@@ -1,8 +1,44 @@
 "use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
+import { api, Dashboard as DashboardData, Role } from "@/lib/api";
+
+const roleContent: Record<Role, { title: string; intro: string; next: string }> = {
+  federation: { title: "Федерация", intro: "Сводка реестра по назначенным ролям и проверке согласий представителей.", next: "Календарь и заявки появятся после запуска соревнований." },
+  athlete: { title: "Спортсмен", intro: "Личные данные согласия и доступные дисциплины.", next: "Заявки и история результатов появятся после запуска соревнований." },
+  coach: { title: "Тренер", intro: "Ваш доступ тренера и каталог дисциплин.", next: "Связи со спортсменами и заявки появятся в следующем этапе." },
+  judge: { title: "Судья", intro: "Ваш доступ судьи и каталог дисциплин.", next: "Назначения и история судейства появятся после запуска соревнований." },
+};
 
 export default function Dashboard() {
   const me = useCurrentUser();
-  return <section className="blk"><h2><b>04</b><span>Кабинет</span></h2><div>{me ? <><h1>{me.full_name}</h1><p>Активная роль: {me.active_role ?? "не выбрана"}</p><p>Доступные роли: {me.roles.join(", ")}</p></> : <div className="note wn">Для доступа к кабинету <Link href="/login">войдите</Link>.</div>}</div></section>;
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState("");
+  const role = me?.active_role;
+
+  useEffect(() => {
+    if (!role) return;
+    let current = true;
+    api<DashboardData>("auth/dashboard/")
+      .then((result) => { if (current) { setData(result); setError(""); } })
+      .catch((failure) => { if (current) { setData(null); setError(failure instanceof Error ? failure.message : "Не удалось загрузить кабинет"); } });
+    return () => { current = false; };
+  }, [me?.id, role]);
+
+  const dashboard = data?.role === role ? data : null;
+  return <>
+    <header className="dashboard-head"><span className="kick">Личный кабинет · {role ? roleContent[role].title : "Вход"}</span><h1>{role ? roleContent[role].title : "Личный кабинет"}</h1><p className="lead">{role ? roleContent[role].intro : "Войдите, чтобы открыть свой кабинет."}</p></header>
+    {!me ? <section className="blk"><h2><b>01</b><span>Вход</span></h2><div className="note wn">Для доступа к кабинету <Link href="/login">войдите</Link>.</div></section>
+      : !role ? <section className="blk"><h2><b>01</b><span>Роль</span></h2><div className="note wn">Активная роль недоступна. Выберите назначенную роль в боковой панели.</div></section>
+        : <>
+          <section className="blk"><h2><b>01</b><span>Обзор</span></h2><div>
+            <p className="section-intro">{me.full_name} · {roleContent[role].title}</p>
+            {error ? <div className="note wn" role="alert">{error}</div> : dashboard ? <div className="kp dashboard-metrics">{dashboard.metrics.map((metric) => <div key={metric.label}><div className="v">{metric.value}</div><div className="l">{metric.label}</div></div>)}</div> : <p role="status">Загрузка данных кабинета…</p>}
+            {dashboard?.guardian_status && <div className="note wn dashboard-guardian">Согласие представителя: {dashboard.guardian_status === "pending_verification" ? "ожидает проверки" : dashboard.guardian_status}</div>}
+          </div></section>
+          <section className="blk"><h2><b>02</b><span>Действия</span></h2><div><div className="note">{roleContent[role].next}</div><div className="cta"><Link className="btn i" href="/competitions">Открыть календарь</Link><Link className="btn" href="/#disciplines">Смотреть дисциплины</Link></div></div></section>
+        </>}
+  </>;
 }

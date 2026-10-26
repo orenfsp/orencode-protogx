@@ -19,6 +19,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [dark, setDark] = useState(false);
   const [roleError, setRoleError] = useState("");
 
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    localStorage.setItem("fsp-theme", next ? "dark" : "light");
+  }
+
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDark(localStorage.getItem("fsp-theme") === "dark"));
     return () => cancelAnimationFrame(frame);
@@ -43,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return <>
-    <input type="checkbox" id="th" aria-label="Тёмная тема" checked={dark} onChange={(event) => { setDark(event.target.checked); localStorage.setItem("fsp-theme", event.target.checked ? "dark" : "light"); }} />
+    <input type="checkbox" id="th" aria-label="Тёмная тема" checked={dark} onChange={toggleTheme} />
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
       <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6" /></symbol>
       <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.7a3.5 3.5 0 010 6.6M18 14.3c2.2.7 3.5 2.6 3.5 5.7" /></symbol>
@@ -70,8 +76,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <small>Платформа ФСП Оренбургской области</small>
         </div>
       </aside>
-      <main className="main" id="top"><CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
+      <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <p className="mobile-role-error" role="alert">{roleError}</p>}<CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
     </div>
-    <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
+    <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link className={path === "/competitions" ? "on" : ""} href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link className={path === "/dashboard" ? "on" : ""} href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
   </>;
 }

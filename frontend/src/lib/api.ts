@@ -1,6 +1,7 @@
 export type Role = "federation" | "athlete" | "coach" | "judge";
 export type Me = { id: number; email: string; full_name: string; roles: Role[]; active_role: Role | null };
 export type Discipline = { code: string; name: string };
+export type Dashboard = { role: Role; metrics: { label: string; value: string }[]; guardian_status: string | null };
 
 async function csrfToken(): Promise<string> {
   const response = await fetch("/api/v1/auth/csrf/", { credentials: "include" });

@@ -2,6 +2,8 @@
 
 The functional contract is `docs/MASTER_PROMPT.md`; the visual contract is the unchanged `docs/design/fsp-reference.html`. This document freezes Phase 1 interfaces and organizes delivery. It does not claim that later workflows exist.
 
+**Phase 1 completion (2026-10-27):** the four role dashboard foundations, mobile theme/role controls, expanded visual QA, and clean-volume startup gate are verified. `GET /api/v1/auth/dashboard/` is the new role-checked read contract in `docs/openapi.yaml`. The initial Phase 2 competition workflow is planned in `docs/phase2-plan.md`; its domain models and endpoints are not implemented yet.
+
 ## Architecture and first vertical slice
 
 - `backend/`: Django 5 + DRF, PostgreSQL in Compose, `drf-spectacular` OpenAPI, Django session authentication and CSRF. `/api/v1/` is the versioned API. Django admin is for internal catalog maintenance.

@@ -47,6 +47,57 @@ try {
       }
     }
   }
+
+  const screens = [
+    { name: "calendar", path: "/competitions" },
+    { name: "login", path: "/login" },
+    { name: "register", path: "/register" },
+    { name: "privacy", path: "/privacy" },
+    { name: "federation", email: "demo.federation@example.test" },
+    { name: "athlete", email: "demo.athlete@example.test" },
+    { name: "coach", email: "demo.coach@example.test" },
+    { name: "judge", email: "demo.judge@example.test" },
+  ];
+  const roleSessions = new Map();
+  for (const screen of screens.filter((item) => item.email)) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(`${site}/login`, { waitUntil: "domcontentloaded" });
+    await page.getByLabel("Электронная почта").fill(screen.email);
+    await page.getByLabel("Пароль").fill("DemoOnly2026!");
+    await page.getByRole("button", { name: "Войти", exact: true }).click();
+    await page.waitForURL("**/dashboard");
+    await page.locator(".dashboard-metrics").waitFor();
+    roleSessions.set(screen.name, await context.storageState());
+    await context.close();
+  }
+  for (const viewport of viewports) {
+    for (const theme of ["light", "dark"]) {
+      for (const screen of screens) {
+        const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, deviceScaleFactor: 1, storageState: roleSessions.get(screen.name) });
+        if (theme === "dark") await context.addInitScript(() => localStorage.setItem("fsp-theme", "dark"));
+        const page = await context.newPage();
+        if (screen.email) {
+          await page.goto(`${site}/dashboard`, { waitUntil: "domcontentloaded" });
+          await page.locator(".dashboard-metrics").waitFor();
+        } else {
+          await page.goto(`${site}${screen.path}`, { waitUntil: "domcontentloaded" });
+          await page.locator("section.blk").first().waitFor();
+        }
+        await page.evaluate(() => document.fonts.ready);
+        await page.waitForFunction(
+          (expected) => getComputedStyle(document.body).backgroundColor === expected,
+          theme === "dark" ? "rgb(28, 27, 69)" : "rgb(255, 255, 255)",
+        );
+        if (viewport.width <= 900 && !(await page.locator(".mobtab").isVisible())) throw new Error(`Mobile navigation hidden on ${screen.name}`);
+        await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; window.scrollTo(0, 0); });
+        const screenshotPath = path.join(output, `site-${screen.name}-${viewport.name}-${theme}.png`);
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log(screenshotPath);
+        await context.close();
+      }
+    }
+  }
 } finally {
   await browser.close();
 }

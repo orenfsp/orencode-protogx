@@ -2,6 +2,8 @@
 .menu button{display:flex;width:100%;align-items:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--ink);font:600 14px var(--fb);text-align:left;cursor:pointer}
 .menu button.a{background:var(--acs);color:var(--ac)}
 .menu button:hover{background:var(--acs)}
+.idx button.tgl{width:100%;background:transparent}
+.idx button.tgl:hover{background:var(--side-ink)}
 .auth-form{max-width:480px;display:grid;gap:12px}
 .auth-form .inp{display:block;width:100%;background:transparent;color:var(--ink);border:0;border-bottom:2px solid var(--ink);border-radius:0}
 .auth-form .inp:focus{background:var(--acs);border-bottom-color:var(--ac);outline:3px solid var(--fcs);outline-offset:2px}
@@ -16,4 +18,16 @@
 .idx .rbtn a{text-decoration:underline}
 .mobtab a{display:grid;place-items:center}
 .main>section:first-child{padding-top:48px}
+.dashboard-head{padding:48px 0 18px;border-bottom:2px solid var(--ink)}
+.dashboard-head h1{margin-bottom:12px}
+.dashboard-metrics .v{font-size:clamp(20px,2.5vw,36px);overflow-wrap:anywhere}
+.dashboard-guardian{margin-top:16px}
+.mobile-tools{display:none}
+@media(max-width:900px){
+  .mobile-tools{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding-top:12px}
+  .mobile-theme{min-height:44px;padding:0 12px;border:1.5px solid var(--ac);background:var(--paper);color:var(--ac);font:700 13px var(--fb);box-shadow:3px 3px 0 var(--sg);cursor:pointer}
+  .mobile-role{display:flex;align-items:center;gap:6px;font:700 12px var(--fb)}
+  .mobile-role select{min-height:44px;max-width:138px;padding:0 4px;border:1.5px solid var(--ac);border-radius:0;background:var(--paper);color:var(--ink);font:600 13px var(--fb)}
+  .mobile-role-error{display:block;margin-top:10px;color:var(--ink)}
+}
 @media(max-width:900px){.tw th:nth-child(3),.tw td:nth-child(3){display:table-cell}}

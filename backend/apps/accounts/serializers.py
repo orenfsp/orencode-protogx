@@ -36,6 +36,17 @@ class EmptySerializer(serializers.Serializer):
     pass
 
 
+class DashboardMetricSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    value = serializers.CharField()
+
+
+class DashboardSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=UserRole.Role.choices)
+    metrics = DashboardMetricSerializer(many=True)
+    guardian_status = serializers.CharField(allow_null=True)
+
+
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)

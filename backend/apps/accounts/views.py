@@ -10,11 +10,14 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from .models import UserRole
+from apps.catalogs.models import Discipline
+
+from .models import Guardian, PersonalDataConsent, UserRole
 from .serializers import (
     ActiveRoleSerializer,
     AuthResponseSerializer,
     CsrfSerializer,
+    DashboardSerializer,
     EmptySerializer,
     LoginSerializer,
     MeSerializer,
@@ -67,6 +70,36 @@ class MeView(APIView):
     @extend_schema(responses={200: MeSerializer})
     def get(self, request):
         return Response(MeSerializer(request.user, context={"request": request}).data)
+
+
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses={200: DashboardSerializer})
+    def get(self, request):
+        role = request.session.get("active_role")
+        assignment = request.user.role_assignments.filter(role=role).first() if role in UserRole.Role.values else None
+        if assignment is None:
+            return Response({"detail": "Active role is not assigned"}, status=status.HTTP_403_FORBIDDEN)
+
+        guardian_status = None
+        if role == UserRole.Role.FEDERATION:
+            metrics = [
+                {"label": "Спортсменов", "value": str(UserRole.objects.filter(role=UserRole.Role.ATHLETE).count())},
+                {"label": "Тренеров", "value": str(UserRole.objects.filter(role=UserRole.Role.COACH).count())},
+                {"label": "Судей", "value": str(UserRole.objects.filter(role=UserRole.Role.JUDGE).count())},
+                {"label": "Ожидают проверки", "value": str(Guardian.objects.filter(confirmation_status="pending_verification").count())},
+            ]
+        else:
+            consent = PersonalDataConsent.objects.filter(user=request.user).exists()
+            if role == UserRole.Role.ATHLETE:
+                guardian_status = Guardian.objects.filter(minor=request.user).values_list("confirmation_status", flat=True).first()
+            metrics = [
+                {"label": "Роль назначена", "value": assignment.assigned_at.date().isoformat()},
+                {"label": "Согласие", "value": "Записано" if consent else "Не записано"},
+                {"label": "Дисциплин в каталоге", "value": str(Discipline.objects.count())},
+            ]
+        return Response({"role": role, "metrics": metrics, "guardian_status": guardian_status})
 
 
 @method_decorator(csrf_protect, name="dispatch")

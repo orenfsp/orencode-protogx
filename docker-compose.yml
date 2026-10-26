@@ -13,7 +13,7 @@ services:
       timeout: 5s
       retries: 10
     ports:
-      - "5432:5432"
+      - "${FSP_DB_PORT:-5432}:5432"
   api:
     build: ./backend
     environment:
@@ -28,16 +28,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --noinput && if [ \"${DJANGO_DEBUG:-1}\" = \"1\" ]; then python manage.py seed_demo; fi && python manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     ports:
-      - "8000:8000"
+      - "${FSP_API_PORT:-8000}:8000"
   web:
     build: ./frontend
     environment:
       API_INTERNAL_URL: http://api:8000
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${FSP_WEB_PORT:-3000}:3000"
 volumes:
   postgres_data:
