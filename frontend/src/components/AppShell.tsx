@@ -2,10 +2,15 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { api, Me, Role } from "@/lib/api";
 
 const roleName: Record<Role, string> = { federation: "Федерация", athlete: "Спортсмен", coach: "Тренер", judge: "Судья" };
+const CurrentUserContext = createContext<Me | null>(null);
+
+export function useCurrentUser() {
+  return useContext(CurrentUserContext);
+}
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -65,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <small>Платформа ФСП Оренбургской области</small>
         </div>
       </aside>
-      <main className="main" id="top">{children}<footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
+      <main className="main" id="top"><CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
     </div>
     <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
   </>;

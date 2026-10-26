@@ -23,3 +23,7 @@ coverage/
 # editor
 .vscode/
 .idea/
+# Local browser QA profile
+.chrome-qa*/
+frontend/test-results/
+frontend/playwright-report/

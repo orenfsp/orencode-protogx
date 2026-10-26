@@ -1,6 +1,6 @@
 """Regenerate the shared token/style baseline without editing the visual reference."""
-from pathlib import Path
 import re
+from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 reference = root / "docs/design/fsp-reference.html"

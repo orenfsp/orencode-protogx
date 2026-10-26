@@ -4,9 +4,9 @@ Status is based on executed evidence. `partial` means a foundation exists but th
 
 | ID | Status | Evidence / next gate |
 | --- | --- | --- |
-| AC-01 | partial | Next.js build and Compose web pass; viewport browser review pending |
+| AC-01 | implemented | Compose web serves responsive homepage; 1440/768/390 Playwright screenshots captured in both themes |
 | AC-02 | implemented | PostgreSQL Compose healthy, migrations checked, 8 tests and proxy API smoke pass |
-| AC-03 | partial | Role assignment/switch/denial backend test passes; multi-dashboard browser flow pending |
+| AC-03 | partial | Seeded multi-role Playwright login/switch passes; role-specific dashboard content is still pending |
 | AC-04 | implemented | Six catalog rows verified in backend test and Compose proxy smoke |
 | AC-05 | not_implemented | Competition workflow pending |
 | AC-06 | not_implemented | Approved-participant protocol test pending |
@@ -19,6 +19,6 @@ Status is based on executed evidence. `partial` means a foundation exists but th
 | AC-13 | not_implemented | Manual team selection test pending |
 | AC-14 | not_implemented | Real-data document export test pending |
 | AC-15 | partial | Role denial and CSRF tests pass; audit and object permissions pending |
-| AC-16 | partial | Compose build, migration check, and auth smoke pass; fictional seed and fresh startup pending |
+| AC-16 | partial | Compose build/migrations/auth smoke and idempotent fictional seed pass; clean-volume startup pending |
 | AC-17 | implemented | Unchanged reference committed; design-contract checker passes SHA-256 and exact extracted CSS comparison; mapping documented |
-| AC-18 | not_implemented | Six viewport/theme screenshot comparisons pending |
+| AC-18 | partial | Six homepage viewport/theme comparisons captured; forms, role screens, states and mobile theme control pending |

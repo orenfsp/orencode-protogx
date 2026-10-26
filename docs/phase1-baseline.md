@@ -26,8 +26,12 @@ The first proxy smoke failed because Next.js removed API trailing slashes and Dj
 
 ## Incomplete Phase 1 gates
 
-- Capture and review reference versus Next.js screenshots at 1440, 768, and 390 px in light and dark themes. Record actual differences in `docs/design/visual-qa.md`.
-- Add an idempotent fictional demo seed command and verify a clean Compose startup with it.
-- Verify a real multi-role user through the browser, including dashboard switching. Existing backend tests cover role assignment and denial; the dashboard is still a simple account page.
+- Reference and Next.js homepage screenshots have been captured at 1440, 768, and 390 px in both themes; broader screen/state comparison and a mobile theme control remain open.
+- `seed_demo` now creates fictional accounts and passes idempotence and non-debug refusal tests. A fully clean Compose volume startup has not been exercised.
+- A seeded multi-role browser login and role switch now pass in Playwright. Role-specific dashboard features remain to be built; the current dashboard shows account and active role only.
 - The read-only design-contract check is now available as `python scripts/check_design_contract.py`; it passes against the committed reference and CSS. Responsive screenshot comparison remains open.
 - Begin Phase 2 only after the shared competition DTO, permission rules, and migrations are frozen by Codex. No competition workflow exists yet.
+
+## Continued Phase 1 checks
+
+The seed command was run twice against the existing PostgreSQL Compose database. The backend test suite grew from 8 to 10 passing tests, including seed idempotence and refusal with `DEBUG=False`. The rebuilt API retained its migration state. `ruff check backend scripts`, `npm.cmd run typecheck`, and `npm.cmd run lint` pass. Playwright captured 12 homepage images and the seeded role-switch E2E test passed (1 test) after Codex fixed the shared dashboard state. An initial browser login failure exposed missing `127.0.0.1:3000` in the default trusted origins; the Compose/API defaults now include both localhost forms. `docs/design/visual-qa.md` records visual differences and remaining gates.

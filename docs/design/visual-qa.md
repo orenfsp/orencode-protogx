@@ -6,4 +6,12 @@ Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numb
 
 `python scripts/check_design_contract.py` passes: it checks the immutable HTML hash and the extracted CSS text. This confirms the token source but does not establish screenshot fidelity. Mocked hash and CSS mismatches both returned failure during validation.
 
-Pending visual gate: render original and Next.js at 1440px, 768px, and 390px in both themes. Compare sidebar width, rail positions, typography, gutters, borders, stamps, forms, table overflow, active navigation, and bottom navigation. Record actual screenshot results here before marking AC-18 implemented.
+## Executed screenshot review
+
+`cd frontend && npm run visual:qa` captured the reference and running Compose homepage at 1440×900, 768×900, and 390×844 in light and dark themes. The 12 images are in `docs/design/screenshots/`, named `reference-*` and `site-*`. The script waits for the six-discipline table and verifies the dark checkbox state before each dark capture.
+
+- At 1440 px, both use the 268 px indigo sidebar, orange numbered dotted links, a 48 px dotted document rail, Rubik hero, rotated outlined card, and bordered content. The Next.js shell has four live navigation links rather than the reference's seven static federation links because the remaining modules do not exist yet.
+- At 768 and 390 px, both hide the sidebar at the 900 px breakpoint, retain the narrower document rail, and show the four-item fixed bottom navigation. The mobile hero and cards fit the viewport without clipping. The Next.js table is horizontally scrollable; the reference hides a table column at this breakpoint.
+- Light and dark palette values, border treatments, and stamp headings visibly match. The live page uses real catalog rows and a truthful empty-calendar card, while the reference contains fictitious KPI counts and a dated competition card. These content differences change section heights and CTA wrapping. The reference's mobile CTA wraps to two rows at 390 px; the current shorter live labels fit on one row.
+
+AC-18 remains `partial`: the homepage shell and table were visually reviewed in six combinations, but registration form/detail screens, role-specific dashboards, status states, and any future competition UI still need side-by-side review. The theme switcher lives in the hidden desktop sidebar, so mobile users cannot currently toggle theme from the mobile navigation; this needs an accessible mobile control. Do not interpret screenshot similarity as completion of the missing workflows.
