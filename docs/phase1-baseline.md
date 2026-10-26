@@ -29,5 +29,5 @@ The first proxy smoke failed because Next.js removed API trailing slashes and Dj
 - Capture and review reference versus Next.js screenshots at 1440, 768, and 390 px in light and dark themes. Record actual differences in `docs/design/visual-qa.md`.
 - Add an idempotent fictional demo seed command and verify a clean Compose startup with it.
 - Verify a real multi-role user through the browser, including dashboard switching. Existing backend tests cover role assignment and denial; the dashboard is still a simple account page.
-- Add a repeatable design-contract check for the immutable reference and extracted CSS. This is a suitable bounded DeepSeek implementation task; Codex will inspect and test the proposal.
+- The read-only design-contract check is now available as `python scripts/check_design_contract.py`; it passes against the committed reference and CSS. Responsive screenshot comparison remains open.
 - Begin Phase 2 only after the shared competition DTO, permission rules, and migrations are frozen by Codex. No competition workflow exists yet.

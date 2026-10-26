@@ -4,4 +4,6 @@ Reference: `fsp-reference.html` (SHA-256 `2362C4D1AEC5D54FA075215D6FDF986416D23D
 
 Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numbered indigo sidebar and role selector to `AppShell`, the document rail to `.main::before`, and the fixed mobile bottom navigation to `.mobtab`. Rubik, Inter, and JetBrains Mono are loaded with the same font weights. The light/dark token values and 900px/520px breakpoints come from the reference CSS.
 
+`python scripts/check_design_contract.py` passes: it checks the immutable HTML hash and the extracted CSS text. This confirms the token source but does not establish screenshot fidelity. Mocked hash and CSS mismatches both returned failure during validation.
+
 Pending visual gate: render original and Next.js at 1440px, 768px, and 390px in both themes. Compare sidebar width, rail positions, typography, gutters, borders, stamps, forms, table overflow, active navigation, and bottom navigation. Record actual screenshot results here before marking AC-18 implemented.

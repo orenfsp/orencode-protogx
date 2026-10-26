@@ -20,5 +20,5 @@ Status is based on executed evidence. `partial` means a foundation exists but th
 | AC-14 | not_implemented | Real-data document export test pending |
 | AC-15 | partial | Role denial and CSRF tests pass; audit and object permissions pending |
 | AC-16 | partial | Compose build, migration check, and auth smoke pass; fictional seed and fresh startup pending |
-| AC-17 | partial | Reference SHA-256 matches documented hash and tokens/shell are mapped; Git and visual gate pending |
+| AC-17 | implemented | Unchanged reference committed; design-contract checker passes SHA-256 and exact extracted CSS comparison; mapping documented |
 | AC-18 | not_implemented | Six viewport/theme screenshot comparisons pending |

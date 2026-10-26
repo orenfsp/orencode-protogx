@@ -12,6 +12,8 @@ Backend: install `backend/requirements.txt`; set `DATABASE_ENGINE=sqlite` only f
 
 Frontend: `cd frontend`, `npm ci`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run dev`. The frontend rewrites `/api/*` to `API_INTERNAL_URL` (default `http://127.0.0.1:8000` for local development; the Docker image compiles with `http://api:8000`).
 
+Run `python scripts/check_design_contract.py` to verify that the reference HTML and extracted shared CSS still match the committed design contract.
+
 After Compose starts, `python scripts/smoke_auth.py` exercises registration, session login/logout, role denial, and the six-discipline catalog through the frontend proxy. It creates one randomly named fictional test account in the local database.
 
 Registration always creates an athlete role. Federation and other roles require trusted administrator assignment. For minors, submitted guardian details remain pending verification; online self-attestation is not claimed as production-grade legal verification.
