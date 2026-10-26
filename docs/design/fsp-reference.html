@@ -1,0 +1,246 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ФСП Оренбургская область — итоговый макет</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Итог: скелет C3 (боковая панель, блоки с заголовком слева), оформление и шрифты C2 (бланк, штампы, подчёркнутые поля).
+   Два цвета: индиго #221F73 и оранжевый #FF9900. Только HTML и CSS, тёмная тема переключается без скриптов. */
+:root{--fd:Rubik,Inter,sans-serif;--fb:Inter,system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+ --paper:#fff;--side:#221F73;--side-ink:#fff;--side-mut:#C9C7F5;--ink:#1B1C21;--mut:#5C5C66;--rl:#DDDDE8;--rl2:#9A99B8;
+ --ac:#221F73;--ach:#3A36A8;--acs:#EEEDF9;--onac:#fff;--sg:#FF9900;--onsg:#1B1C21;--dis:#E4E4EC;--fcs:#221F73;--wnb:#FFF1D6;color-scheme:light}
+:root:has(#th:checked){--paper:#1C1B45;--side:#0B0A24;--side-ink:#F2F2FA;--side-mut:#A9A8CC;--ink:#F2F2FA;--mut:#A9A8CC;--rl:#34336E;--rl2:#5A59A0;
+ --ac:#A6A3FF;--ach:#C0BEFF;--acs:#2A2970;--onac:#14123B;--dis:#2A2A55;--fcs:#FF9900;--wnb:#3A2B10;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}*{margin:0}
+html{scroll-behavior:smooth}
+body{font:15px/1.55 var(--fb);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid var(--fcs);outline-offset:3px}
+#th{position:absolute;opacity:0;pointer-events:none}
+.t-d{display:none}:root:has(#th:checked) .t-d{display:inline}:root:has(#th:checked) .t-l{display:none}
+.m{font-family:var(--fm);font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+small{display:block;font-size:13px;color:var(--mut);font-weight:400}
+
+/* ---------- каркас (C3) ---------- */
+.lay{display:grid;grid-template-columns:268px minmax(0,1fr);min-height:100vh}
+.idx{position:sticky;top:0;height:100vh;background:var(--side);color:var(--side-ink);padding:28px 22px;display:flex;flex-direction:column;gap:6px;overflow-y:auto}
+:root:has(#th:checked) .idx{border-right:1px solid var(--rl)}
+.logo{display:flex;align-items:center;gap:12px;font:800 16px/1.2 var(--fd)}
+.logo i{width:42px;height:42px;background:var(--sg);color:var(--onsg);display:grid;place-items:center;font:800 12px var(--fd);font-style:normal;border-radius:2px;flex:none}
+.idx nav{margin-top:28px;display:flex;flex-direction:column}
+.idx nav a{display:flex;gap:14px;align-items:center;min-height:48px;padding:0 6px;color:var(--side-mut);font-weight:600;border-bottom:1px dotted rgba(255,255,255,.28)}
+.idx nav a b{font:700 12px var(--fm);min-width:24px;color:var(--sg)}
+.idx nav a.on{color:var(--side-ink);background:rgba(255,255,255,.1);box-shadow:inset 4px 0 0 var(--sg);padding-left:14px}
+.rb{margin-top:auto;position:relative;padding-top:16px}
+.rb .menu{background:var(--paper);color:var(--ink);border:1.5px solid var(--ink);padding:6px;margin-bottom:10px;box-shadow:4px 4px 0 rgba(0,0,0,.35)}
+.menu div{display:flex;justify-content:space-between;align-items:center;padding:0 12px;min-height:44px;font-size:14px}
+.menu .a{background:var(--acs);color:var(--ac);font-weight:700}
+.menu .go{color:var(--mut);border-top:1px dotted var(--rl2);margin-top:4px}
+.rbtn{border:1.5px solid var(--side-mut);padding:10px 14px;min-height:54px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.rbtn small{color:var(--side-mut);font-size:12px}
+.tgl{margin-top:12px;display:flex;align-items:center;justify-content:center;min-height:44px;border:1.5px solid var(--side-mut);color:var(--side-ink);font-weight:700;font-size:14px;cursor:pointer}
+.tgl:hover{background:var(--side-ink);color:var(--side)}
+#th:focus-visible~.lay .tgl{outline:3px solid var(--sg);outline-offset:3px}
+.idx small{margin-top:12px;color:var(--side-mut);font-size:12px}
+
+.main{position:relative;padding:0 56px 48px 96px;min-width:0}
+.main::before{content:"";position:absolute;left:0;top:0;bottom:0;width:48px;border-right:2px solid var(--ac);background:radial-gradient(circle at 24px 64px,var(--side) 0 9px,transparent 10px) 0 0/48px 150px repeat-y;pointer-events:none}
+
+/* ---------- первый экран ---------- */
+.hd{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:48px;align-items:center;padding:56px 0 40px;border-bottom:2px solid var(--ink)}
+.kick{font-size:13px;font-weight:600;color:var(--mut)}
+h1{font:800 clamp(36px,5.2vw,68px)/1.02 var(--fd);letter-spacing:-.045em;margin:10px 0 18px}
+h1 span{display:block;white-space:nowrap}
+h1 span:last-child{text-decoration:underline;text-decoration-thickness:6px;text-underline-offset:8px;text-decoration-color:var(--sg)}
+.lead{font-size:18px;color:var(--mut);max-width:46ch;margin-bottom:26px}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;font:700 14px var(--fb);border:1.5px solid var(--ac);background:transparent;color:var(--ac);cursor:pointer;box-shadow:3px 3px 0 var(--ac);white-space:nowrap}
+.btn.p{background:var(--sg);color:var(--onsg);border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.btn.p:hover,.btn.p.hv{background:#FFB020}
+.btn.i{background:var(--ac);color:var(--onac);border-color:var(--ac);box-shadow:3px 3px 0 var(--ink)}
+.btn.i:hover{background:var(--ach)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.fc{outline:3px solid var(--fcs);outline-offset:3px}
+.btn:disabled{background:var(--dis);border-color:var(--dis);color:var(--mut);box-shadow:none;cursor:not-allowed}
+.btn.er{background:var(--sg);border-color:var(--ink);color:var(--onsg)}
+
+/* плашка «Ближайшее соревнование» (C2) */
+.soon{transform:rotate(1.2deg);border:1.5px solid var(--ink);background:var(--acs);padding:20px 22px;box-shadow:6px 6px 0 var(--ac)}
+.soon h4{font:700 20px var(--fd);margin:6px 0 2px}
+.cd{display:flex;gap:22px;margin:16px 0}
+.cd b{display:block;font:700 44px/1 var(--fm);letter-spacing:-.06em;color:var(--ac)}
+.cd span{font-size:12px;color:var(--mut)}
+
+/* ---------- блоки (C3): заголовок слева ---------- */
+.blk{display:grid;grid-template-columns:150px minmax(0,1fr);gap:32px;padding:36px 0;border-bottom:1px solid var(--rl2)}
+.blk>h2{font:700 15px/1.3 var(--fd)}
+.blk>h2 b{display:inline-block;margin-bottom:8px;border:3px double var(--ac);color:var(--ac);padding:2px 10px;font:800 14px var(--fm);transform:rotate(-3deg)}
+.blk>h2 span{display:block}
+.kp{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--ink)}
+.kp>div{padding:18px 20px}.kp>div+div{border-left:1.5px solid var(--ink)}
+.v{font:700 clamp(28px,3.4vw,44px)/1.05 var(--fm);letter-spacing:-.05em}
+.l{font-weight:600;margin-top:6px}.g{font-size:13px;color:var(--mut)}.g::before{content:"▲ ";color:var(--sg)}
+
+.tabs{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:10px}
+.tabs span{padding:10px 0;min-height:44px;color:var(--mut);font-weight:600;border-bottom:3px solid transparent}
+.tabs .on{color:var(--ink);font-weight:700;border-color:var(--sg)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;border:1.5px solid var(--ink)}
+th{text-align:left;font-size:12.5px;font-weight:700;padding:10px 12px;background:var(--acs);border-bottom:1.5px solid var(--ink);border-right:1px solid var(--rl);white-space:nowrap}
+td{padding:13px 12px;border-bottom:1px solid var(--rl);border-right:1px solid var(--rl);vertical-align:middle}
+th:last-child,td:last-child{border-right:0}
+td:first-child,th:first-child{width:48px;text-align:center;font:500 13px var(--fm);color:var(--mut)}
+td:nth-child(2){font-weight:700}
+tr.sel td{background:var(--acs)}tr.sel td:first-child{box-shadow:inset 4px 0 0 var(--sg)}
+
+/* штампы вместо бейджей (C2): индиго — норма, оранжевый — внимание */
+.bd{display:inline-block;border:2px solid var(--ac);color:var(--ac);padding:1px 9px;font-size:12.5px;font-weight:800;transform:rotate(-2deg);border-radius:2px;white-space:nowrap}
+.bd.in{border:3px double var(--ac)}
+.bd.wn{border-color:var(--sg);color:var(--ink)}
+.bd.er{background:var(--sg);border-color:var(--sg);color:var(--onsg)}
+.pag{display:flex;margin-top:16px}
+.pag span{width:44px;height:44px;border:1.5px solid var(--ink);margin-right:-1.5px;display:grid;place-items:center;font:600 14px var(--fm)}
+.pag .on{background:var(--ac);color:var(--onac)}
+
+.at{list-style:none;padding:0}
+.at li{display:grid;grid-template-columns:70px 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px dotted var(--rl2)}
+.at b{font:700 32px/1 var(--fm);letter-spacing:-.07em}
+
+/* ---------- компоненты ---------- */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.btns{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px}
+.note{display:flex;gap:12px;padding:12px 14px;margin-bottom:10px;border:1.5px solid var(--ink);border-left-width:6px;background:var(--acs);font-weight:600;font-size:14px;align-items:flex-start}
+.note.wn{background:var(--wnb);border-left-color:var(--sg)}
+.note .ic{margin-top:1px}
+.lb{display:block;font-weight:700;font-size:13px;margin-bottom:6px}
+.inp{min-height:44px;padding:9px 2px;border-bottom:2px solid var(--ink);display:flex;align-items:center;gap:8px;font:500 15px var(--fm);margin-bottom:6px}
+.inp .ic{color:var(--mut)}
+.inp.f{background:var(--acs);border-bottom-color:var(--ac)}
+.inp.er{border-bottom:3px solid var(--sg)}.inp.er .ic{color:var(--sg)}
+.hint{font-size:13px;color:var(--mut);margin-bottom:14px;display:flex;gap:8px;align-items:center}
+.hint.er{color:var(--ink);font-weight:700}.hint.er::before{content:"!";background:var(--sg);color:var(--onsg);width:18px;height:18px;display:grid;place-items:center;font-size:12px;font-weight:800}
+.ck{display:flex;gap:10px;align-items:center;margin:8px 0}
+.bx{width:22px;height:22px;border:2px solid var(--ink);flex:none;position:relative}
+.bx.on{background:var(--ac);border-color:var(--ac)}
+.bx.on::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid var(--onac);border-width:0 2.5px 2.5px 0;transform:rotate(40deg)}
+footer{padding:28px 0 0;color:var(--mut);font-size:13px}
+
+.mobtab{display:none}
+@media(max-width:1100px){.hd{grid-template-columns:1fr;gap:32px}.soon{max-width:420px}}
+@media(max-width:900px){
+ .lay{display:block}.idx{display:none}
+ .main{padding:0 18px 96px 46px}.main::before{width:26px;background:radial-gradient(circle at 13px 50px,var(--side) 0 6px,transparent 7px) 0 0/26px 120px repeat-y}
+ .hd{padding:36px 0 28px}
+ .blk{grid-template-columns:1fr;gap:16px;padding:28px 0}
+ .kp{grid-template-columns:1fr 1fr}.kp>div:nth-child(3){border-left:0}.kp>div:nth-child(n+3){border-top:1.5px solid var(--ink)}
+ .cmp{grid-template-columns:1fr;gap:28px}
+ th:nth-child(3),td:nth-child(3){display:none}
+ .mobtab{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--paper);border-top:2px solid var(--ink);justify-content:space-around}
+ .mobtab a{display:grid;justify-items:center;gap:2px;min-width:64px;min-height:56px;padding:6px 4px;font-size:11px;font-weight:600;color:var(--mut)}
+ .mobtab a.on{color:var(--ac);font-weight:800;box-shadow:inset 0 3px 0 var(--sg)}
+}
+@media(max-width:520px){h1 span{white-space:normal}.kp{grid-template-columns:1fr}.kp>div+div{border-left:0;border-top:1.5px solid var(--ink)}.at li{grid-template-columns:56px 1fr}.at li>:last-child{grid-column:2;justify-self:start}.cd b{font-size:36px}.cd{gap:16px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style></head><body>
+<input type="checkbox" id="th" aria-label="Тёмная тема">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-6 6.5-6s6.5 2.4 6.5 6M16 4.7a3.5 3.5 0 010 6.6M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+<symbol id="i-dots" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-qr" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h3v3h-3zM19 14v6M14 20h3"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.5l3.5 2"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9.5 16h-19z"/><path d="M12 10v4.5M12 17.5v.01"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+</svg>
+
+<div class="lay">
+<aside class="idx">
+ <a class="logo" href="#top"><i>ФСП</i><span>Оренбургская<br>область</span></a>
+ <nav aria-label="Разделы">
+  <a class="on" href="#dash"><b>01</b>Дашборд</a><a href="#reg"><b>02</b>Реестр</a><a><b>03</b>Календарь</a><a><b>04</b>Судьи</a><a><b>05</b>Результаты</a><a><b>06</b>Разряды</a><a><b>07</b>Сроки</a>
+ </nav>
+ <div class="rb">
+  <div class="menu" role="menu"><div class="a">Федерация (админ)<svg class="ic"><use href="#i-check"/></svg></div><div>Спортсмен</div><div>Тренер</div><div>Судья</div><div class="go">Выбор роли при входе</div></div>
+  <div class="rbtn"><span>Иванов И. И.<small>Роль: Федерация</small></span><svg class="ic"><use href="#i-chev"/></svg></div>
+  <label class="tgl" for="th"><span class="t-l">Тёмная тема</span><span class="t-d">Светлая тема</span></label>
+  <small>Демо-макет, данные вымышлены</small>
+ </div>
+</aside>
+
+<main class="main" id="top">
+ <header class="hd">
+  <div>
+   <span class="kick">Навигатор для новичка</span>
+   <h1><span>Пиши код.</span><span>Побеждай.</span><span>В&nbsp;Оренбуржье.</span></h1>
+   <p class="lead">Спортивное программирование: дисциплины, секции региона и ближайшие соревнования. Начните с регистрации.</p>
+   <div class="cta"><button type="button" class="btn p"><svg class="ic"><use href="#i-arrow"/></svg>Зарегистрироваться</button><button type="button" class="btn"><svg class="ic"><use href="#i-qr"/></svg>Проверить справку</button></div>
+  </div>
+  <aside class="soon" aria-label="Ближайшее соревнование">
+   <small>Ближайшее соревнование</small><h4>Кубок области</h4><p>14 ноября, Оренбург</p>
+   <div class="cd"><div><b>19</b><span>дней</span></div><div><b>04</b><span>часа</span></div><div><b>37</b><span>минут</span></div></div>
+   <span class="bd wn">Заявки до 5 ноября</span>
+  </aside>
+ </header>
+
+ <section class="blk" id="dash"><h2><b>01</b><span>Дашборд</span></h2>
+  <div class="kp">
+   <div><div class="v">1 248</div><div class="l">Занимающихся</div><div class="g">+12% за год</div></div>
+   <div><div class="v">18</div><div class="l">Соревнований</div><div class="g">+3 к прошлому сезону</div></div>
+   <div><div class="v">2 906</div><div class="l">Участников</div><div class="g">+8% за год</div></div>
+   <div><div class="v">94</div><div class="l">Присвоено разрядов</div><div class="g">+21 за сезон</div></div>
+  </div>
+ </section>
+
+ <section class="blk" id="reg"><h2><b>02</b><span>Реестр</span></h2>
+  <div>
+   <div class="tabs" role="tablist"><span class="on" role="tab">Спортсмены</span><span role="tab">Тренеры</span><span role="tab">Судьи</span><span role="tab">Организации</span></div>
+   <div class="tw"><table><thead><tr><th>№</th><th>ФИО</th><th>Дисциплина</th><th>Разряд</th><th>Статус</th></tr></thead><tbody>
+    <tr><td>1</td><td>Иванов Иван Иванович</td><td>Алгоритмы</td><td class="m">II</td><td><span class="bd">Активен</span></td></tr>
+    <tr class="sel"><td>2</td><td>Петрова Анна Сергеевна</td><td>Продуктовое</td><td class="m">III</td><td><span class="bd in">ЕВСК: подходит</span></td></tr>
+    <tr><td>3</td><td>Сидоров Пётр Андреевич</td><td>Робототехника</td><td class="m">—</td><td><span class="bd wn">Модерация</span></td></tr>
+    <tr><td>4</td><td>Кузнецова Мария Олеговна</td><td>Безопасность</td><td class="m">I</td><td><span class="bd er">Срок истёк</span></td></tr>
+   </tbody></table></div>
+   <div class="pag"><span>‹</span><span class="on">1</span><span>2</span><span>3</span><span>›</span></div>
+  </div>
+ </section>
+
+ <section class="blk"><h2><b>!</b><span>Требует внимания</span></h2>
+  <ul class="at">
+   <li><b>7</b><span>заявок на модерации</span><span class="bd wn">проверить</span></li>
+   <li><b>12</b><span>заявок на разряд</span><span class="bd wn">проверить</span></li>
+   <li><b>5</b><span>разрядов истекают в течение 30 дней</span><span class="bd er">скоро</span></li>
+   <li><b>1.02</b><span>отчёт в Минспорт России</span><span class="bd">в норме</span></li>
+  </ul>
+ </section>
+
+ <section class="blk"><h2><b>UI</b><span>Компоненты</span></h2>
+  <div class="cmp">
+   <div>
+    <div class="btns"><button type="button" class="btn p">Default</button><button type="button" class="btn p hv">Hover</button><button type="button" class="btn p fc">Focus</button><button type="button" class="btn i">Основная</button><button type="button" class="btn">Вторичная</button><button type="button" class="btn" disabled>Disabled</button></div>
+    <div class="note"><svg class="ic"><use href="#i-check"/></svg><div>Заявка принята</div></div>
+    <div class="note wn"><svg class="ic"><use href="#i-clock"/></svg><div>Разряд истекает через 30 дней</div></div>
+   </div>
+   <div>
+    <span class="lb">Номер справки</span><div class="inp f"><svg class="ic"><use href="#i-file"/></svg>FSP-56-2026-0417</div><div class="hint">Или отсканируйте QR-код</div>
+    <span class="lb">Электронная почта</span><div class="inp er"><svg class="ic"><use href="#i-mail"/></svg>ivanov@</div><div class="hint er">Введите корректный адрес</div>
+    <div class="ck"><i class="bx on"></i>Согласие на обработку персональных данных</div>
+    <div class="ck"><i class="bx"></i>Согласие законного представителя</div>
+   </div>
+  </div>
+ </section>
+ <footer>Демо-макет. Все данные вымышлены. ЕВСК, ФССП, РУСАДА.</footer>
+</main>
+</div>
+
+<nav class="mobtab" aria-label="Основная навигация">
+ <a class="on" href="#dash"><svg class="ic"><use href="#i-home"/></svg>Дашборд</a>
+ <a href="#reg"><svg class="ic"><use href="#i-users"/></svg>Реестр</a>
+ <a><svg class="ic"><use href="#i-cal"/></svg>Календарь</a>
+ <a><svg class="ic"><use href="#i-dots"/></svg>Ещё</a>
+</nav>
+</body></html>

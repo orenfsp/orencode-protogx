@@ -1,0 +1,17 @@
+# EXAMPLE ONLY. Merge this block into C:\Users\User\.codex\config.toml
+# only AFTER checking that these paths exist and your reliable server
+# supports these environment variables. Do not overwrite existing MCP entries.
+# TOML single quotes below avoid the need to double Windows backslashes.
+
+[mcp_servers.deepseek_reliable]
+command = 'C:\Users\User\AppData\Local\Programs\Python\Python313\python.exe'
+args = ['C:\Users\User\Documents\ChatGPT\test\deepseek_mcp_v2_reliable.py']
+
+[mcp_servers.deepseek_reliable.env]
+ORCHESTRATOR_PROJECT_ROOT = 'C:\Users\User\Documents\ChatGPT\fsp-platform'
+CONTEXT_MAX_FILES = '15'
+CONTEXT_MAX_BYTES = '100000'
+# Set DEEPSEEK_BASE_URL and DEEPSEEK_MODEL to the existing VERIFIED provider values
+# in this environment block, if your server requires them here.
+# Do not put the API key into this file. In a shell-launched Codex CLI,
+# ensure DEEPSEEK_API_KEY is available in the inherited environment.

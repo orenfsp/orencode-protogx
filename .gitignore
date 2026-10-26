@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+# Next.js
+node_modules/
+.next/
+out/
+# Runtime
+*.sqlite3
+*.log
+coverage/
+*.tsbuildinfo
+.DS_Store
+# editor
+.vscode/
+.idea/
