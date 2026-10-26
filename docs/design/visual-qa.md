@@ -8,7 +8,7 @@ Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numb
 
 ## Executed screenshot review
 
-`cd frontend && npm run visual:qa` captured the reference and running Compose homepage at 1440×900, 768×900, and 390×844 in light and dark themes. The 12 images are in `docs/design/screenshots/`, named `reference-*` and `site-*`. The script waits for the six-discipline table and verifies the dark checkbox state before each dark capture.
+`cd frontend && npm run visual:qa` captured the reference and running Compose homepage at 1440×900, 768×900, and 390×844 in light and dark themes. The 12 images are in `docs/design/screenshots/`, named `reference-*` and `site-*`. The script waits for the six-discipline table and fonts, then verifies the rendered body background in each theme before capture.
 
 - At 1440 px, both use the 268 px indigo sidebar, orange numbered dotted links, a 48 px dotted document rail, Rubik hero, rotated outlined card, and bordered content. The Next.js shell has four live navigation links rather than the reference's seven static federation links because the remaining modules do not exist yet.
 - At 768 and 390 px, both hide the sidebar at the 900 px breakpoint, retain the narrower document rail, and show the four-item fixed bottom navigation. The mobile hero and cards fit the viewport without clipping. The Next.js table is horizontally scrollable; the reference hides a table column at this breakpoint.

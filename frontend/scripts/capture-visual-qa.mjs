@@ -27,13 +27,18 @@ try {
             try { localStorage.setItem("fsp-theme", "dark"); } catch { /* about:blank has no storage */ }
           });
         }
-        await page.goto(target === "reference" ? reference : site, { waitUntil: "networkidle" });
+        await page.goto(target === "reference" ? reference : site, { waitUntil: "domcontentloaded" });
         if (target === "site") await page.locator("#disciplines tbody tr").first().waitFor();
+        await page.evaluate(() => document.fonts.ready);
         if (theme === "dark") {
           if (target === "reference") await page.locator("#th").evaluate((checkbox) => { checkbox.checked = true; });
           else await page.waitForFunction(() => document.querySelector("#th")?.checked);
           if (!(await page.locator("#th").isChecked())) throw new Error(`${target} dark theme did not activate`);
         }
+        await page.waitForFunction(
+          (expected) => getComputedStyle(document.body).backgroundColor === expected,
+          theme === "dark" ? "rgb(28, 27, 69)" : "rgb(255, 255, 255)",
+        );
         await page.evaluate(() => { document.documentElement.style.scrollBehavior = "auto"; window.scrollTo(0, 0); });
         const screenshotPath = path.join(output, `${target}-${viewport.name}-${theme}.png`);
         await page.screenshot({ path: screenshotPath });
