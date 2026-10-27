@@ -10,6 +10,7 @@ from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
 
 class SeedDemoTests(TestCase):
     @override_settings(DEBUG=True)
+    @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "1"}, clear=False)
     def test_seed_is_idempotent_and_keeps_existing_passwords(self):
         call_command("seed_demo", stdout=StringIO())
         self.assertEqual(User.objects.filter(email__endswith="@example.test").count(), 5)
@@ -36,6 +37,7 @@ class SeedDemoTests(TestCase):
         self.assertEqual(TeamDecisionHistory.objects.count(), history_count)
 
     @override_settings(DEBUG=False)
+    @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "1"}, clear=False)
     def test_seed_refuses_non_debug_environment(self):
         with self.assertRaises(CommandError):
             call_command("seed_demo", stdout=StringIO())

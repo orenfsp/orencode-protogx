@@ -29,7 +29,7 @@ class Command(BaseCommand):
     help = "Seed fictional local demo accounts and regional teams without resetting existing passwords"
 
     def handle(self, *args, **options):
-        enabled = os.environ.get("DEMO_SEED_ENABLED", "1" if settings.DEBUG else "0") == "1"
+        enabled = os.environ.get("DEMO_SEED_ENABLED", "0") == "1"
         if not settings.DEBUG or not enabled:
             raise CommandError("seed_demo requires DJANGO_DEBUG=1 and DEMO_SEED_ENABLED=1")
 
