@@ -96,6 +96,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link href="/#disciplines"><b>02</b>Дисциплины</Link>
           <Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><b>03</b>Календарь</Link>
           <Link href="/dashboard"><b>04</b>Кабинет</Link>
+          <Link className={path.startsWith("/ratings") ? "on" : ""} href="/ratings"><b>05</b>Рейтинги</Link>
         </nav>
         <div className="rb">
           {me ? <>

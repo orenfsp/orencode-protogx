@@ -179,4 +179,8 @@ def publish_protocol(competition, actor, correction_reason=""):
         snapshot=snapshot, published_by=actor, correction_reason=correction_reason.strip(),
     )
     audit(actor, "protocol.published", publication, competition=competition, after={"version": version, "correction_reason": publication.correction_reason})
+    # Ratings consume the newly published immutable snapshot immediately. Import
+    # lazily to keep the competitions app independent at module import time.
+    from apps.ratings.services import calculate_ratings, season_for_year
+    calculate_ratings(season=season_for_year(competition.starts_at.year), discipline=competition.discipline, actor=actor)
     return publication
