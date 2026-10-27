@@ -1226,7 +1226,7 @@ components:
       type: object
       properties:
         requested_category:
-          $ref: '#/components/schemas/RequestedCategoryEnum'
+          $ref: '#/components/schemas/JudgeCategoryEnum'
         request_type:
           $ref: '#/components/schemas/RequestTypeEnum'
         comment:
@@ -1236,19 +1236,7 @@ components:
       - request_type
       - requested_category
     CategoryEnum:
-      enum:
-      - youth
-      - third
-      - second
-      - first
-      - all_russian
-      type: string
-      description: |-
-        * `youth` - Юный спортивный судья
-        * `third` - Спортивный судья третьей категории
-        * `second` - Спортивный судья второй категории
-        * `first` - Спортивный судья первой категории
-        * `all_russian` - Спортивный судья всероссийской категории
+      $ref: '#/components/schemas/JudgeCategoryEnum'
     CoachLink:
       type: object
       properties:
@@ -1455,7 +1443,7 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/StatusDc7Enum'
+          $ref: '#/components/schemas/DecisionStatusEnum'
         reason:
           type: string
       required:
@@ -1464,7 +1452,7 @@ components:
       type: object
       properties:
         status:
-          $ref: '#/components/schemas/StatusDc7Enum'
+          $ref: '#/components/schemas/DecisionStatusEnum'
         reason:
           type: string
           maxLength: 1000
@@ -1497,6 +1485,14 @@ components:
       - id
       - order_number
       - valid_until
+    DecisionStatusEnum:
+      enum:
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `approved` - approved
+        * `rejected` - rejected
     Discipline:
       type: object
       properties:
@@ -1576,7 +1572,7 @@ components:
         request_type:
           $ref: '#/components/schemas/RequestTypeEnum'
         requested_category:
-          $ref: '#/components/schemas/RequestedCategoryEnum'
+          $ref: '#/components/schemas/JudgeCategoryEnum'
         requested_category_label:
           type: string
           readOnly: true
@@ -1584,7 +1580,7 @@ components:
           type: string
         status:
           allOf:
-          - $ref: '#/components/schemas/Status41aEnum'
+          - $ref: '#/components/schemas/QualificationReviewStatusEnum'
           default: pending
         decision_reason:
           type: string
@@ -1611,6 +1607,20 @@ components:
       - request_type
       - requested_category
       - requested_category_label
+    JudgeCategoryEnum:
+      enum:
+      - youth
+      - third
+      - second
+      - first
+      - all_russian
+      type: string
+      description: |-
+        * `youth` - Юный спортивный судья
+        * `third` - Спортивный судья третьей категории
+        * `second` - Спортивный судья второй категории
+        * `first` - Спортивный судья первой категории
+        * `all_russian` - Спортивный судья всероссийской категории
     JudgeCategoryHistory:
       type: object
       properties:
@@ -1623,7 +1633,7 @@ components:
           type: string
           readOnly: true
         category:
-          $ref: '#/components/schemas/CategoryEnum'
+          $ref: '#/components/schemas/JudgeCategoryEnum'
         category_label:
           type: string
           readOnly: true
@@ -1931,6 +1941,16 @@ components:
       - name
       - source_verified
       - version
+    QualificationReviewStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - На рассмотрении
+        * `approved` - Присвоено
+        * `rejected` - Отклонено
     QualificationRule:
       type: object
       properties:
@@ -1943,7 +1963,7 @@ components:
           type: string
           readOnly: true
         rank:
-          $ref: '#/components/schemas/RankEnum'
+          $ref: '#/components/schemas/SportRankEnum'
         rank_label:
           type: string
           readOnly: true
@@ -2002,7 +2022,7 @@ components:
         request_type:
           $ref: '#/components/schemas/RequestTypeEnum'
         requested_rank:
-          $ref: '#/components/schemas/RequestedRankEnum'
+          $ref: '#/components/schemas/SportRankEnum'
         requested_rank_label:
           type: string
           readOnly: true
@@ -2036,7 +2056,7 @@ components:
           type: string
         status:
           allOf:
-          - $ref: '#/components/schemas/Status41aEnum'
+          - $ref: '#/components/schemas/QualificationReviewStatusEnum'
           default: pending
         decision_reason:
           type: string
@@ -2080,7 +2100,7 @@ components:
           type: integer
           minimum: 1
         requested_rank:
-          $ref: '#/components/schemas/RequestedRankEnum'
+          $ref: '#/components/schemas/SportRankEnum'
         request_type:
           $ref: '#/components/schemas/RequestTypeEnum'
         comment:
@@ -2091,27 +2111,7 @@ components:
       - requested_rank
       - result
     RankEnum:
-      enum:
-      - youth_3
-      - youth_2
-      - youth_1
-      - adult_3
-      - adult_2
-      - adult_1
-      - cms
-      - ms
-      - msmk
-      type: string
-      description: |-
-        * `youth_3` - III юношеский разряд
-        * `youth_2` - II юношеский разряд
-        * `youth_1` - I юношеский разряд
-        * `adult_3` - III спортивный разряд
-        * `adult_2` - II спортивный разряд
-        * `adult_1` - I спортивный разряд
-        * `cms` - Кандидат в мастера спорта
-        * `ms` - Мастер спорта России
-        * `msmk` - Мастер спорта России международного класса
+      $ref: '#/components/schemas/SportRankEnum'
     RankHint:
       type: object
       properties:
@@ -2251,41 +2251,9 @@ components:
         * `assign` - Присвоение
         * `confirm` - Подтверждение
     RequestedCategoryEnum:
-      enum:
-      - youth
-      - third
-      - second
-      - first
-      - all_russian
-      type: string
-      description: |-
-        * `youth` - Юный спортивный судья
-        * `third` - Спортивный судья третьей категории
-        * `second` - Спортивный судья второй категории
-        * `first` - Спортивный судья первой категории
-        * `all_russian` - Спортивный судья всероссийской категории
+      $ref: '#/components/schemas/JudgeCategoryEnum'
     RequestedRankEnum:
-      enum:
-      - youth_3
-      - youth_2
-      - youth_1
-      - adult_3
-      - adult_2
-      - adult_1
-      - cms
-      - ms
-      - msmk
-      type: string
-      description: |-
-        * `youth_3` - III юношеский разряд
-        * `youth_2` - II юношеский разряд
-        * `youth_1` - I юношеский разряд
-        * `adult_3` - III спортивный разряд
-        * `adult_2` - II спортивный разряд
-        * `adult_1` - I спортивный разряд
-        * `cms` - Кандидат в мастера спорта
-        * `ms` - Мастер спорта России
-        * `msmk` - Мастер спорта России международного класса
+      $ref: '#/components/schemas/SportRankEnum'
     Result:
       type: object
       properties:
@@ -2356,6 +2324,28 @@ components:
       description: |-
         * `ekp` - Единый календарный план
         * `regional` - Региональный календарь
+    SportRankEnum:
+      enum:
+      - youth_3
+      - youth_2
+      - youth_1
+      - adult_3
+      - adult_2
+      - adult_1
+      - cms
+      - ms
+      - msmk
+      type: string
+      description: |-
+        * `youth_3` - III юношеский разряд
+        * `youth_2` - II юношеский разряд
+        * `youth_1` - I юношеский разряд
+        * `adult_3` - III спортивный разряд
+        * `adult_2` - II спортивный разряд
+        * `adult_1` - I спортивный разряд
+        * `cms` - Кандидат в мастера спорта
+        * `ms` - Мастер спорта России
+        * `msmk` - Мастер спорта России международного класса
     SportRankHistory:
       type: object
       properties:
@@ -2373,7 +2363,7 @@ components:
           type: string
           readOnly: true
         rank:
-          $ref: '#/components/schemas/RankEnum'
+          $ref: '#/components/schemas/SportRankEnum'
         rank_label:
           type: string
           readOnly: true
@@ -2461,23 +2451,9 @@ components:
         * `published` - Опубликовано
         * `closed` - Завершено
     Status41aEnum:
-      enum:
-      - pending
-      - approved
-      - rejected
-      type: string
-      description: |-
-        * `pending` - На рассмотрении
-        * `approved` - Присвоено
-        * `rejected` - Отклонено
+      $ref: '#/components/schemas/QualificationReviewStatusEnum'
     StatusDc7Enum:
-      enum:
-      - approved
-      - rejected
-      type: string
-      description: |-
-        * `approved` - approved
-        * `rejected` - rejected
+      $ref: '#/components/schemas/DecisionStatusEnum'
     UserChoice:
       type: object
       properties:

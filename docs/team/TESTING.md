@@ -10,6 +10,7 @@
 | `docker compose exec -T api python manage.py makemigrations --check --dry-run` | drift моделей/миграций | проверено: `No changes detected`, exit 0 |
 | `docker compose exec -T api python manage.py spectacular --validate --file /tmp/fsp-doc-schema.yaml` | сгенерировать/валидировать OpenAPI внутри контейнера | проверено: exit 0; сохранённый `docs/openapi.yaml` сверяйте отдельно по paths/operations |
 | `python scripts/check_design_contract.py` | SHA-256 HTML и точный extracted CSS | проверено: `PASS`, exit 0 |
+| `python scripts/check_openapi_schema.py` | warning-free генерация OpenAPI и сравнение с `docs/openapi.yaml` | проверено в изолированном Python-окружении PR #1: `PASS`, exit 0 |
 | `docker compose exec -T api python manage.py migrate` | применить миграции | команда присутствует в startup и исторически проверена; отдельно в этом спринте не запускалась |
 | `docker compose exec -T api python manage.py seed_demo` | фиктивные аккаунты | исторически проверена; отдельно в этом спринте не запускалась |
 | `python -m pip install -r backend/requirements.txt` | локальные Python-зависимости | команда подтверждена `requirements.txt`, но в этом спринте не выполнялась; Compose уже собран |
