@@ -182,8 +182,8 @@ class Command(BaseCommand):
         AthleteRestriction.objects.get_or_create(
             athlete=athlete3,
             kind=AthleteRestriction.Kind.SUSPENSION,
-            starts_at=date(2026, 12, 1),
-            ends_at=date(2026, 12, 10),
+            starts_at=date(2024, 12, 1),
+            ends_at=date(2024, 12, 10),
             defaults={"created_by": federation, "reason_private": "Демо-период ограничения; не действует на весенние протоколы."},
         )
         CoachAthleteLink.objects.get_or_create(

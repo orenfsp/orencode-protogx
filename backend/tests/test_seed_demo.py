@@ -79,3 +79,10 @@ class SeedDemoTests(TestCase):
     def test_seed_requires_explicit_opt_in_when_disabled(self):
         with self.assertRaises(CommandError):
             call_command("seed_demo", stdout=StringIO())
+
+    @override_settings(DEBUG=True)
+    @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "1", "DEMO_ENVIRONMENT": "staging"}, clear=False)
+    def test_seed_refuses_staging_marker(self):
+        with self.assertRaises(CommandError):
+            call_command("seed_demo", stdout=StringIO())
+        self.assertFalse(User.objects.filter(email__startswith="demo.").exists())
