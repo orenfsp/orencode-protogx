@@ -1,5 +1,9 @@
 # DeepSeek delegation log
 
+## Документационный спринт — 2026-10-27
+
+После создания `docs/team/` Codex передал в `deepseek_reliable.review_code` только четыре новых несекретных документа (`API_CONTRACTS.md`, `CURRENT_STATUS.md`, `AI_AGENT_RULES.md`, `TESTING.md`) для ограниченного read-only review. Ответ: `status: success`, reported `model: deepseek-v4-pro`, `requested_model: deepseek-v4-pro`, `model_mismatch: false`, `files_written: false`, `tests_executed: false`, request ID `dbef3ed5-36be-478d-a296-3c8338b5a381`. Предложения о публичной видимости шаблонов/черновиков, повторном POST результата и разделении исторических/текущих проверок сверены с `views.py`, `services.py`, тестами и уточнены в документации. Требование указать единственный HTTP статус анонимного dashboard не принято: текущий тест явно допускает 401 или 403, поэтому записана эта фактическая граница. MCP не изменял файлы и не запускал тесты.
+
 | Task | Model | Result | Validation |
 | --- | --- | --- | --- |
 | Read `AGENTS.md` and reference HTML (initial requested check) | none | Rejected by automatic approval review: transmitting project instructions and design source to an unverified external destination was considered unacceptable risk. | No files sent; no implementation delegated. |

@@ -1,5 +1,7 @@
 # FSP OrenKod 2026
 
+Для новых разработчиков и независимых AI-ассистентов: [документация команды](docs/team/README.md).
+
 Phase 2 competition workflow on the Phase 1 platform. The mandatory design source is `docs/design/fsp-reference.html`; it is unchanged. Scope, API contracts and acceptance evidence are recorded in `docs/phase2-architecture.md`, `docs/openapi.yaml` and `docs/acceptance-matrix.md`.
 
 ## Run with Docker Compose
