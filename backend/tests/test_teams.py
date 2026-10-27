@@ -46,6 +46,8 @@ class RegionalTeamApiTests(TestCase):
             document_xml = archive.read("word/document.xml").decode("utf-8")
         self.assertIn("Демо-команда Оренбург", document_xml)
         self.assertIn("Демо Спортсмен Два", document_xml)
+        self.assertIn("w:tblHeader", document_xml)
+        self.assertIn("w:cantSplit", document_xml)
         self.assertFalse(team.decision_history.filter(action="published").exists())
         published = self.client.post(f"/api/v1/teams/{team.pk}/publish/", {}, format="json")
         self.assertEqual(published.status_code, 200)

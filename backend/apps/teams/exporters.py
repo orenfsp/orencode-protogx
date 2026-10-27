@@ -3,6 +3,8 @@ from xml.sax.saxutils import escape
 
 from django.utils import timezone
 from docx import Document
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -45,10 +47,22 @@ def render_team_docx(team, *, draft=False):
         doc.add_paragraph("Проект: предлагается утвердить приведённый ниже состав. Документ не является подписанным официальным приказом; форма требует проверки.")
     table = doc.add_table(rows=1, cols=4)
     table.style = "Table Grid"
+    table.autofit = False
+    widths = (Cm(1.2), Cm(8.0), Cm(5.4), Cm(2.6))
+    for column, width in zip(table.columns, widths):
+        column.width = width
+    header_properties = table.rows[0]._tr.get_or_add_trPr()
+    repeat = OxmlElement("w:tblHeader")
+    repeat.set(qn("w:val"), "true")
+    header_properties.append(repeat)
     for cell, text in zip(table.rows[0].cells, ("№", "Спортсмен", "Спортивный разряд", "Рейтинг")):
         cell.text = text
     for index, membership in enumerate(_rows(team), 1):
-        cells = table.add_row().cells
+        row = table.add_row()
+        row._tr.get_or_add_trPr().append(OxmlElement("w:cantSplit"))
+        cells = row.cells
+        for cell, width in zip(cells, widths):
+            cell.width = width
         cells[0].text = str(index)
         cells[1].text = membership.athlete.full_name
         cells[2].text = _rank(team, membership.athlete)

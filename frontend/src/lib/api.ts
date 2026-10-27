@@ -23,6 +23,10 @@ export type RegionalTeam = { id: number; name: string; region: string; status: "
 export type TeamCandidate = { id: number; full_name: string; email: string; eligible: boolean; selected: boolean; eligibility: { age: number | null; consent: boolean; guardian_verified: boolean; restriction: string | null; rating_score: string | null }; rating: { score: string; base_score: string; prize_count: number } | null };
 export type TeamOptions = { seasons: { id: number; year: number; name: string }[]; disciplines: Discipline[]; age_groups: AgeGroup[] };
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) { super(message); }
+}
+
 async function csrfToken(signal?: AbortSignal | null): Promise<string> {
   const response = await fetch("/api/v1/auth/csrf/", { credentials: "include", signal });
   if (!response.ok) throw new Error("Не удалось подготовить запрос");
@@ -40,13 +44,13 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(typeof error.detail === "string" ? error.detail : JSON.stringify(error));
+    throw new ApiError(typeof error.detail === "string" ? error.detail : JSON.stringify(error), response.status);
   }
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
 export async function downloadDocument(path: string): Promise<Blob> {
   const response = await fetch(`/api/v1/${path}`, { credentials: "include" });
-  if (!response.ok) throw new Error("Не удалось скачать документ");
+  if (!response.ok) throw new ApiError("Не удалось скачать документ", response.status);
   return response.blob();
 }

@@ -49,3 +49,7 @@ The `/teams` page reuses the numbered sidebar, document rail, orange actions, bo
 ## Phase 3.2 document and live workflow review — 2026-10-28
 
 On an isolated PostgreSQL Compose project, the live `teams-live.spec.ts` scenario logged in, opened rating provenance, created a team, manually selected and reordered athletes, reloaded the persisted roster, finalized it and downloaded all four documents. The roster and draft-order PDFs and both DOCX files converted with LibreOffice were rendered using PDFium. Their single pages were inspected: Cyrillic names, ranks, team metadata, order and signature placeholders were visible without table clipping for this two-athlete sample. Longer rosters and names remain a separate pagination/overflow gate. The draft form is a demonstration and requires regulatory review against a primary source.
+
+## Phase 3.2 stress review — 2026-10-28
+
+Roster and draft-order PDF and DOCX were generated for 2, 15 and 50 fictional athletes with long Cyrillic names. All PDF pages and LibreOffice-rendered DOCX pages were visually inspected with PDFium. The initial DOCX split table rows across pages and omitted repeating headers; the exporter now prevents row splitting, repeats headers and widens the name column. After correction, all first and last names were present and the reviewed pages did not clip rows. The current project has no athlete-organization model or organization column, so long organization names were not tested and remain an acceptance gap. The draft form still requires primary-source regulatory review.

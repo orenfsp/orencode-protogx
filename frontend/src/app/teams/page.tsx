@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { api, downloadDocument, RegionalTeam, TeamCandidate, TeamOptions } from "@/lib/api";
+import { api, ApiError, downloadDocument, RegionalTeam, TeamCandidate, TeamOptions } from "@/lib/api";
 import { useCurrentUser } from "@/components/AppShell";
 
 export default function TeamsPage() {
@@ -20,7 +20,13 @@ function TeamsWorkspace() {
   const [ageGroup, setAgeGroup] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
   const [teamName, setTeamName] = useState("Новая региональная команда");
+
+  function handleFailure(failure: unknown, fallback: string) {
+    if (failure instanceof ApiError && (failure.status === 401 || failure.status === 403)) setAccessDenied(true);
+    setError(failure instanceof Error ? failure.message : fallback);
+  }
 
   async function loadTeams() {
     const params = new URLSearchParams();
@@ -38,7 +44,7 @@ function TeamsWorkspace() {
       if (value.seasons[0]) setSeason(String(value.seasons[0].year));
       if (value.disciplines[0]) setDiscipline(value.disciplines[0].code);
       if (value.age_groups[0]) setAgeGroup(String(value.age_groups[0].id));
-    }).catch((failure) => setError(failure instanceof Error ? failure.message : "Не удалось загрузить справочники"));
+    }).catch((failure) => handleFailure(failure, "Не удалось загрузить справочники"));
   }, []);
 
   useEffect(() => {
@@ -54,13 +60,13 @@ function TeamsWorkspace() {
         setTeams(value);
         setSelected((current) => current ? value.find((item) => item.id === current.id) ?? null : null);
       })
-      .catch((failure) => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : "Не удалось загрузить команды"); });
+      .catch((failure) => { if (!controller.signal.aborted) handleFailure(failure, "Не удалось загрузить команды"); });
     return () => controller.abort();
   }, [options, season, discipline, ageGroup]);
 
   async function openTeam(team: RegionalTeam) {
     setSelected(team);
-    try { setCandidates(await api<TeamCandidate[]>(`teams/${team.id}/candidates/`)); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось загрузить кандидатов"); }
+    try { setCandidates(await api<TeamCandidate[]>(`teams/${team.id}/candidates/`)); } catch (failure) { handleFailure(failure, "Не удалось загрузить кандидатов"); }
   }
 
   async function createTeam() {
@@ -69,19 +75,19 @@ function TeamsWorkspace() {
     try {
       const created = await api<RegionalTeam>("teams/", { method: "POST", body: JSON.stringify({ name: teamName, season: options.seasons.find((item) => String(item.year) === season)?.id, discipline: options.disciplines.find((item) => item.code === discipline)?.id, age_group: Number(ageGroup), region: "Оренбургская область" }) });
       await loadTeams(); await openTeam(created);
-    } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось создать команду"); } finally { setBusy(false); }
+    } catch (failure) { handleFailure(failure, "Не удалось создать команду"); } finally { setBusy(false); }
   }
 
   async function selectCandidate(candidate: TeamCandidate) {
     if (!selected || !candidate.eligible || candidate.selected) return;
     setBusy(true); setError("");
-    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/members/`, { method: "POST", body: JSON.stringify({ athlete: candidate.id }) }); setSelected(updated); setCandidates(await api<TeamCandidate[]>(`teams/${selected.id}/candidates/`)); await loadTeams(); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось сохранить выбор"); } finally { setBusy(false); }
+    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/members/`, { method: "POST", body: JSON.stringify({ athlete: candidate.id }) }); setSelected(updated); setCandidates(await api<TeamCandidate[]>(`teams/${selected.id}/candidates/`)); await loadTeams(); } catch (failure) { handleFailure(failure, "Не удалось сохранить выбор"); } finally { setBusy(false); }
   }
 
   async function removeMember(memberId: number) {
     if (!selected) return;
     setBusy(true);
-    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/members/${memberId}/remove/`, { method: "POST", body: JSON.stringify({ reason: "Ручное решение федерации" }) }); setSelected(updated); setCandidates(await api<TeamCandidate[]>(`teams/${selected.id}/candidates/`)); await loadTeams(); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось снять участника"); } finally { setBusy(false); }
+    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/members/${memberId}/remove/`, { method: "POST", body: JSON.stringify({ reason: "Ручное решение федерации" }) }); setSelected(updated); setCandidates(await api<TeamCandidate[]>(`teams/${selected.id}/candidates/`)); await loadTeams(); } catch (failure) { handleFailure(failure, "Не удалось снять участника"); } finally { setBusy(false); }
   }
 
   async function moveMember(index: number, direction: -1 | 1) {
@@ -90,21 +96,22 @@ function TeamsWorkspace() {
     if (target < 0 || target >= members.length) return;
     [members[index], members[target]] = [members[target], members[index]];
     setBusy(true);
-    try { await api(`teams/${selected.id}/reorder/`, { method: "POST", body: JSON.stringify({ member_ids: members.map((item) => item.id) }) }); await openTeam(selected); await loadTeams(); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось изменить порядок"); } finally { setBusy(false); }
+    try { await api(`teams/${selected.id}/reorder/`, { method: "POST", body: JSON.stringify({ member_ids: members.map((item) => item.id) }) }); await openTeam(selected); await loadTeams(); } catch (failure) { handleFailure(failure, "Не удалось изменить порядок"); } finally { setBusy(false); }
   }
 
   async function download(kind: "roster" | "draft-order", format: "pdf" | "docx") {
     if (!selected) return;
-    try { const blob = await downloadDocument(`teams/${selected.id}/documents/?type=${kind}&document_format=${format}`); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `team-${selected.id}-${kind}.${format}`; link.click(); URL.revokeObjectURL(url); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось скачать документ"); }
+    try { const blob = await downloadDocument(`teams/${selected.id}/documents/?type=${kind}&document_format=${format}`); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `team-${selected.id}-${kind}.${format}`; link.click(); URL.revokeObjectURL(url); } catch (failure) { handleFailure(failure, "Не удалось скачать документ"); }
   }
 
   async function publishSelected() {
     if (!selected) return;
     setBusy(true); setError("");
-    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/publish/`, { method: "POST", body: JSON.stringify({}) }); setSelected(updated); await loadTeams(); } catch (failure) { setError(failure instanceof Error ? failure.message : "Не удалось утвердить состав"); } finally { setBusy(false); }
+    try { const updated = await api<RegionalTeam>(`teams/${selected.id}/publish/`, { method: "POST", body: JSON.stringify({}) }); setSelected(updated); await loadTeams(); } catch (failure) { handleFailure(failure, "Не удалось утвердить состав"); } finally { setBusy(false); }
   }
 
   const selectedIds = useMemo(() => new Set(selected?.members.map((item) => item.athlete) ?? []), [selected]);
+  if (accessDenied) return <p className="note wn" role="alert">Доступ к командам недоступен. Войдите снова или выберите роль федерации.</p>;
   return <>
     <header className="dashboard-head"><span className="kick">ФЕДЕРАЦИЯ · ручное решение состава</span><h1>Региональные команды</h1><p className="lead">Рейтинг и ограничения показывают контекст. Состав, порядок и выпуск документов утверждает представитель федерации вручную.</p></header>
     {error && <div className="note wn workflow-spaced" role="alert">{error}</div>}
