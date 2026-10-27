@@ -124,7 +124,7 @@ def calculate_ratings(*, season, discipline, actor=None):
             if not point_rule:
                 continue
             athlete_id = row.get("athlete_id")
-            if not athlete_id or active_restriction(athlete_id):
+            if not athlete_id or active_restriction(athlete_id, competition.starts_at.date()):
                 continue
             athlete_totals = totals.setdefault(athlete_id, {"base": Decimal("0"), "prizes": 0, "rows": []})
             athlete_totals["base"] += Decimal(str(point_rule.points))

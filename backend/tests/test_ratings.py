@@ -5,13 +5,15 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from apps.accounts.models import User, UserRole
+from apps.accounts.models import PersonalDataConsent, User, UserRole
 from apps.catalogs.models import Discipline
 from apps.competitions.models import (
     AgeGroup,
+    Application,
     Competition,
     ProtocolPublication,
     ProtocolTemplate,
+    Result,
 )
 from apps.ratings.models import (
     AthleteRestriction,
@@ -31,6 +33,8 @@ class RatingDomainTests(TestCase):
         self.other_discipline = Discipline.objects.get(code="product")
         self.age_group = AgeGroup.objects.first()
         self.template = ProtocolTemplate.objects.filter(discipline=self.discipline).first()
+        PersonalDataConsent.objects.create(user=self.athlete, text_version="test-v1")
+        PersonalDataConsent.objects.create(user=self.second, text_version="test-v1")
 
     def user(self, email, role):
         user = User.objects.create_user(email=f"{email}@test.invalid", password="SafePassphrase2048!", full_name=email.title(), date_of_birth=date(2000, 1, 1))
@@ -89,7 +93,8 @@ class RatingDomainTests(TestCase):
         calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
         self.assertTrue(self.athlete.ratings.filter(season=season, discipline=self.discipline).exists())
         self.assertFalse(self.athlete.ratings.filter(season=other_season).exists())
-        AthleteRestriction.objects.create(athlete=self.athlete, kind="suspension", starts_at=timezone.localdate() - timedelta(days=1), ends_at=timezone.localdate() + timedelta(days=1), created_by=self.federation)
+        event_day = competition.starts_at.date()
+        AthleteRestriction.objects.create(athlete=self.athlete, kind="suspension", starts_at=event_day - timedelta(days=1), ends_at=event_day + timedelta(days=1), created_by=self.federation)
         calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
         self.assertFalse(self.athlete.ratings.filter(season=season, discipline=self.discipline).exists())
 
@@ -97,10 +102,41 @@ class RatingDomainTests(TestCase):
         season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
         competition = self.competition("Regional")
         self.publish(competition, [self.row(self.athlete, 1)])
-        AthleteRestriction.objects.create(athlete=self.athlete, kind="suspension", starts_at=timezone.localdate() + timedelta(days=2), ends_at=timezone.localdate() + timedelta(days=3), created_by=self.federation)
-        AthleteRestriction.objects.create(athlete=self.second, kind="disqualification", starts_at=timezone.localdate() - timedelta(days=3), ends_at=timezone.localdate() - timedelta(days=1), created_by=self.federation)
+        event_day = competition.starts_at.date()
+        AthleteRestriction.objects.create(athlete=self.athlete, kind="suspension", starts_at=event_day + timedelta(days=2), ends_at=event_day + timedelta(days=3), created_by=self.federation)
+        AthleteRestriction.objects.create(athlete=self.second, kind="disqualification", starts_at=event_day - timedelta(days=3), ends_at=event_day - timedelta(days=1), created_by=self.federation)
         calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
         self.assertTrue(self.athlete.ratings.filter(season=season).exists())
+
+    def test_protocol_publication_recalculates_rating_from_its_snapshot(self):
+        season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
+        competition = self.competition("Regional")
+        application = Application.objects.create(
+            competition=competition, athlete=self.athlete, age_group=self.age_group,
+            submitted_by=self.athlete, status=Application.Status.APPROVED,
+        )
+        Result.objects.create(
+            application=application, status=Result.Status.CLASSIFIED, place=1, score="99",
+            metrics={}, validated_by=self.federation, updated_by=self.federation,
+        )
+        from apps.competitions.services import publish_protocol
+        publish_protocol(competition, self.federation)
+        rating = self.athlete.ratings.get(season=season, discipline=self.discipline)
+        self.assertEqual(rating.base_score, Decimal("40.00"))
+        self.assertEqual(rating.rating_score, Decimal("40.00"))
+
+    def test_ratings_api_returns_breakdown_and_deterministic_placement(self):
+        competition = self.competition("Regional")
+        self.publish(competition, [self.row(self.athlete, 1)])
+        season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        client = APIClient()
+        response = client.get("/api/v1/ratings/?season=2026&discipline=algorithmic&page=1&page_size=10")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total"], 1)
+        self.assertEqual(response.data["items"][0]["placement"], 1)
+        self.assertEqual(response.data["items"][0]["breakdown"][0]["publication_version"], 1)
+        self.assertEqual(response.data["items"][0]["breakdown"][0]["awarded_points"], "40.00")
 
     def test_rule_changes_are_federation_only_and_public_api_hides_restriction_reason(self):
         client = APIClient()
