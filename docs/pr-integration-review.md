@@ -6,7 +6,7 @@ PR #2 was merged with explicit authorization as `e3903fbfe14420d83e9043b74485420
 
 The integrated PostgreSQL suite passed 55/55. The production build, TypeScript, ESLint, Ruff, migration consistency, warning-free OpenAPI validation and checked-in schema comparison, and design-contract check passed. Post-merge browser verification passed the targeted role/navigation and stale-request tests, 7/7 sequential live authentication/dashboard tests, and the full competition-to-qualification workflow. A separate regression for logout during a stalled CSRF request also passed. The original reference HTML remains unchanged.
 
-Final `main`: `5291a6dd8b4b6a5bea6e3829e50c9508d5f1d06e`. PR #1 merged head: `d283a54f545ea6466e34ffd2318e03ae01024469`. PR #2 merged head: `ebe2189b39487db053378b94cfd69f40c5f3bfa1`.
+PR #1 merge commit: `5291a6dd8b4b6a5bea6e3829e50c9508d5f1d06e`. The current `main` tip includes the documentation follow-up below. PR #1 merged head: `d283a54f545ea6466e34ffd2318e03ae01024469`. PR #2 merged head: `ebe2189b39487db053378b94cfd69f40c5f3bfa1`.
 
 ## PR #1 — qualifications
 
