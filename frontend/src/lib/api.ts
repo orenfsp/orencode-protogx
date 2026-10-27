@@ -1,7 +1,19 @@
 export type Role = "federation" | "athlete" | "coach" | "judge";
 export type Me = { id: number; email: string; full_name: string; roles: Role[]; active_role: Role | null };
-export type Discipline = { code: string; name: string };
+export type Discipline = { id: number; code: string; name: string };
 export type Dashboard = { role: Role; metrics: { label: string; value: string }[]; guardian_status: string | null };
+export type AgeGroup = { id: number; name: string; min_age: number; max_age: number };
+export type CalendarEntry = { id: number; source: "ekp" | "regional"; entry_number: string; title: string; year: number; reference_url: string };
+export type MetricField = { key: string; label: string; type: "number" | "string"; required: boolean };
+export type ProtocolTemplate = { id: number; discipline: number; discipline_code: string; version: number; name: string; competition_type: string; rule_version: string; effective_from: string | null; metric_fields: MetricField[]; columns: string[]; sections: string[]; signature_roles: string[]; sort: { key: string; direction: "asc" | "desc" }; source_url: string; source_verified: boolean; source_note: string };
+export type CompetitionStage = { order: number; name: string; format: "online" | "in_person" | "hybrid"; starts_at: string; ends_at: string };
+export type Competition = { id: number; title: string; discipline: number; discipline_name: string; age_groups: number[]; age_group_details: AgeGroup[]; level: string; competition_type: string; format: "online" | "in_person" | "hybrid"; starts_at: string; ends_at: string; registration_deadline: string; age_reference_date: string; allow_ties: boolean; location: string; regulations: string; calendar_entry: number | null; template: number; state: "draft" | "published" | "closed"; stages: CompetitionStage[] };
+export type Application = { id: number; competition: number; athlete: number; athlete_name: string; age_group: number; submitted_by: number; status: "pending" | "approved" | "rejected"; decision_reason: string };
+export type JudgeAssignment = { id: number; competition: number; judge: number; judge_name: string; role_label: string };
+export type Result = { id: number; application: number; status: "classified" | "no_show" | "unclassified" | "disqualified"; place: number | null; score: string | null; metrics: Record<string, string | number>; validated_by: number | null; updated_by: number; updated_at: string };
+export type ProtocolSnapshot = { competition_id: number; competition_title: string; discipline: string; template_id: number; template_version: number; source_verified: boolean; source_note: string; source_url: string; sections: string[]; signature_roles: string[]; sort: { key: string; direction: string }; metadata: { level: string; competition_type: string; format: string; starts_at: string; ends_at: string; age_reference_date: string; location: string; calendar_entry: string | null; stages: CompetitionStage[] }; judges: { name: string; role: string }[]; columns: { key: string; label: string }[]; rows: (Record<string, string | number | null> & { application_id: number; athlete_id: number; status: string })[] };
+export type ProtocolPublication = { id: number; version: number; snapshot: ProtocolSnapshot; correction_reason: string; published_at: string };
+export type CoachLink = { id: number; coach: number; coach_name: string; athlete: number | null; athlete_name: string; discipline: number; status: "pending" | "confirmed" | "rejected" };
 
 async function csrfToken(): Promise<string> {
   const response = await fetch("/api/v1/auth/csrf/", { credentials: "include" });

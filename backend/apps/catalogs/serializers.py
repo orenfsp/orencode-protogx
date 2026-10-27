@@ -6,4 +6,4 @@ from .models import Discipline
 class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
-        fields = ("code", "name")
+        fields = ("id", "code", "name")

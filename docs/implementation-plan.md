@@ -1,8 +1,8 @@
 # FSP OrenKod 2026 implementation plan
 
-The functional contract is `docs/MASTER_PROMPT.md`; the visual contract is the unchanged `docs/design/fsp-reference.html`. This document freezes Phase 1 interfaces and organizes delivery. It does not claim that later workflows exist.
+The functional contract is `docs/MASTER_PROMPT.md`; the visual contract is the unchanged `docs/design/fsp-reference.html`. This document freezes Phase 1 interfaces and organizes delivery. Phase 2's implemented competition contract is in `docs/phase2-architecture.md`.
 
-**Phase 1 completion (2026-10-27):** the four role dashboard foundations, mobile theme/role controls, expanded visual QA, and clean-volume startup gate are verified. `GET /api/v1/auth/dashboard/` is the new role-checked read contract in `docs/openapi.yaml`. The initial Phase 2 competition workflow is planned in `docs/phase2-plan.md`; its domain models and endpoints are not implemented yet.
+**Phase 1 completion (2026-10-27):** the four role dashboard foundations, mobile theme/role controls, expanded visual QA, and clean-volume startup gate are verified. `GET /api/v1/auth/dashboard/` is the role-checked read contract in `docs/openapi.yaml`. **Phase 2 (2026-10-27):** competition, application, judge, result, protocol and history contracts are implemented; see `docs/phase2-architecture.md`.
 
 ## Architecture and first vertical slice
 
@@ -15,7 +15,7 @@ The functional contract is `docs/MASTER_PROMPT.md`; the visual contract is the u
 
 `User` is a custom email-identified model. `UserRole(user, role)` stores multiple assigned roles; `active_role` lives in the server session and is checked against these assignments on every protected request. `PersonalDataConsent` records version and time. `Guardian` stores restricted guardian details and confirmation evidence for a minor. `Discipline` is a catalog record; its six initial values are inserted by data migration. Registration does not make legal claims about the sufficiency of online guardian verification.
 
-The next domain slices use `Organization`, `AthleteProfile`, `AthleteDiscipline` with dated participation, `CoachAthleteLink` with explicit confirmation, `Competition`/`CompetitionStage`/`CompetitionCalendarEntry`, `CompetitionApplication`, `JudgeAssignment`, `CompetitionResult`/`ResultMetric`, `DocumentTemplate`/`GeneratedDocument`, `RankApplication`, `JudgeCategoryApplication`, `RatingRule`, `RegionalTeam`/`TeamMember`, `Notification`, and `AuditEvent`. Results must reference approved applications. Published protocol versions must retain the template version and include every approved participant. Ratings derive from the same published results, and manual team membership remains separate from ratings.
+Phase 2 adds `AgeGroup`, `CalendarEntry`, `CoachAthleteLink`, `Competition`/`CompetitionStage`, `Application`, `JudgeAssignment`, `Result`, `ProtocolTemplate`/`ProtocolPublication`, `AuditEvent`, and published-protocol PDF/DOCX export. Later domain slices use `Organization`, `AthleteProfile`, dated `AthleteDiscipline`, `RankApplication`, `JudgeCategoryApplication`, `RatingRule`, `RegionalTeam`/`TeamMember`, `Notification`, and other document exports including XLSX. Ratings must derive from published results, and manual team membership remains separate from ratings.
 
 ## Initial API contract
 
@@ -30,15 +30,15 @@ All responses are JSON, except OpenAPI. Error responses use DRF validation error
 | POST | `/api/v1/auth/logout/` | — | 204 |
 | GET | `/api/v1/auth/me/` | — | `MeDTO` |
 | POST | `/api/v1/auth/active-role/` | `{ "role": "athlete" }` | `MeDTO` |
-| GET | `/api/v1/disciplines/` | — | `[{ "code", "name" }]` |
+| GET | `/api/v1/disciplines/` | — | `[{ "id", "code", "name" }]` |
 
-`MeDTO = { id, email, full_name, roles: Role[], active_role: Role | null }`; roles are `federation`, `athlete`, `coach`, `judge`. Guardian data is absent from this DTO. Future endpoints in Master Prompt §5 must be versioned and reviewed before frontend adoption.
+`MeDTO = { id, email, full_name, roles: Role[], active_role: Role | null }`; roles are `federation`, `athlete`, `coach`, `judge`. Guardian data is absent from this DTO. The current Phase 2 endpoints are generated in `docs/openapi.yaml`.
 
 ## Phases and dependencies
 
 1. **Phase 1 — foundation:** Django/Next/Compose, schema, user/roles/consent, catalog, reference-faithful shared shell, auth UI, backend tests, typecheck/build, startup verification.
-2. **Phase 2 — first full workflow:** competition creation, eligibility, athlete application, federation moderation, judge assignment, result entry, configurable protocol preview/publication, athlete history. This is the first full end-to-end gate.
-3. **Phase 3 — domain breadth:** coach links, ranks and judge categories, rating rules and manual team selection, two-year participation analytics, exports, notifications, auditing.
+2. **Phase 2 — first full workflow (implemented):** competition creation, eligibility, athlete/confirmed coach application, federation moderation, judge assignment, result entry, configurable protocol preview/publication, athlete history, scoped audit.
+3. **Phase 3 — domain breadth:** ranks and judge categories, rating rules and manual team selection, two-year participation analytics, exports, notifications, wider audit.
 4. **Phase 4 — stabilization:** full role dashboards, seed data with fictional identities, security/object tests, visual screenshots at 1440/768/390px in both themes, reproducible startup and demo.
 
 ## Five ownership tracks

@@ -1,0 +1,78 @@
+import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
+
+test("competition application, moderation, result, protocol and athlete history", async ({ page, browser }) => {
+  test.setTimeout(240000);
+  page.setDefaultTimeout(10000);
+  const title = `Тестовый турнир ${Date.now()}`;
+  const asLocal = (days: number) => {
+    const date = new Date(Date.now() + days * 86400000);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  };
+  await signIn(page, "demo.federation@example.test");
+  await page.goto("/competitions");
+  await page.getByRole("button", { name: "Создать соревнование" }).click();
+  const editor = page.locator("form.workflow-form").first();
+  await editor.getByLabel("Название", { exact: true }).fill(title);
+  await editor.locator("select").nth(0).selectOption({ label: "Программирование алгоритмическое" });
+  await editor.locator("select").nth(1).selectOption({ index: 1 });
+  await editor.getByLabel("Уровень").fill("Демо");
+  await editor.getByLabel("Вид соревнования").fill("Тестовый турнир");
+  await editor.getByLabel("Место").fill("Тестовая площадка");
+  await editor.getByLabel("Начало", { exact: true }).fill(asLocal(10));
+  await editor.getByLabel("Конец", { exact: true }).fill(asLocal(11));
+  await editor.getByLabel("Приём заявок до").fill(asLocal(5));
+  await editor.getByLabel("Возраст определяется на дату").fill(asLocal(10).slice(0, 10));
+  await editor.getByLabel("Демо: 18+").check();
+  await editor.getByLabel("Положение").fill("Вымышленное положение для проверки работы платформы.");
+  await editor.getByRole("button", { name: "Создать черновик" }).click();
+  await expect(page.getByRole("link", { name: title })).toBeVisible();
+  await page.getByRole("link", { name: title }).click();
+  await expect(page).toHaveURL(/\/competitions\/\d+$/);
+  const competitionUrl = page.url();
+  await page.getByRole("button", { name: "Опубликовать", exact: true }).click();
+  await expect(page.getByText("Соревнование опубликовано")).toBeVisible();
+
+  const athleteContext = await browser.newContext();
+  const athletePage = await athleteContext.newPage();
+  await signIn(athletePage, "demo.athlete@example.test");
+  await athletePage.goto(competitionUrl);
+  await athletePage.getByRole("combobox", { name: "Возрастная группа" }).selectOption({ label: "Демо: 18+" });
+  await athletePage.getByRole("button", { name: "Отправить заявку" }).click();
+  await expect(athletePage.getByText("Ваша заявка: На рассмотрении")).toBeVisible();
+
+  await page.goto(competitionUrl);
+  await page.getByRole("button", { name: "Одобрить" }).click();
+  await expect(page.getByText("Заявка одобрена")).toBeVisible();
+  await page.getByRole("combobox", { name: "Судья", exact: true }).selectOption({ label: "Демо Судья" });
+  await page.getByRole("button", { name: "Назначить" }).click();
+  await expect(page.getByText("Судья назначен")).toBeVisible();
+
+  const judgeContext = await browser.newContext();
+  const judgePage = await judgeContext.newPage();
+  await signIn(judgePage, "demo.judge@example.test");
+  await judgePage.goto(competitionUrl);
+  const result = judgePage.locator("form.result-editor");
+  await result.getByLabel("Место").fill("1");
+  await result.getByLabel("Баллы").fill("100");
+  await result.getByLabel("Решено задач").fill("3");
+  await result.getByRole("button", { name: "Записать результат" }).click();
+  await expect(judgePage.getByText("Результат записан")).toBeVisible();
+
+  await page.goto(competitionUrl);
+  await page.getByRole("button", { name: "Проверить" }).click();
+  await expect(page.getByText("Результат проверен")).toBeVisible();
+  await page.getByRole("button", { name: "Предпросмотр" }).click();
+  await expect(page.getByRole("table").last()).toContainText("Демо Спортсмен");
+  await page.getByRole("button", { name: "Опубликовать версию" }).click();
+  await expect(page.getByText("Новая версия протокола опубликована")).toBeVisible();
+  const [pdf] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "PDF", exact: true }).last().click()]);
+  expect(pdf.suggestedFilename()).toMatch(/^protocol-\d+-v1\.pdf$/);
+  const [docx] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "DOCX", exact: true }).last().click()]);
+  expect(docx.suggestedFilename()).toMatch(/^protocol-\d+-v1\.docx$/);
+
+  await athletePage.goto("/history");
+  await expect(athletePage.getByRole("row", { name: new RegExp(title) })).toContainText("Классифицирован");
+  await judgeContext.close();
+  await athleteContext.close();
+});

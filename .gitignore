@@ -27,3 +27,4 @@ coverage/
 .chrome-qa*/
 frontend/test-results/
 frontend/playwright-report/
+tmp/

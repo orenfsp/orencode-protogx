@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "visual:qa": "node scripts/capture-visual-qa.mjs",
+    "visual:phase2": "node scripts/capture-phase2-qa.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

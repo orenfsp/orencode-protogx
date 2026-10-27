@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function signIn(page: import("@playwright/test").Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("Электронная почта").fill(email);
-  await page.getByLabel("Пароль").fill("DemoOnly2026!");
-  await page.getByRole("button", { name: "Войти", exact: true }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
+import { signIn } from "./helpers";
 
 test("multi-role account loads role-specific data after switching", async ({ page }) => {
   await signIn(page, "demo.federation@example.test");

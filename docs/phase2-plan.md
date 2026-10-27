@@ -1,6 +1,6 @@
 # Phase 2 — complete competition workflow
 
-Phase 1 is verified in `docs/acceptance-matrix.md` and `docs/phase1-baseline.md`. Phase 2 has not started. Codex owns new shared DTOs, permissions, migrations, protocol contracts and design primitives. The immutable reference HTML remains the visual contract.
+Phase 1 is verified in `docs/acceptance-matrix.md` and `docs/phase1-baseline.md`. The Phase 2 competition workflow is implemented in `backend/apps/competitions` and the Next.js competition, coach-link and history routes. Codex owns the shared DTOs, permissions, migrations, protocol contracts and design primitives. The immutable reference HTML remains the visual contract. Executed gates and remaining limits are recorded in `docs/phase2-architecture.md`.
 
 ## Delivery order and gates
 

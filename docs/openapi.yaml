@@ -3,6 +3,122 @@ info:
   title: FSP OrenKod API
   version: 0.1.0
 paths:
+  /api/v1/age-groups/:
+    get:
+      operationId: v1_age_groups_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgeGroup'
+          description: ''
+    post:
+      operationId: v1_age_groups_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgeGroup'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AgeGroup'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AgeGroup'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgeGroup'
+          description: ''
+  /api/v1/applications/:
+    get:
+      operationId: v1_applications_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Application'
+          description: ''
+    post:
+      operationId: v1_applications_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Application'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Application'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+          description: ''
+  /api/v1/applications/{id}/decision/:
+    post:
+      operationId: v1_applications_decision_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Decision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Decision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Decision'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+          description: ''
   /api/v1/auth/active-role/:
     post:
       operationId: v1_auth_active_role_create
@@ -136,6 +252,344 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
           description: ''
+  /api/v1/calendar-entries/:
+    get:
+      operationId: v1_calendar_entries_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEntry'
+          description: ''
+    post:
+      operationId: v1_calendar_entries_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalendarEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CalendarEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CalendarEntry'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarEntry'
+          description: ''
+  /api/v1/coach-links/:
+    get:
+      operationId: v1_coach_links_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoachLink'
+          description: ''
+    post:
+      operationId: v1_coach_links_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CoachLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CoachLinkRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          description: No response body
+  /api/v1/coach-links/{id}/decision/:
+    post:
+      operationId: v1_coach_links_decision_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachLinkDecision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CoachLinkDecision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CoachLinkDecision'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachLink'
+          description: ''
+  /api/v1/competitions/:
+    get:
+      operationId: v1_competitions_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Competition'
+          description: ''
+    post:
+      operationId: v1_competitions_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Competition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Competition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Competition'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+          description: ''
+  /api/v1/competitions/{id}/:
+    get:
+      operationId: v1_competitions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+          description: ''
+    patch:
+      operationId: v1_competitions_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetition'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+          description: ''
+  /api/v1/competitions/{id}/protocol-preview/:
+    get:
+      operationId: v1_competitions_protocol_preview_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolSnapshot'
+          description: ''
+  /api/v1/competitions/{id}/protocol-publish/:
+    post:
+      operationId: v1_competitions_protocol_publish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtocolPublishRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProtocolPublishRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProtocolPublishRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolPublication'
+          description: ''
+  /api/v1/competitions/{id}/protocols/:
+    get:
+      operationId: v1_competitions_protocols_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProtocolPublication'
+          description: ''
+  /api/v1/competitions/{id}/protocols/{version}/download/:
+    get:
+      operationId: v1_competitions_protocols_download_retrieve
+      parameters:
+      - in: query
+        name: file_format
+        schema:
+          type: string
+          enum:
+          - docx
+          - pdf
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/competitions/{id}/publish/:
+    post:
+      operationId: v1_competitions_publish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+          description: ''
   /api/v1/disciplines/:
     get:
       operationId: v1_disciplines_list
@@ -168,6 +622,183 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/v1/history/:
+    get:
+      operationId: v1_history_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AthleteHistory'
+          description: ''
+  /api/v1/judge-assignments/:
+    get:
+      operationId: v1_judge_assignments_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JudgeAssignment'
+          description: ''
+    post:
+      operationId: v1_judge_assignments_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JudgeAssignment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JudgeAssignment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JudgeAssignment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JudgeAssignment'
+          description: ''
+  /api/v1/judge-choices/:
+    get:
+      operationId: v1_judge_choices_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserChoice'
+          description: ''
+  /api/v1/results/:
+    get:
+      operationId: v1_results_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Result'
+          description: ''
+    post:
+      operationId: v1_results_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Result'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Result'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Result'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+          description: ''
+  /api/v1/results/{id}/validate/:
+    post:
+      operationId: v1_results_validate_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result'
+          description: ''
+  /api/v1/templates/:
+    get:
+      operationId: v1_templates_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProtocolTemplate'
+          description: ''
+    post:
+      operationId: v1_templates_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProtocolTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProtocolTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProtocolTemplate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtocolTemplate'
+          description: ''
 components:
   schemas:
     ActiveRole:
@@ -177,6 +808,110 @@ components:
           $ref: '#/components/schemas/RoleEnum'
       required:
       - role
+    AgeGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        min_age:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_age:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - max_age
+      - min_age
+      - name
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        competition:
+          type: integer
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+          readOnly: true
+        age_group:
+          type: integer
+        submitted_by:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ApplicationStatusEnum'
+          readOnly: true
+        decision_reason:
+          type: string
+          readOnly: true
+        decided_by:
+          type: integer
+          readOnly: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+        decided_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - age_group
+      - athlete
+      - athlete_name
+      - competition
+      - decided_at
+      - decided_by
+      - decision_reason
+      - id
+      - status
+      - submitted_at
+      - submitted_by
+    ApplicationStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - На рассмотрении
+        * `approved` - Одобрена
+        * `rejected` - Отклонена
+    AthleteHistory:
+      type: object
+      properties:
+        competition_id:
+          type: integer
+        competition_title:
+          type: string
+        version:
+          type: integer
+        published_at:
+          type: string
+          format: date-time
+        row:
+          type: object
+          additionalProperties: {}
+      required:
+      - competition_id
+      - competition_title
+      - published_at
+      - row
+      - version
     AuthResponse:
       type: object
       properties:
@@ -184,6 +919,207 @@ components:
           $ref: '#/components/schemas/Me'
       required:
       - user
+    CalendarEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        source:
+          $ref: '#/components/schemas/SourceEnum'
+        entry_number:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 200
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        reference_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+      required:
+      - entry_number
+      - id
+      - source
+      - title
+      - year
+    CoachLink:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        coach:
+          type: integer
+          readOnly: true
+        coach_name:
+          type: string
+          readOnly: true
+        athlete:
+          type: integer
+          nullable: true
+          readOnly: true
+        athlete_name:
+          type: string
+          readOnly: true
+        discipline:
+          type: integer
+        status:
+          allOf:
+          - $ref: '#/components/schemas/CoachLinkStatusEnum'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - athlete
+      - athlete_name
+      - coach
+      - coach_name
+      - created_at
+      - discipline
+      - id
+      - status
+    CoachLinkDecision:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/CoachLinkDecisionStatusEnum'
+      required:
+      - status
+    CoachLinkDecisionStatusEnum:
+      enum:
+      - confirmed
+      - rejected
+      type: string
+      description: |-
+        * `confirmed` - confirmed
+        * `rejected` - rejected
+    CoachLinkRequest:
+      type: object
+      properties:
+        athlete_email:
+          type: string
+          format: email
+        discipline:
+          type: integer
+      required:
+      - athlete_email
+      - discipline
+    CoachLinkStatusEnum:
+      enum:
+      - pending
+      - confirmed
+      - rejected
+      type: string
+      description: |-
+        * `pending` - Ожидает
+        * `confirmed` - Подтверждено
+        * `rejected` - Отклонено
+    Competition:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 250
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+          readOnly: true
+        age_groups:
+          type: array
+          items:
+            type: integer
+        age_group_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgeGroup'
+          readOnly: true
+        level:
+          type: string
+          maxLength: 100
+        competition_type:
+          type: string
+          maxLength: 100
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        registration_deadline:
+          type: string
+          format: date-time
+        age_reference_date:
+          type: string
+          format: date
+          nullable: true
+        allow_ties:
+          type: boolean
+        location:
+          type: string
+          maxLength: 250
+        regulations:
+          type: string
+        calendar_entry:
+          type: integer
+          nullable: true
+        template:
+          type: integer
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stage'
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - age_group_details
+      - age_groups
+      - competition_type
+      - created_at
+      - created_by
+      - discipline
+      - discipline_name
+      - ends_at
+      - format
+      - id
+      - level
+      - location
+      - registration_deadline
+      - regulations
+      - starts_at
+      - state
+      - template
+      - title
+      - updated_at
     Csrf:
       type: object
       properties:
@@ -217,9 +1153,29 @@ components:
       required:
       - label
       - value
+    Decision:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/DecisionStatusEnum'
+        reason:
+          type: string
+      required:
+      - status
+    DecisionStatusEnum:
+      enum:
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `approved` - approved
+        * `rejected` - rejected
     Discipline:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
         code:
           type: string
           maxLength: 64
@@ -229,7 +1185,18 @@ components:
           maxLength: 200
       required:
       - code
+      - id
       - name
+    FormatEnum:
+      enum:
+      - online
+      - in_person
+      - hybrid
+      type: string
+      description: |-
+        * `online` - Онлайн
+        * `in_person` - Очное
+        * `hybrid` - Гибридное
     Health:
       type: object
       properties:
@@ -237,6 +1204,37 @@ components:
           type: string
       required:
       - status
+    JudgeAssignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        competition:
+          type: integer
+        judge:
+          type: integer
+        judge_name:
+          type: string
+          readOnly: true
+        role_label:
+          type: string
+          maxLength: 100
+        assigned_by:
+          type: integer
+          readOnly: true
+        assigned_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assigned_at
+      - assigned_by
+      - competition
+      - id
+      - judge
+      - judge_name
+      - role_label
     Login:
       type: object
       properties:
@@ -277,6 +1275,245 @@ components:
       - full_name
       - id
       - roles
+    PatchedCompetition:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 250
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+          readOnly: true
+        age_groups:
+          type: array
+          items:
+            type: integer
+        age_group_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgeGroup'
+          readOnly: true
+        level:
+          type: string
+          maxLength: 100
+        competition_type:
+          type: string
+          maxLength: 100
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        registration_deadline:
+          type: string
+          format: date-time
+        age_reference_date:
+          type: string
+          format: date
+          nullable: true
+        allow_ties:
+          type: boolean
+        location:
+          type: string
+          maxLength: 250
+        regulations:
+          type: string
+        calendar_entry:
+          type: integer
+          nullable: true
+        template:
+          type: integer
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stage'
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    ProtocolColumn:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+      required:
+      - key
+      - label
+    ProtocolPublication:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        competition:
+          type: integer
+        version:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        template:
+          type: integer
+        snapshot: {}
+        correction_reason:
+          type: string
+        published_by:
+          type: integer
+        published_at:
+          type: string
+          format: date-time
+      required:
+      - competition
+      - id
+      - published_by
+      - snapshot
+      - template
+      - version
+    ProtocolPublishRequest:
+      type: object
+      properties:
+        correction_reason:
+          type: string
+    ProtocolSnapshot:
+      type: object
+      properties:
+        competition_id:
+          type: integer
+        competition_title:
+          type: string
+        discipline:
+          type: string
+        template_id:
+          type: integer
+        template_version:
+          type: integer
+        source_verified:
+          type: boolean
+        source_note:
+          type: string
+        source_url:
+          oneOf:
+          - type: string
+            format: uri
+          - type: string
+            maxLength: 0
+        sections:
+          type: array
+          items:
+            type: string
+        signature_roles:
+          type: array
+          items:
+            type: string
+        sort:
+          type: object
+          additionalProperties: {}
+        metadata:
+          type: object
+          additionalProperties: {}
+        judges:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProtocolColumn'
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: One row per approved application, including missing results
+      required:
+      - columns
+      - competition_id
+      - competition_title
+      - discipline
+      - judges
+      - metadata
+      - rows
+      - sections
+      - signature_roles
+      - sort
+      - source_note
+      - source_url
+      - source_verified
+      - template_id
+      - template_version
+    ProtocolTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        competition_type:
+          type: string
+          maxLength: 100
+        rule_version:
+          type: string
+          maxLength: 100
+        effective_from:
+          type: string
+          format: date
+          nullable: true
+        metric_fields: {}
+        columns: {}
+        sections: {}
+        signature_roles: {}
+        sort: {}
+        source_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        source_verified:
+          type: boolean
+          readOnly: true
+        source_note:
+          type: string
+      required:
+      - discipline
+      - discipline_code
+      - id
+      - name
+      - source_verified
+      - version
     Register:
       type: object
       properties:
@@ -314,6 +1551,57 @@ components:
       - email
       - full_name
       - password
+    Result:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        application:
+          type: integer
+        status:
+          $ref: '#/components/schemas/ResultStatusEnum'
+        place:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          nullable: true
+        metrics: {}
+        validated_by:
+          type: integer
+          readOnly: true
+        updated_by:
+          type: integer
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - application
+      - id
+      - status
+      - updated_at
+      - updated_by
+      - validated_by
+    ResultStatusEnum:
+      enum:
+      - classified
+      - no_show
+      - unclassified
+      - disqualified
+      type: string
+      description: |-
+        * `classified` - Классифицирован
+        * `no_show` - Не явился
+        * `unclassified` - Без результата
+        * `disqualified` - Дисквалифицирован
     RoleEnum:
       enum:
       - federation
@@ -326,6 +1614,65 @@ components:
         * `athlete` - Athlete
         * `coach` - Coach
         * `judge` - Judge
+    SourceEnum:
+      enum:
+      - ekp
+      - regional
+      type: string
+      description: |-
+        * `ekp` - Единый календарный план
+        * `regional` - Региональный календарь
+    Stage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        name:
+          type: string
+          maxLength: 150
+        format:
+          $ref: '#/components/schemas/FormatEnum'
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+      required:
+      - ends_at
+      - format
+      - id
+      - name
+      - order
+      - starts_at
+    StateEnum:
+      enum:
+      - draft
+      - published
+      - closed
+      type: string
+      description: |-
+        * `draft` - Черновик
+        * `published` - Опубликовано
+        * `closed` - Завершено
+    UserChoice:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 200
+      required:
+      - full_name
+      - id
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -2,6 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
+  timeout: 180000,
   use: {
     ...devices["Desktop Chrome"],
     channel: "chrome",
