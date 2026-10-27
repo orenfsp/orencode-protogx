@@ -67,3 +67,26 @@ test("late candidate response cannot reveal data after switching role", async ({
   await expect(page.getByText("Частный спортсмен")).toHaveCount(0);
   await expect(page.getByText("Частная команда")).toHaveCount(0);
 });
+
+test("logout hides a pending team response", async ({ page }) => {
+  let release: (() => void) | undefined;
+  let started: (() => void) | undefined;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const requested = new Promise<void>((resolve) => { started = resolve; });
+  let signedOut = false;
+  const user = { id: 1, email: "demo@example.test", full_name: "Демо", roles: ["federation"], active_role: "federation" };
+  await page.route("**/api/v1/auth/me/", (route) => signedOut ? route.fulfill({ status: 403 }) : route.fulfill({ json: user }));
+  await page.route("**/api/v1/auth/csrf/", (route) => route.fulfill({ json: { csrfToken: "test" } }));
+  await page.route("**/api/v1/auth/logout/", (route) => { signedOut = true; return route.fulfill({ status: 204 }); });
+  await page.route("**/api/v1/teams/options/", (route) => route.fulfill({ json: { seasons: [{ id: 1, year: 2026, name: "2026" }], disciplines: [{ id: 1, code: "algorithmic", name: "Алгоритм" }], age_groups: [{ id: 1, name: "Взрослые", min_age: 18, max_age: 35 }] } }));
+  await page.route("**/api/v1/teams/?**", (route) => route.fulfill({ json: [{ id: 1, name: "Частная команда", region: "Регион", status: "draft", season: 1, season_year: 2026, discipline: 1, discipline_code: "algorithmic", discipline_name: "Алгоритм", age_group: 1, age_group_name: "Взрослые", created_by: 1, created_at: "2026-01-01", updated_at: "2026-01-01", member_count: 0, members: [] }] }));
+  await page.route("**/api/v1/teams/1/candidates/", async (route) => { started?.(); await gate; await route.fulfill({ json: [{ id: 2, full_name: "Частный спортсмен", email: "private@example.test", eligible: true, selected: false, eligibility: {}, rating: null }] }).catch(() => {}); });
+  await page.goto("/teams");
+  await page.getByRole("button", { name: "Частная команда" }).click();
+  await requested;
+  await page.getByRole("button", { name: "Выйти", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  release?.();
+  await expect(page.getByText("Частный спортсмен")).toHaveCount(0);
+  await expect(page.getByText("Частная команда")).toHaveCount(0);
+});
