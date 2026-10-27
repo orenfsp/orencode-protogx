@@ -23,7 +23,7 @@ def eligibility_snapshot(*, athlete, team):
     reference = date(team.season.year, 1, 1)
     age = age_on(athlete.date_of_birth, reference) if athlete.date_of_birth else None
     minor_guardian = age is not None and age < 18 and Guardian.objects.filter(minor=athlete, confirmation_status="verified").exists()
-    restriction = active_restriction(athlete.pk, reference)
+    restriction = active_restriction(athlete.pk)
     rating = AthleteRating.objects.filter(athlete=athlete, season=team.season, discipline=team.discipline).first()
     return {
         "eligible": bool(athlete.date_of_birth and age is not None and team.age_group.min_age <= age <= team.age_group.max_age and has_current_consent(athlete) and (age >= 18 or minor_guardian) and restriction is None),
@@ -35,6 +35,7 @@ def eligibility_snapshot(*, athlete, team):
         "rating_score": str(rating.rating_score) if rating else None,
         "rating_id": rating.pk if rating else None,
         "checked_on": reference.isoformat(),
+        "restriction_checked_on": timezone.localdate().isoformat(),
     }
 
 
@@ -56,6 +57,13 @@ def _record(actor, team, action, membership=None, before=None, after=None):
     AuditEvent.objects.create(actor=actor, action=f"regional_team.{action}", target_type=team._meta.model_name, target_id=team.pk, before=before or {}, after=after)
 
 
+def _invalidate_finalization(actor, team):
+    if team.status == RegionalTeam.Status.PUBLISHED:
+        team.status = RegionalTeam.Status.DRAFT
+        team.save(update_fields=("status", "updated_at"))
+        _record(actor, team, "finalization_invalidated", before={"status": RegionalTeam.Status.PUBLISHED}, after={"status": team.status})
+
+
 @transaction.atomic
 def create_team(*, actor, validated_data):
     team = RegionalTeam.objects.create(created_by=actor, **validated_data)
@@ -72,12 +80,14 @@ def add_member(*, actor, team, athlete, note=""):
         raise ValidationError({"athlete": "Athlete is already selected"})
     position = (TeamMembership.objects.filter(team=team, removed_at__isnull=True).order_by("-position").values_list("position", flat=True).first() or 0) + 1
     membership = TeamMembership.objects.create(team=team, athlete=athlete, position=position, selected_by=actor, eligibility_snapshot=snapshot, selection_note=note)
+    _invalidate_finalization(actor, team)
     _record(actor, team, "member_added", membership, after={"athlete_id": athlete.pk, "position": position, "eligibility": snapshot})
     return membership
 
 
 @transaction.atomic
 def remove_member(*, actor, membership, reason=""):
+    RegionalTeam.objects.select_for_update().get(pk=membership.team_id)
     membership = TeamMembership.objects.select_for_update().select_related("team", "athlete").get(pk=membership.pk)
     if membership.removed_at:
         raise ValidationError("Membership is already removed")
@@ -85,6 +95,7 @@ def remove_member(*, actor, membership, reason=""):
     membership.removed_at = timezone.now()
     membership.removal_reason = reason
     membership.save(update_fields=("removed_at", "removal_reason"))
+    _invalidate_finalization(actor, membership.team)
     _record(actor, membership.team, "member_removed", membership, before=before, after={"reason": reason})
     return membership
 
@@ -100,11 +111,35 @@ def reorder_members(*, actor, team, member_ids):
         raise ValidationError({"member_ids": "Member ids must be integers"})
     if set(requested) != set(current) or len(requested) != len(current):
         raise ValidationError({"member_ids": "All active members must be included exactly once"})
+    before = {str(m.pk): m.position for m in memberships}
+    if requested == [m.pk for m in sorted(memberships, key=lambda m: m.position)]:
+        return list(sorted(memberships, key=lambda m: m.position))
+    # Move all positions above the existing range first: the conditional unique
+    # constraint is immediate on both PostgreSQL and SQLite.
+    offset = max((m.position for m in memberships), default=0) + len(memberships)
+    for index, member in enumerate(memberships, start=1):
+        member.position = offset + index
+        member.save(update_fields=("position",))
     for position, member_id in enumerate(requested, start=1):
         current[member_id].position = position
         current[member_id].save(update_fields=("position",))
-    _record(actor, team, "members_reordered", after={"positions": {str(item): index for index, item in enumerate(requested, start=1)}})
+    _invalidate_finalization(actor, team)
+    _record(actor, team, "members_reordered", before={"positions": before}, after={"positions": {str(item): index for index, item in enumerate(requested, start=1)}})
     return list(TeamMembership.objects.filter(team=team, removed_at__isnull=True).select_related("athlete").order_by("position"))
+
+
+@transaction.atomic
+def publish_team(*, actor, team):
+    team = RegionalTeam.objects.select_for_update().get(pk=team.pk)
+    if team.status == RegionalTeam.Status.PUBLISHED:
+        return team
+    if not team.memberships.filter(removed_at__isnull=True).exists():
+        raise ValidationError("A team must have at least one active member")
+    before = {"status": team.status}
+    team.status = RegionalTeam.Status.PUBLISHED
+    team.save(update_fields=("status", "updated_at"))
+    _record(actor, team, "published", before=before, after={"status": team.status})
+    return team
 
 
 def candidate_rows(team):

@@ -11,5 +11,6 @@ urlpatterns = [
     path("teams/<int:pk>/members/<int:membership_id>/remove/", views.TeamMemberRemoveView.as_view()),
     path("teams/<int:pk>/reorder/", views.TeamReorderView.as_view()),
     path("teams/<int:pk>/history/", views.TeamHistoryView.as_view()),
+    path("teams/<int:pk>/publish/", views.TeamPublishView.as_view()),
     path("teams/<int:pk>/documents/", views.TeamDocumentsView.as_view()),
 ]

@@ -9,11 +9,17 @@ from .models import RegionalTeam, TeamDecisionHistory, TeamMembership
 class TeamMembershipSerializer(serializers.ModelSerializer):
     athlete_name = serializers.CharField(source="athlete.full_name", read_only=True)
     athlete_email = serializers.EmailField(source="athlete.email", read_only=True)
+    current_eligibility = serializers.SerializerMethodField()
 
     class Meta:
         model = TeamMembership
-        fields = ("id", "athlete", "athlete_name", "athlete_email", "position", "selected_by", "selected_at", "removed_at", "removal_reason", "eligibility_snapshot", "selection_note")
+        fields = ("id", "athlete", "athlete_name", "athlete_email", "position", "selected_by", "selected_at", "removed_at", "removal_reason", "eligibility_snapshot", "current_eligibility", "selection_note")
         read_only_fields = ("selected_by", "selected_at", "removed_at", "eligibility_snapshot")
+
+    @extend_schema_field(serializers.DictField())
+    def get_current_eligibility(self, obj):
+        from .services import eligibility_snapshot
+        return eligibility_snapshot(athlete=obj.athlete, team=obj.team)
 
 
 class RegionalTeamSerializer(serializers.ModelSerializer):
@@ -21,7 +27,7 @@ class RegionalTeamSerializer(serializers.ModelSerializer):
     discipline_code = serializers.CharField(source="discipline.code", read_only=True)
     discipline_name = serializers.CharField(source="discipline.name", read_only=True)
     age_group_name = serializers.CharField(source="age_group.name", read_only=True)
-    members = TeamMembershipSerializer(source="memberships", many=True, read_only=True)
+    members = serializers.SerializerMethodField()
     member_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -32,6 +38,10 @@ class RegionalTeamSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.IntegerField)
     def get_member_count(self, obj):
         return obj.memberships.filter(removed_at__isnull=True).count()
+
+    @extend_schema_field(TeamMembershipSerializer(many=True))
+    def get_members(self, obj):
+        return TeamMembershipSerializer(obj.memberships.filter(removed_at__isnull=True).select_related("athlete").order_by("position"), many=True).data
 
 
 class TeamCreateSerializer(serializers.ModelSerializer):

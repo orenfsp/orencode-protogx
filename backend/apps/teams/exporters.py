@@ -1,5 +1,7 @@
 from io import BytesIO
+from xml.sax.saxutils import escape
 
+from django.utils import timezone
 from docx import Document
 from docx.shared import Cm, Pt
 from reportlab.lib import colors
@@ -18,7 +20,7 @@ def _rows(team):
 
 
 def _title(team, draft=False):
-    return ("ПРОЕКТ ОФИЦИАЛЬНОГО ПОРЯДКА" if draft else "СОСТАВ РЕГИОНАЛЬНОЙ КОМАНДЫ")
+    return ("ПРОЕКТ ПРИКАЗА" if draft else "СОСТАВ РЕГИОНАЛЬНОЙ КОМАНДЫ")
 
 
 def render_team_docx(team, *, draft=False):
@@ -32,7 +34,9 @@ def render_team_docx(team, *, draft=False):
     doc.add_paragraph(f"Команда: {team.name}")
     doc.add_paragraph(f"Регион: {team.region}")
     doc.add_paragraph(f"Сезон: {team.season.year}; дисциплина: {team.discipline.name}; возрастная группа: {team.age_group.name}")
-    doc.add_paragraph("Документ сформирован из сохранённого состава; проект не является подписанным официальным приказом." if draft else "Дата формирования: текущая дата демонстрационной системы.")
+    doc.add_paragraph(f"Сформировано: {timezone.localtime():%d.%m.%Y %H:%M %Z}")
+    if draft:
+        doc.add_paragraph("Проект: предлагается утвердить приведённый ниже состав. Документ не является подписанным официальным приказом; форма требует проверки.")
     table = doc.add_table(rows=1, cols=4)
     table.style = "Table Grid"
     for cell, text in zip(table.rows[0].cells, ("№", "Спортсмен", "Организация / email", "Рейтинг")):
@@ -57,7 +61,9 @@ def render_team_pdf(team, *, draft=False):
     doc = SimpleDocTemplate(stream, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm, bottomMargin=16 * mm, title=_title(team, draft=draft), invariant=1)
     normal = ParagraphStyle("team-normal", fontName=font_name, fontSize=9, leading=13)
     heading = ParagraphStyle("team-heading", parent=normal, fontSize=16, leading=20, textColor=colors.HexColor("#221F73"), spaceAfter=8)
-    story = [Paragraph(_title(team, draft=draft), heading), Paragraph(f"Команда: {team.name}", normal), Paragraph(f"Регион: {team.region}; сезон: {team.season.year}; дисциплина: {team.discipline.name}; возрастная группа: {team.age_group.name}", normal), Spacer(1, 10)]
+    story = [Paragraph(_title(team, draft=draft), heading), Paragraph(escape(f"Команда: {team.name}"), normal), Paragraph(escape(f"Регион: {team.region}; сезон: {team.season.year}; дисциплина: {team.discipline.name}; возрастная группа: {team.age_group.name}"), normal), Paragraph(f"Сформировано: {timezone.localtime():%d.%m.%Y %H:%M %Z}", normal), Spacer(1, 10)]
+    if draft:
+        story.append(Paragraph("Предлагается утвердить приведённый ниже состав. Форма требует проверки.", normal))
     data = [["№", "Спортсмен", "Email", "Рейтинг"]]
     data.extend([[str(index), item.athlete.full_name, item.athlete.email, item.eligibility_snapshot.get("rating_score") or "—"] for index, item in enumerate(_rows(team), 1)])
     table = Table(data, colWidths=[12 * mm, 60 * mm, 68 * mm, 22 * mm], repeatRows=1)

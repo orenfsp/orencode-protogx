@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.catalogs.models import Discipline
-from apps.competitions.models import AgeGroup
+from apps.competitions.models import AgeGroup, AuditEvent
 from apps.ratings.models import RatingSeason
 
 from .exporters import render_team_docx, render_team_pdf
@@ -27,6 +27,7 @@ from .services import (
     add_member,
     candidate_rows,
     create_team,
+    publish_team,
     remove_member,
     reorder_members,
     require_federation,
@@ -145,6 +146,17 @@ class TeamHistoryView(APIView):
         return Response(TeamHistorySerializer(TeamDecisionHistory.objects.filter(team_id=pk).select_related("actor"), many=True).data)
 
 
+class TeamPublishView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = RegionalTeamSerializer
+
+    @transaction.atomic
+    def post(self, request, pk):
+        require_federation(request)
+        team = get_object_or_404(RegionalTeam, pk=pk)
+        return Response(RegionalTeamSerializer(publish_team(actor=request.user, team=team)).data)
+
+
 class TeamDocumentsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TeamDocumentResponseSerializer
@@ -158,6 +170,13 @@ class TeamDocumentsView(APIView):
         if kind not in {"roster", "draft", "draft-order"} or fmt not in {"pdf", "docx"}:
             return Response({"detail": "type must be roster or draft-order; format must be pdf or docx"}, status=400)
         payload = render_team_pdf(team, draft=draft) if fmt == "pdf" else render_team_docx(team, draft=draft)
+        AuditEvent.objects.create(
+            actor=request.user,
+            action="regional_team.document_generated",
+            target_type=team._meta.model_name,
+            target_id=team.pk,
+            after={"active_role": "federation", "type": "draft-order" if draft else "roster", "format": fmt},
+        )
         content_type = "application/pdf" if fmt == "pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         filename = f"regional-team-{team.pk}-{'draft-order' if draft else 'roster'}.{fmt}"
         response = HttpResponse(payload, content_type=content_type)

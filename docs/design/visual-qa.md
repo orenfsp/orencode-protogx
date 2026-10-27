@@ -44,4 +44,4 @@ The `/ratings` page was rebuilt with the existing shell, numbered indigo navigat
 
 ## Phase 3.2 regional teams review — 2026-10-27
 
-The `/teams` page reuses the numbered sidebar, document rail, orange actions, bordered tables, stamps, Rubik/Inter/JetBrains Mono tokens and mobile navigation. It adds no new global styles or changes to `fsp-reference.html`. TypeScript, ESLint, production build and the targeted Playwright manual-selection workflow pass. A dedicated side-by-side screenshot capture remains a follow-up visual review item.
+The `/teams` page reuses the numbered sidebar, document rail, orange actions, bordered tables, stamps, Rubik/Inter/JetBrains Mono tokens and mobile navigation. It adds no new global styles or changes to `fsp-reference.html`. The existing targeted Playwright test uses intercepted API data and checks page rendering; it does not verify manual selection or finalization. A dedicated side-by-side screenshot capture remains a follow-up visual review item.

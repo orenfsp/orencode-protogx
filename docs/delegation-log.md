@@ -58,3 +58,5 @@ During final export verification, Codex sent only `backend/apps/competitions/exp
 ## Phase 3.2 regional teams review — 2026-10-27
 
 Codex requested one bounded read-only `deepseek_reliable.review_code` review of `backend/apps/teams`. The MCP returned `provider_http_503` with `Request budget exhausted`; `files_written: false`, no findings were returned, and no repository changes came from DeepSeek. Codex independently validated the scope with Django tests, Ruff, OpenAPI validation and frontend checks.
+
+Finalization requested a second bounded Pro review covering `seed_demo.py`, competition publication, rating provenance and production safety. The MCP again returned `provider_http_503` / `Request budget exhausted`; no files were written and no review findings were available. Codex completed independent SQLite and PostgreSQL test suites, isolated Compose startup/reseed checks, OpenAPI validation and document assertions.
