@@ -19,9 +19,14 @@ from apps.ratings.models import (
     AthleteRestriction,
     RatingContribution,
     RatingPointRule,
+    RatingRuleVersion,
     RatingSeason,
 )
-from apps.ratings.services import calculate_ratings, ensure_default_rule
+from apps.ratings.services import (
+    calculate_ratings,
+    create_rule_version,
+    ensure_default_rule,
+)
 
 
 class RatingDomainTests(TestCase):
@@ -152,3 +157,76 @@ class RatingDomainTests(TestCase):
         self.assertEqual(public.status_code, 200)
         self.assertNotIn("reason_private", public.data[0])
         self.assertIn(APIClient().get("/api/v1/rating-restrictions/").status_code, (401, 403))
+
+    def test_rule_version_change_preserves_historical_contribution_provenance(self):
+        season = RatingSeason.objects.create(year=2026, name="РЎРµР·РѕРЅ 2026")
+        competition = self.competition("Regional")
+        self.publish(competition, [self.row(self.athlete, 1)])
+
+        first = ensure_default_rule(season, self.discipline, self.federation)
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        original = RatingContribution.objects.get(athlete=self.athlete, is_current=True)
+        self.assertEqual(original.rule_version_id, first.id)
+
+        second = create_rule_version(
+            actor=self.federation,
+            season=season,
+            discipline=self.discipline,
+            validated_data={
+                "coefficient_threshold": 2,
+                "stability_coefficient": Decimal("1.20"),
+                "rounding_places": 2,
+                "rounding_mode": "ROUND_HALF_UP",
+                "is_active": True,
+                "point_rules": [{"competition_level": "Regional", "place": 1, "points": Decimal("25.00")}],
+            },
+        )
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+
+        current = RatingContribution.objects.get(athlete=self.athlete, is_current=True)
+        self.assertEqual(current.rule_version_id, second.id)
+        self.assertFalse(RatingContribution.objects.get(pk=original.pk).is_current)
+        self.assertEqual(RatingContribution.objects.get(pk=original.pk).rule_version_id, first.id)
+
+    def test_configured_rounding_mode_is_deterministic(self):
+        season = RatingSeason.objects.create(year=2026, name="РЎРµР·РѕРЅ 2026")
+        competition = self.competition("Regional")
+        self.publish(competition, [self.row(self.athlete, 1)])
+        rule = RatingRuleVersion.objects.create(
+            season=season,
+            discipline=self.discipline,
+            version=1,
+            coefficient_threshold=1,
+            stability_coefficient=Decimal("1.20"),
+            rounding_places=2,
+            rounding_mode="ROUND_DOWN",
+            is_active=True,
+            created_by=self.federation,
+        )
+        RatingPointRule.objects.create(rule_version=rule, competition_level="Regional", place=1, points=Decimal("33.33"))
+
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        rating = self.athlete.ratings.get(season=season, discipline=self.discipline)
+        self.assertEqual(rating.rating_score, Decimal("39.99"))
+
+    def test_rating_filters_are_scoped_to_the_selected_discipline_and_empty_sets_are_stable(self):
+        season = RatingSeason.objects.create(year=2026, name="РЎРµР·РѕРЅ 2026")
+        other_age_group = AgeGroup.objects.exclude(pk=self.age_group.pk).first()
+        self.assertIsNotNone(other_age_group)
+
+        algorithmic = self.competition("Regional", discipline=self.discipline, days=1)
+        product = self.competition("Regional", discipline=self.other_discipline, days=2)
+        self.publish(algorithmic, [self.row(self.athlete, 1, self.age_group.name)])
+        self.publish(product, [self.row(self.athlete, 1, other_age_group.name)])
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        calculate_ratings(season=season, discipline=self.other_discipline, actor=self.federation)
+
+        client = APIClient()
+        response = client.get(f"/api/v1/ratings/?season=2026&discipline=algorithmic&age_group={other_age_group.pk}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total"], 0)
+        empty = client.get("/api/v1/ratings/?season=2099&discipline=algorithmic")
+        self.assertEqual(empty.status_code, 200)
+        self.assertEqual(empty.data["items"], [])
+        self.assertEqual(empty.data["total"], 0)
+        self.assertEqual(empty.data["pages"], 0)

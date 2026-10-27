@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Exists, OuterRef, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import (
@@ -87,16 +87,30 @@ class RatingsView(APIView):
             queryset = queryset.filter(discipline__code=discipline_value) if not discipline_value.isdigit() else queryset.filter(discipline_id=int(discipline_value))
         age_group = request.query_params.get("age_group")
         if age_group:
-            queryset = queryset.filter(athlete__rating_contributions__age_group__in=AgeGroup.objects.filter(pk=age_group).values_list("name", flat=True), athlete__rating_contributions__is_current=True).distinct()
+            age_names = AgeGroup.objects.filter(pk=age_group).values_list("name", flat=True)
+            matching_contributions = RatingContribution.objects.filter(
+                athlete_id=OuterRef("athlete_id"),
+                season_id=OuterRef("season_id"),
+                discipline_id=OuterRef("discipline_id"),
+                is_current=True,
+                age_group__in=age_names,
+            )
+            queryset = queryset.annotate(_has_age_group=Exists(matching_contributions)).filter(_has_age_group=True)
         min_rank = _rank_value(request.query_params.get("min_rank"))
         if min_rank is not None:
             from apps.qualifications.models import SportRankHistory
             allowed = []
-            for athlete_id in queryset.values_list("athlete_id", flat=True).distinct():
-                history = SportRankHistory.objects.filter(athlete_id=athlete_id).order_by("-valid_until", "-assigned_on", "-pk").first()
+            for item in queryset.values("athlete_id", "discipline_id").distinct():
+                history = SportRankHistory.objects.filter(athlete_id=item["athlete_id"], discipline_id=item["discipline_id"]).order_by("-valid_until", "-assigned_on", "-pk").first()
                 if history and _rank_value(history.rank) is not None and _rank_value(history.rank) >= min_rank:
-                    allowed.append(athlete_id)
-            queryset = queryset.filter(athlete_id__in=allowed)
+                    allowed.append((item["athlete_id"], item["discipline_id"]))
+            if allowed:
+                pair_filter = Q()
+                for athlete_id, discipline_id in allowed:
+                    pair_filter |= Q(athlete_id=athlete_id, discipline_id=discipline_id)
+                queryset = queryset.filter(pair_filter)
+            else:
+                queryset = queryset.none()
         queryset = queryset.order_by("-rating_score", "athlete__full_name", "athlete_id")
         page = max(int(request.query_params.get("page", 1) or 1), 1)
         page_size = min(max(int(request.query_params.get("page_size", 25) or 25), 1), 100)
