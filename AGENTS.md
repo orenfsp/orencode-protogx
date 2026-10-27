@@ -23,5 +23,10 @@
 - Use fictitious seed identities only. Preserve role-based/object-level authorization and guardian consent requirements for minors.
 - For protocols, preserve discipline-specific templates and source verification requirement in Section 7.
 
-## First task
-Read `BOOTSTRAP_PROMPT.md`, inventory the repo and available tools, inspect the HTML, write a short implementation plan, and establish an executable baseline before starting feature work. Keep the original design file unchanged.
+## Original bootstrap task (completed)
+`BOOTSTRAP_PROMPT.md` records the initial inventory, reference inspection, implementation plan, and executable baseline. Phase 1 and Phase 2 are documented; use current status and an assigned task contract for new work. Keep the original design file unchanged.
+
+## Team collaboration and agent discovery
+- The shared onboarding index is [docs/team/README.md](docs/team/README.md). All agents must follow [docs/team/AI_AGENT_RULES.md](docs/team/AI_AGENT_RULES.md) and the assigned [task contract](docs/team/TASK_TEMPLATE.md); the lead alone makes integration decisions.
+- Before a task, check [current status](docs/team/CURRENT_STATUS.md), [acceptance evidence](docs/acceptance-matrix.md), the actual code, branch, and allowed paths. Use the relevant backend, frontend, API, authentication, design, Git, and testing guides linked from the team index.
+- For frontend work, read `frontend/AGENTS.md` and the unchanged `docs/design/fsp-reference.html`. Do not start Phase 3 without an explicit new assignment.
