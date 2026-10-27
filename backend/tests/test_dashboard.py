@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
@@ -36,6 +37,14 @@ class DashboardTests(TestCase):
                     self.assertNotIn("Согласие", labels)
                 else:
                     self.assertNotIn("Спортсменов", labels)
+
+    def test_revoked_consent_is_not_reported_as_recorded(self):
+        consent = PersonalDataConsent.objects.get(user=self.user)
+        consent.revoked_at = timezone.now()
+        consent.save(update_fields=["revoked_at"])
+        self.client.post("/api/v1/auth/active-role/", {"role": "athlete"}, format="json")
+        metrics = self.client.get("/api/v1/auth/dashboard/").data["metrics"]
+        self.assertEqual(next(item["value"] for item in metrics if item["label"] == "Согласие"), "Не записано")
 
     def test_forged_or_revoked_role_cannot_read_federation_dashboard(self):
         self.client.post("/api/v1/auth/active-role/", {"role": "federation"}, format="json")

@@ -679,6 +679,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/JudgeAssignment'
           description: ''
+  /api/v1/judge-category-applications/:
+    get:
+      operationId: v1_judge_category_applications_list
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JudgeCategoryApplication'
+          description: ''
+    post:
+      operationId: v1_judge_category_applications_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryApplicationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryApplicationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryApplicationCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JudgeCategoryApplication'
+          description: ''
+  /api/v1/judge-category-applications/{id}/decision/:
+    post:
+      operationId: v1_judge_category_applications_decision_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JudgeCategoryApplication'
+          description: ''
+  /api/v1/judge-category-history/:
+    get:
+      operationId: v1_judge_category_history_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JudgeCategoryHistory'
+          description: ''
   /api/v1/judge-choices/:
     get:
       operationId: v1_judge_choices_list
@@ -694,6 +788,186 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserChoice'
+          description: ''
+  /api/v1/qualification-deadlines/:
+    get:
+      operationId: v1_qualification_deadlines_retrieve
+      description: |-
+        Контроль сроков: разряды и категории, которые истекают в ближайшие N дней или уже истекли.
+
+        Для каждого человека учитывается его «текущая» запись (см. services.most_significant),
+        поэтому заменённая более новой запись не вызывает ложного предупреждения.
+      parameters:
+      - in: query
+        name: days
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/qualification-options/:
+    get:
+      operationId: v1_qualification_options_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/qualification-rules/:
+    get:
+      operationId: v1_qualification_rules_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QualificationRule'
+          description: ''
+  /api/v1/rank-applications/:
+    get:
+      operationId: v1_rank_applications_list
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RankApplication'
+          description: ''
+    post:
+      operationId: v1_rank_applications_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RankApplicationCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RankApplicationCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RankApplicationCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankApplication'
+          description: ''
+  /api/v1/rank-applications/{id}/decision/:
+    post:
+      operationId: v1_rank_applications_decision_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecisionInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankApplication'
+          description: ''
+  /api/v1/rank-history/:
+    get:
+      operationId: v1_rank_history_list
+      parameters:
+      - in: query
+        name: athlete
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SportRankHistory'
+          description: ''
+  /api/v1/rank-results/:
+    get:
+      operationId: v1_rank_results_retrieve
+      description: Результаты, на основании которых можно подать заявку, с предварительной
+        подсказкой по правилам.
+      parameters:
+      - in: query
+        name: hinted
+        schema:
+          type: boolean
+      - in: query
+        name: page
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankResultPage'
           description: ''
   /api/v1/results/:
     get:
@@ -819,14 +1093,12 @@ components:
           maxLength: 100
         min_age:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         max_age:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
       required:
       - id
       - max_age
@@ -935,9 +1207,8 @@ components:
           maxLength: 200
         year:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         reference_url:
           oneOf:
           - type: string
@@ -951,6 +1222,21 @@ components:
       - source
       - title
       - year
+    CategoryApplicationCreate:
+      type: object
+      properties:
+        requested_category:
+          $ref: '#/components/schemas/JudgeCategoryEnum'
+        request_type:
+          $ref: '#/components/schemas/RequestTypeEnum'
+        comment:
+          type: string
+          maxLength: 1000
+      required:
+      - request_type
+      - requested_category
+    CategoryEnum:
+      $ref: '#/components/schemas/JudgeCategoryEnum'
     CoachLink:
       type: object
       properties:
@@ -1162,6 +1448,43 @@ components:
           type: string
       required:
       - status
+    DecisionInput:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/DecisionStatusEnum'
+        reason:
+          type: string
+          maxLength: 1000
+        order_number:
+          type: string
+          maxLength: 100
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+      required:
+      - status
+    DecisionRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_number:
+          type: string
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+      required:
+      - assigned_on
+      - id
+      - order_number
+      - valid_until
     DecisionStatusEnum:
       enum:
       - approved
@@ -1235,6 +1558,111 @@ components:
       - judge
       - judge_name
       - role_label
+    JudgeCategoryApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        judge:
+          type: integer
+        judge_name:
+          type: string
+          readOnly: true
+        request_type:
+          $ref: '#/components/schemas/RequestTypeEnum'
+        requested_category:
+          $ref: '#/components/schemas/JudgeCategoryEnum'
+        requested_category_label:
+          type: string
+          readOnly: true
+        comment:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QualificationReviewStatusEnum'
+          default: pending
+        decision_reason:
+          type: string
+        decided_by:
+          type: integer
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+        record:
+          allOf:
+          - $ref: '#/components/schemas/DecisionRecord'
+          nullable: true
+          readOnly: true
+      required:
+      - id
+      - judge
+      - judge_name
+      - record
+      - request_type
+      - requested_category
+      - requested_category_label
+    JudgeCategoryEnum:
+      enum:
+      - youth
+      - third
+      - second
+      - first
+      - all_russian
+      type: string
+      description: |-
+        * `youth` - Юный спортивный судья
+        * `third` - Спортивный судья третьей категории
+        * `second` - Спортивный судья второй категории
+        * `first` - Спортивный судья первой категории
+        * `all_russian` - Спортивный судья всероссийской категории
+    JudgeCategoryHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        judge:
+          type: integer
+        judge_name:
+          type: string
+          readOnly: true
+        category:
+          $ref: '#/components/schemas/JudgeCategoryEnum'
+        category_label:
+          type: string
+          readOnly: true
+        order_number:
+          type: string
+          maxLength: 100
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        validity:
+          type: string
+          readOnly: true
+        days_left:
+          type: integer
+          readOnly: true
+      required:
+      - assigned_on
+      - category
+      - category_label
+      - days_left
+      - id
+      - judge
+      - judge_name
+      - order_number
+      - valid_until
+      - validity
     Login:
       type: object
       properties:
@@ -1370,9 +1798,8 @@ components:
           type: integer
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         template:
           type: integer
         snapshot: {}
@@ -1514,6 +1941,270 @@ components:
       - name
       - source_verified
       - version
+    QualificationReviewStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `pending` - На рассмотрении
+        * `approved` - Присвоено
+        * `rejected` - Отклонено
+    QualificationRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+          readOnly: true
+        rank:
+          $ref: '#/components/schemas/SportRankEnum'
+        rank_label:
+          type: string
+          readOnly: true
+        competition_level:
+          type: string
+          maxLength: 100
+        max_place:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        rule_version:
+          type: string
+          default: demo-1
+          maxLength: 50
+        effective_from:
+          type: string
+          format: date
+          nullable: true
+        source_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
+        source_verified:
+          type: boolean
+        source_note:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - competition_level
+      - discipline
+      - discipline_code
+      - id
+      - max_place
+      - rank
+      - rank_label
+    RankApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+          readOnly: true
+        submitted_by:
+          type: integer
+        submitted_by_name:
+          type: string
+          readOnly: true
+        request_type:
+          $ref: '#/components/schemas/RequestTypeEnum'
+        requested_rank:
+          $ref: '#/components/schemas/SportRankEnum'
+        requested_rank_label:
+          type: string
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+          readOnly: true
+        competition:
+          type: integer
+        competition_title:
+          type: string
+          readOnly: true
+        competition_level:
+          type: string
+          readOnly: true
+        result:
+          type: integer
+        publication:
+          type: integer
+          nullable: true
+        place:
+          type: integer
+          nullable: true
+          readOnly: true
+        score:
+          type: string
+          nullable: true
+          readOnly: true
+        comment:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/QualificationReviewStatusEnum'
+          default: pending
+        decision_reason:
+          type: string
+        decided_by:
+          type: integer
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+        record:
+          allOf:
+          - $ref: '#/components/schemas/DecisionRecord'
+          nullable: true
+          readOnly: true
+      required:
+      - athlete
+      - athlete_name
+      - competition
+      - competition_level
+      - competition_title
+      - discipline
+      - discipline_name
+      - id
+      - place
+      - record
+      - request_type
+      - requested_rank
+      - requested_rank_label
+      - result
+      - score
+      - submitted_by
+      - submitted_by_name
+    RankApplicationCreate:
+      type: object
+      properties:
+        result:
+          type: integer
+          minimum: 1
+        requested_rank:
+          $ref: '#/components/schemas/SportRankEnum'
+        request_type:
+          $ref: '#/components/schemas/RequestTypeEnum'
+        comment:
+          type: string
+          maxLength: 1000
+      required:
+      - request_type
+      - requested_rank
+      - result
+    RankEnum:
+      $ref: '#/components/schemas/SportRankEnum'
+    RankHint:
+      type: object
+      properties:
+        rank:
+          type: string
+        rank_label:
+          type: string
+        rule_version:
+          type: string
+        source_verified:
+          type: boolean
+        disclaimer:
+          type: string
+      required:
+      - disclaimer
+      - rank
+      - rank_label
+      - rule_version
+      - source_verified
+    RankResult:
+      type: object
+      properties:
+        result:
+          type: integer
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+        competition:
+          type: integer
+        competition_title:
+          type: string
+        competition_level:
+          type: string
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+        place:
+          type: integer
+        score:
+          type: string
+          nullable: true
+        current_rank:
+          type: string
+          nullable: true
+        current_rank_label:
+          type: string
+          nullable: true
+        pending_ranks:
+          type: array
+          items:
+            type: string
+        hint:
+          allOf:
+          - $ref: '#/components/schemas/RankHint'
+          nullable: true
+      required:
+      - athlete
+      - athlete_name
+      - competition
+      - competition_level
+      - competition_title
+      - current_rank
+      - current_rank_label
+      - discipline
+      - discipline_name
+      - hint
+      - pending_ranks
+      - place
+      - result
+      - score
+    RankResultPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RankResult'
+        page:
+          type: integer
+        pages:
+          type: integer
+        count:
+          type: integer
+        has_next:
+          type: boolean
+      required:
+      - count
+      - has_next
+      - items
+      - page
+      - pages
     Register:
       type: object
       properties:
@@ -1551,6 +2242,18 @@ components:
       - email
       - full_name
       - password
+    RequestTypeEnum:
+      enum:
+      - assign
+      - confirm
+      type: string
+      description: |-
+        * `assign` - Присвоение
+        * `confirm` - Подтверждение
+    RequestedCategoryEnum:
+      $ref: '#/components/schemas/JudgeCategoryEnum'
+    RequestedRankEnum:
+      $ref: '#/components/schemas/SportRankEnum'
     Result:
       type: object
       properties:
@@ -1563,9 +2266,8 @@ components:
           $ref: '#/components/schemas/ResultStatusEnum'
         place:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
           nullable: true
         score:
           type: string
@@ -1622,6 +2324,94 @@ components:
       description: |-
         * `ekp` - Единый календарный план
         * `regional` - Региональный календарь
+    SportRankEnum:
+      enum:
+      - youth_3
+      - youth_2
+      - youth_1
+      - adult_3
+      - adult_2
+      - adult_1
+      - cms
+      - ms
+      - msmk
+      type: string
+      description: |-
+        * `youth_3` - III юношеский разряд
+        * `youth_2` - II юношеский разряд
+        * `youth_1` - I юношеский разряд
+        * `adult_3` - III спортивный разряд
+        * `adult_2` - II спортивный разряд
+        * `adult_1` - I спортивный разряд
+        * `cms` - Кандидат в мастера спорта
+        * `ms` - Мастер спорта России
+        * `msmk` - Мастер спорта России международного класса
+    SportRankHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+          readOnly: true
+        rank:
+          $ref: '#/components/schemas/SportRankEnum'
+        rank_label:
+          type: string
+          readOnly: true
+        order_number:
+          type: string
+          maxLength: 100
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        validity:
+          type: string
+          readOnly: true
+        days_left:
+          type: integer
+          readOnly: true
+        competition_id:
+          type: integer
+          readOnly: true
+        competition_title:
+          type: string
+          readOnly: true
+        result_id:
+          type: integer
+          readOnly: true
+        place:
+          type: integer
+          nullable: true
+          readOnly: true
+      required:
+      - assigned_on
+      - athlete
+      - athlete_name
+      - competition_id
+      - competition_title
+      - days_left
+      - discipline
+      - discipline_name
+      - id
+      - order_number
+      - place
+      - rank
+      - rank_label
+      - result_id
+      - valid_until
+      - validity
     Stage:
       type: object
       properties:
@@ -1630,9 +2420,8 @@ components:
           readOnly: true
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         name:
           type: string
           maxLength: 150
@@ -1661,6 +2450,10 @@ components:
         * `draft` - Черновик
         * `published` - Опубликовано
         * `closed` - Завершено
+    Status41aEnum:
+      $ref: '#/components/schemas/QualificationReviewStatusEnum'
+    StatusDc7Enum:
+      $ref: '#/components/schemas/DecisionStatusEnum'
     UserChoice:
       type: object
       properties:

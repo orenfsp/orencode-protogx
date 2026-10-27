@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from io import BytesIO
+from zipfile import ZipFile
 
 from django.test import TestCase
 from django.utils import timezone
@@ -73,6 +74,21 @@ class CompetitionWorkflowTests(TestCase):
         response = self.client.post(f"/api/v1/applications/{application}/decision/", {"status": "approved"}, format="json")
         self.assertEqual(response.status_code, 200, response.data)
 
+    def test_recorded_revocation_blocks_application_and_publication(self):
+        competition = self.competition()
+        consent = PersonalDataConsent.objects.get(user=self.athlete)
+        consent.revoked_at = timezone.now()
+        consent.save(update_fields=["revoked_at"])
+        self.assertEqual(self.apply(competition, self.athlete).status_code, 400)
+        consent.revoked_at = None
+        consent.save(update_fields=["revoked_at"])
+        application = self.apply(competition, self.athlete)
+        self.assertEqual(application.status_code, 201)
+        self.approve(application.data["id"])
+        consent.revoked_at = timezone.now()
+        consent.save(update_fields=["revoked_at"])
+        self.assertEqual(self.client.post(f"/api/v1/competitions/{competition}/protocol-publish/").status_code, 400)
+
     def test_full_workflow_versioned_protocol_and_history(self):
         competition = self.competition()
         first = self.apply(competition, self.athlete)
@@ -128,7 +144,12 @@ class CompetitionWorkflowTests(TestCase):
         self.assertEqual(published2.data["correction_reason"], "Исправлен результат после проверки")
         self.assertEqual(ProtocolPublication.objects.get(pk=published.data["id"]).snapshot, immutable)
         previous = self.client.get(f"/api/v1/competitions/{competition}/protocols/1/download/?file_format=docx")
-        self.assertEqual(previous.content, docx.content)
+        # DOCX is a ZIP archive whose entry timestamps can differ between downloads.
+        # Compare the actual archived document data, including XML and media.
+        with ZipFile(BytesIO(previous.content)) as old_export, ZipFile(BytesIO(docx.content)) as original_export:
+            self.assertEqual(set(old_export.namelist()), set(original_export.namelist()))
+            for name in original_export.namelist():
+                self.assertEqual(old_export.read(name), original_export.read(name), name)
         self.as_role(self.athlete, "athlete")
         self.assertEqual(self.client.get("/api/v1/history/").data[0]["row"]["place"], 2)
         self.assertTrue(AuditEvent.objects.filter(action="protocol.published", competition_id=competition).count() == 2)

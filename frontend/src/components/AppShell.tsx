@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { api, Me, Role } from "@/lib/api";
 
 const roleName: Record<Role, string> = { federation: "Федерация", athlete: "Спортсмен", coach: "Тренер", judge: "Судья" };
@@ -18,6 +18,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [dark, setDark] = useState(false);
   const [roleError, setRoleError] = useState("");
+  const identityRevision = useRef(0);
+  const roleQueue = useRef<Promise<void>>(Promise.resolve());
+  const activeRoleRequest = useRef<AbortController | null>(null);
+  const logoutPending = useRef(false);
 
   function toggleTheme() {
     const next = !dark;
@@ -31,21 +35,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    api<Me>("auth/me/").then(setMe).catch(() => setMe(null));
+    let current = true;
+    const revision = identityRevision.current;
+    api<Me>("auth/me/").then((user) => { if (current && revision === identityRevision.current) setMe(user); }).catch(() => { if (current && revision === identityRevision.current) setMe(null); });
+    return () => { current = false; };
   }, [path]);
 
   async function switchRole(role: Role) {
-    try {
-      setRoleError("");
-      setMe(await api<Me>("auth/active-role/", { method: "POST", body: JSON.stringify({ role }) }));
-    } catch (error) { setRoleError(error instanceof Error ? error.message : "Ошибка выбора роли"); }
+    if (logoutPending.current) return;
+    const revision = ++identityRevision.current;
+    setRoleError("");
+    const operation = roleQueue.current.then(async () => {
+      if (revision !== identityRevision.current) return;
+      const controller = new AbortController();
+      activeRoleRequest.current = controller;
+      try {
+        const user = await api<Me>("auth/active-role/", { method: "POST", body: JSON.stringify({ role }), signal: controller.signal });
+        if (revision === identityRevision.current) setMe(user);
+      } catch (error) {
+        if (revision === identityRevision.current) setRoleError(error instanceof Error ? error.message : "Ошибка выбора роли");
+      } finally {
+        if (activeRoleRequest.current === controller) activeRoleRequest.current = null;
+      }
+    });
+    roleQueue.current = operation;
+    await operation;
   }
 
   async function signOut() {
-    await api<void>("auth/logout/", { method: "POST" });
-    setMe(null);
-    router.push("/");
-    router.refresh();
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    ++identityRevision.current;
+    activeRoleRequest.current?.abort();
+    try {
+      await roleQueue.current;
+      await api<void>("auth/logout/", { method: "POST" });
+      setMe(null);
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      setRoleError(error instanceof Error ? error.message : "Не удалось выйти");
+    } finally {
+      logoutPending.current = false;
+    }
   }
 
   return <>

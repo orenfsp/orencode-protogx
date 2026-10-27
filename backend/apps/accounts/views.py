@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from apps.catalogs.models import Discipline
 
-from .models import Guardian, PersonalDataConsent, UserRole
+from .models import Guardian, UserRole, has_current_consent
 from .serializers import (
     ActiveRoleSerializer,
     AuthResponseSerializer,
@@ -91,7 +91,7 @@ class DashboardView(APIView):
                 {"label": "Ожидают проверки", "value": str(Guardian.objects.filter(confirmation_status="pending_verification").count())},
             ]
         else:
-            consent = PersonalDataConsent.objects.filter(user=request.user).exists()
+            consent = has_current_consent(request.user)
             if role == UserRole.Role.ATHLETE:
                 guardian_status = Guardian.objects.filter(minor=request.user).values_list("confirmation_status", flat=True).first()
             metrics = [

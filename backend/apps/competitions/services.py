@@ -4,7 +4,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from apps.accounts.models import Guardian, PersonalDataConsent
+from apps.accounts.models import Guardian, has_current_consent
 
 from .models import (
     Application,
@@ -47,7 +47,7 @@ def check_application_eligibility(competition, athlete, age_group, submitted_by)
     age = age_on(athlete.date_of_birth, competition.age_reference_date or competition.starts_at.date())
     if not age_group.min_age <= age <= age_group.max_age:
         raise ValidationError("Athlete is outside age group")
-    if not PersonalDataConsent.objects.filter(user=athlete).exists():
+    if not has_current_consent(athlete):
         raise ValidationError("Personal data consent is required")
     if age < 18 and not Guardian.objects.filter(minor=athlete, confirmation_status="verified").exists():
         raise ValidationError("Verified guardian consent is required")
@@ -166,7 +166,7 @@ def publish_protocol(competition, actor, correction_reason=""):
         if application.status != "approved":
             continue
         athlete = application.athlete
-        if not PersonalDataConsent.objects.filter(user=athlete).exists():
+        if not has_current_consent(athlete):
             raise ValidationError("Every approved athlete needs current personal data consent")
         if age_on(athlete.date_of_birth, competition.age_reference_date or competition.starts_at.date()) < 18 and not Guardian.objects.filter(minor=athlete, confirmation_status="verified").exists():
             raise ValidationError("Every approved minor needs verified guardian consent")

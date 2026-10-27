@@ -35,6 +35,7 @@ test("competition application, moderation, result, protocol and athlete history"
 
   const athleteContext = await browser.newContext();
   const athletePage = await athleteContext.newPage();
+  athletePage.setDefaultTimeout(10000);
   await signIn(athletePage, "demo.athlete@example.test");
   await athletePage.goto(competitionUrl);
   await athletePage.getByRole("combobox", { name: "Возрастная группа" }).selectOption({ label: "Демо: 18+" });
@@ -73,6 +74,20 @@ test("competition application, moderation, result, protocol and athlete history"
 
   await athletePage.goto("/history");
   await expect(athletePage.getByRole("row", { name: new RegExp(title) })).toContainText("Классифицирован");
+  await athletePage.goto("/qualifications");
+  await athletePage.getByLabel("Результат-основание").selectOption({ label: `${title} · 1 место` });
+  await athletePage.locator("form").filter({ hasText: "Результат-основание" }).locator("select").nth(1).selectOption("adult_3");
+  await athletePage.getByRole("button", { name: "Отправить в федерацию" }).click();
+  await expect(athletePage.getByRole("status")).toContainText("Заявка отправлена");
+  await page.goto("/qualifications");
+  const rankApplication = page.locator(".workflow-record").filter({ hasText: title });
+  await expect(rankApplication).toHaveCount(1);
+  await rankApplication.getByLabel("Номер приказа").fill("Тестовый приказ");
+  const nextYear = new Date();
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+  await rankApplication.getByLabel("Действует до").fill(nextYear.toISOString().slice(0, 10));
+  await rankApplication.getByRole("button", { name: "Присвоить" }).click();
+  await expect(page.getByRole("status")).toContainText("запись добавлена в историю");
   await judgeContext.close();
   await athleteContext.close();
 });

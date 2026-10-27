@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.catalogs",
     "apps.competitions",
+    "apps.qualifications",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -56,7 +57,26 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_THROTTLE_RATES": {"login": "5/min"},
 }
-SPECTACULAR_SETTINGS = {"TITLE": "FSP OrenKod API", "VERSION": "0.1.0", "SERVE_INCLUDE_SCHEMA": False}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "FSP OrenKod API",
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "SportRankEnum": "apps.qualifications.models.SportRank",
+        "JudgeCategoryEnum": "apps.qualifications.models.JudgeCategory",
+        "QualificationReviewStatusEnum": "apps.qualifications.models.ReviewStatus",
+        "DecisionStatusEnum": [("approved", "approved"), ("rejected", "rejected")],
+    },
+    # Keep existing component names available for consumers of the earlier schema.
+    "APPEND_COMPONENTS": {"schemas": {
+        "RankEnum": {"$ref": "#/components/schemas/SportRankEnum"},
+        "RequestedRankEnum": {"$ref": "#/components/schemas/SportRankEnum"},
+        "CategoryEnum": {"$ref": "#/components/schemas/JudgeCategoryEnum"},
+        "RequestedCategoryEnum": {"$ref": "#/components/schemas/JudgeCategoryEnum"},
+        "Status41aEnum": {"$ref": "#/components/schemas/QualificationReviewStatusEnum"},
+        "StatusDc7Enum": {"$ref": "#/components/schemas/DecisionStatusEnum"},
+    }},
+}
 LANGUAGE_CODE = "ru-ru"
 TIME_ZONE = "Asia/Yekaterinburg"
 USE_I18N = True

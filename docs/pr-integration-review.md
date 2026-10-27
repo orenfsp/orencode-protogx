@@ -1,0 +1,29 @@
+# PR integration review — 2026-10-27
+
+## Post-merge update
+
+PR #2 was merged with explicit authorization as `e3903fbfe14420d83e9043b744854209bf00318a`. Its reviewed head was unchanged; GitHub reported no branch protection, applicable rulesets, required reviews, check runs or blocking comments. PR #1 was updated in an isolated worktree by a non-destructive merge from that main commit. The dashboard resolution keeps both links; a separate regression exercises all four roles at desktop and mobile widths. During post-merge review, a reproducible out-of-order role-switch response race was fixed by serializing switch requests, ignoring stale identity responses, and aborting pending role/CSRF requests on logout. This merge does not authorize merging PR #1 into main.
+
+The integrated PostgreSQL suite passed 55/55. The production build, TypeScript, ESLint, Ruff, migration consistency, warning-free OpenAPI validation and checked-in schema comparison, and design-contract check passed. The browser suite passed 28/28, including the live competition-to-qualification workflow; a separate regression for logout during a stalled CSRF request also passed. The original reference HTML remains unchanged.
+
+Base `main`: `f7beaa6312147513a14e1362d6f89c3b679e5db3`. PR #1 original head: `61c2839ffcca863f4a7a88f5794130f20c84728b`. PR #2 head: `ebe2189b39487db053378b94cfd69f40c5f3bfa1`.
+
+## PR #1 — qualifications
+
+The repair binds new rank applications to the latest publication and the matching participant row, stores a copy of the evidence, keeps legacy provenance unknown rather than inventing it, removes access after a coach link is revoked, rechecks consent and guardian status, and scopes page state to user and role. It adds a nullable `revoked_at` to consent records: the latest record determines whether consent is current, and the existing dashboard, competition and qualification checks use that rule. A user-facing withdrawal and renewal workflow is not included. Historic records and applications are read-only in Django admin; correction of an existing historic entry remains a separate requirement.
+
+The results endpoint returns paginated candidates with metadata and validates the latest published row; the response count counts candidates before snapshot and hint filtering. The dashboard links to qualifications, and OpenAPI describes the page and decision-record objects. Tests cover changed evidence, later publication, missing rows, coach revocation, consent withdrawal and renewal, guardian verification, more than 300 candidates, admin restrictions, stale role responses, navigation and the live competition-to-qualification workflow.
+
+Individual verification: the PostgreSQL suite passed 55/55 after the enum-name changes; system check, migration drift, Ruff, TypeScript, ESLint, production build, design contract and 4 focused browser tests passed. The live workflow passed. Explicit enum names now produce zero OpenAPI warnings or errors; six prior component names remain as compatibility aliases. All 38 resolved API paths and security schemes matched the preceding schema, and `python scripts/check_openapi_schema.py` confirms the checked-in schema matches a fresh warning-free generation. Generated clients can still differ in their chosen type names even though legacy schema components remain available; downstream code generators were not tested. The focused alias test was rerun after the aliases were added. An earlier full-suite run failed because a DOCX assertion compared ZIP timestamps; the corrected assertion compares every archived member's contents instead of container timestamps.
+
+DeepSeek Pro requests, IDs, accepted and rejected findings, and the schema-validation retry are documented in [delegation-log.md](delegation-log.md). DeepSeek did not write files or run tests. Existing consent records remain valid unless marked withdrawn, and old rank applications cannot be assigned a trustworthy publication retroactively.
+
+## PR #2 — frontend continuation
+
+No code changes were required. The focused Playwright suite passed 13/13 and the existing live competition workflow passed. Reference, homepage, calendar, dashboard, history and role-aware competition captures were inspected at 1440, 768 and 390 pixels in both themes; the implementation retains the rail, indigo navigation, typography, orange accents, bordered tables and mobile navigation. It substitutes live competition data for the reference's static example and adds a mobile theme control. Narrow tables require horizontal scrolling; the new competition page explicitly indicates this. Reference and page captures are in the local temporary directory `fsp-pr2-visual-review` and are not committed baselines.
+
+## Combined integration
+
+PR #2 first is the proposed order. A detached integration worktree based on PR #2 revealed one textual conflict in `frontend/src/app/dashboard/page.tsx`: both PRs add an action on the same line. The test-only resolution retains both the role-aware competition link and the qualifications link; it has not been committed or merged to `main`. A separate integration stack with a new PostgreSQL volume applied both migrations and completed the production build, migration drift check, Ruff and design-contract check. The combined PostgreSQL suite passed 55/55 after enum-name changes; a browser suite passed 18/18, including the live workflow, and an additional 20/20 role/navigation tests passed with all four roles at desktop and mobile widths. After aliases were added, the focused schema test and warning-free regeneration passed in the combined tree, and its generated schema exactly matched the repaired PR's checked-in file.
+
+Before any merge, fetch the heads again, reconcile the dashboard conflict without losing either link, rerun affected checks on the resulting tree, and obtain explicit team-lead merge authorization. No branch protection is bypassed.

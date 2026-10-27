@@ -15,8 +15,8 @@ export type ProtocolSnapshot = { competition_id: number; competition_title: stri
 export type ProtocolPublication = { id: number; version: number; snapshot: ProtocolSnapshot; correction_reason: string; published_at: string };
 export type CoachLink = { id: number; coach: number; coach_name: string; athlete: number | null; athlete_name: string; discipline: number; status: "pending" | "confirmed" | "rejected" };
 
-async function csrfToken(): Promise<string> {
-  const response = await fetch("/api/v1/auth/csrf/", { credentials: "include" });
+async function csrfToken(signal?: AbortSignal | null): Promise<string> {
+  const response = await fetch("/api/v1/auth/csrf/", { credentials: "include", signal });
   if (!response.ok) throw new Error("Не удалось подготовить запрос");
   const data = await response.json();
   return data.csrfToken;
@@ -24,7 +24,7 @@ async function csrfToken(): Promise<string> {
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const unsafe = init?.method && !["GET", "HEAD", "OPTIONS"].includes(init.method.toUpperCase());
-  const token = unsafe ? await csrfToken() : undefined;
+  const token = unsafe ? await csrfToken(init?.signal) : undefined;
   const response = await fetch(`/api/v1/${path}`, {
     credentials: "include",
     ...init,
