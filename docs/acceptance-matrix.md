@@ -15,7 +15,7 @@ Status is based on executed evidence. `partial` means a foundation exists but th
 | AC-09 | partial | Qualifications APIs, federation decisions, audited history, published-row evidence and revocation-aware consent have PostgreSQL tests. End-to-end verification and reviewed source rules remain required; withdrawal/renewal UI and audited historical correction are not implemented. |
 | AC-10 | not_implemented | Dashboard and SMTP delivery test pending |
 | AC-11 | not_implemented | Two-year XLSX test pending |
-| AC-12 | not_implemented | Rating fixtures and formula test pending |
+| AC-12 | implemented | Versioned rating rules, exact default podium table, Decimal formula, automatic recalculation after protocol publication/correction, latest-publication provenance without duplicate counting, event-date suspension/disqualification exclusion, federation-only mutation endpoints, discipline-scoped filters/pagination, API breakdowns, 10 rating backend tests, OpenAPI validation, responsive ratings page, and Playwright empty/populated breakdown states pass. AC-13 remains not implemented. |
 | AC-13 | not_implemented | Manual team selection test pending |
 | AC-14 | partial | Published protocol PDF/DOCX are generated from immutable database snapshots, with Cyrillic font, dynamic columns, version footer and private download authorization. PostgreSQL test and Chrome downloads pass; PDF visually inspected. Other document types and XLSX remain future work. |
 | AC-15 | partial | Phase 2 audit events and role/object tests pass, including unconfirmed coach denial, assigned judge scope, private athlete history, withdrawn-consent publication block, and 403 role denial. Full platform-wide audit coverage remains future work. |

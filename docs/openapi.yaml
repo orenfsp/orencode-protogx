@@ -969,6 +969,169 @@ paths:
               schema:
                 $ref: '#/components/schemas/RankResultPage'
           description: ''
+  /api/v1/rating-options/:
+    get:
+      operationId: v1_rating_options_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingOptionsResponse'
+          description: ''
+  /api/v1/rating-restrictions/:
+    get:
+      operationId: v1_rating_restrictions_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AthleteRestriction'
+          description: ''
+    post:
+      operationId: v1_rating_restrictions_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AthleteRestriction'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AthleteRestriction'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AthleteRestriction'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AthleteRestriction'
+          description: ''
+  /api/v1/rating-rules/:
+    get:
+      operationId: v1_rating_rules_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RatingRule'
+          description: ''
+    post:
+      operationId: v1_rating_rules_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRuleInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RatingRuleInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RatingRuleInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingRule'
+          description: ''
+  /api/v1/ratings/:
+    get:
+      operationId: v1_ratings_retrieve
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+      - in: query
+        name: discipline
+        schema:
+          type: string
+      - in: query
+        name: min_rank
+        schema:
+          type: string
+      - in: query
+        name: page
+        schema:
+          type: integer
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+      - in: query
+        name: season
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingsResponse'
+          description: ''
+  /api/v1/ratings/recalculate/:
+    post:
+      operationId: v1_ratings_recalculate_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRecalculateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RatingRecalculateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RatingRecalculateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingRecalculateResponse'
+          description: ''
   /api/v1/results/:
     get:
       operationId: v1_results_list
@@ -1184,6 +1347,105 @@ components:
       - published_at
       - row
       - version
+    AthleteRating:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+        season:
+          type: integer
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+        discipline_name:
+          type: string
+        base_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        prize_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        coefficient:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        rating_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        calculated_at:
+          type: string
+          format: date-time
+        placement:
+          type: integer
+          readOnly: true
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingContribution'
+          readOnly: true
+      required:
+      - athlete
+      - athlete_name
+      - base_score
+      - breakdown
+      - coefficient
+      - discipline
+      - discipline_code
+      - discipline_name
+      - id
+      - placement
+      - rating_score
+      - season
+    AthleteRestriction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        starts_at:
+          type: string
+          format: date
+        ends_at:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AthleteRestrictionStatusEnum'
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - athlete
+      - created_at
+      - created_by
+      - ends_at
+      - id
+      - kind
+      - starts_at
+    AthleteRestrictionStatusEnum:
+      enum:
+      - active
+      - revoked
+      type: string
+      description: |-
+        * `active` - Активно
+        * `revoked` - Отменено
     AuthResponse:
       type: object
       properties:
@@ -1663,6 +1925,14 @@ components:
       - order_number
       - valid_until
       - validity
+    KindEnum:
+      enum:
+      - suspension
+      - disqualification
+      type: string
+      description: |-
+        * `suspension` - Приостановление
+        * `disqualification` - Дисквалификация
     Login:
       type: object
       properties:
@@ -2205,6 +2475,292 @@ components:
       - items
       - page
       - pages
+    RatingAgeGroupOptions:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        min_age:
+          type: integer
+        max_age:
+          type: integer
+      required:
+      - id
+      - max_age
+      - min_age
+      - name
+    RatingContribution:
+      type: object
+      properties:
+        competition_id:
+          type: integer
+        competition_title:
+          type: string
+        competition_level:
+          type: string
+        publication_id:
+          type: integer
+        publication_version:
+          type: integer
+        placement:
+          type: integer
+        awarded_points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        age_group:
+          type: string
+        source_snapshot:
+          type: object
+          additionalProperties: {}
+      required:
+      - age_group
+      - awarded_points
+      - competition_id
+      - competition_level
+      - competition_title
+      - placement
+      - publication_id
+      - publication_version
+      - source_snapshot
+    RatingDisciplineOptions:
+      type: object
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        name:
+          type: string
+      required:
+      - code
+      - id
+      - name
+    RatingOptionsResponse:
+      type: object
+      properties:
+        seasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingSeason'
+        disciplines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingDisciplineOptions'
+        age_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingAgeGroupOptions'
+      required:
+      - age_groups
+      - disciplines
+      - seasons
+    RatingPointRule:
+      type: object
+      properties:
+        competition_level:
+          type: string
+          maxLength: 100
+        place:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+      required:
+      - competition_level
+      - place
+      - points
+    RatingPointRuleInput:
+      type: object
+      properties:
+        competition_level:
+          type: string
+          maxLength: 100
+        place:
+          type: integer
+          minimum: 1
+        points:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+      required:
+      - competition_level
+      - place
+      - points
+    RatingRecalculateRequest:
+      type: object
+      properties:
+        season:
+          type: integer
+        discipline:
+          type: integer
+      required:
+      - discipline
+      - season
+    RatingRecalculateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        season:
+          type: integer
+        discipline:
+          type: string
+      required:
+      - discipline
+      - season
+      - status
+    RatingRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        season:
+          type: integer
+        season_year:
+          type: integer
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        effective_from:
+          type: string
+          format: date
+          nullable: true
+        effective_until:
+          type: string
+          format: date
+          nullable: true
+        coefficient_threshold:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        stability_coefficient:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        rounding_places:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        rounding_mode:
+          type: string
+          maxLength: 20
+        is_active:
+          type: boolean
+        point_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingPointRule'
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - discipline
+      - discipline_code
+      - id
+      - point_rules
+      - season
+      - season_year
+      - version
+    RatingRuleInput:
+      type: object
+      properties:
+        season:
+          type: integer
+        discipline:
+          type: integer
+        effective_from:
+          type: string
+          format: date
+          nullable: true
+        effective_until:
+          type: string
+          format: date
+          nullable: true
+        coefficient_threshold:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        stability_coefficient:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+        rounding_places:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        rounding_mode:
+          type: string
+          maxLength: 20
+        is_active:
+          type: boolean
+        point_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingPointRuleInput'
+      required:
+      - discipline
+      - point_rules
+      - season
+    RatingSeason:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+      - year
+    RatingsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AthleteRating'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+      required:
+      - items
+      - page
+      - page_size
+      - pages
+      - total
     Register:
       type: object
       properties:

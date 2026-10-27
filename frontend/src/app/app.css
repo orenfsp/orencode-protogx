@@ -45,6 +45,9 @@
 .workflow-search{max-width:520px;margin-bottom:18px}
 .workflow-link{text-decoration:underline;text-decoration-color:var(--sg);text-decoration-thickness:3px;text-underline-offset:3px}
 .workflow-stack{display:grid;gap:18px}
+.rating-breakdown{display:grid;gap:8px;margin-top:12px}
+.rating-breakdown .note{margin:0;font-size:13px}
+.rating-breakdown small{display:block;color:var(--mut);font-weight:400}
 .workflow-record{border:1.5px solid var(--ink);padding:16px;display:grid;gap:10px}
 .workflow-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
 .workflow-actions .inp{width:min(240px,100%)}
