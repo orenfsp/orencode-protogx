@@ -4,9 +4,11 @@ from unittest.mock import patch
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
 from apps.competitions.models import Application, Competition, ProtocolPublication
+from apps.qualifications.models import SportRankHistory
 from apps.ratings.models import AthleteRating, RatingContribution
 
 
@@ -33,7 +35,7 @@ class SeedDemoTests(TestCase):
 
         from apps.teams.models import RegionalTeam, TeamDecisionHistory, TeamMembership
         self.assertEqual(RegionalTeam.objects.count(), 4)
-        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 2)
+        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 3)
         populated = RegionalTeam.objects.get(name="Демо-команда Оренбург 2026")
         self.assertFalse(populated.memberships.filter(athlete__email="demo.athlete@example.test", removed_at__isnull=True).exists())
         self.assertEqual(Competition.objects.filter(title__startswith="Демо ").count(), 4)
@@ -43,9 +45,13 @@ class SeedDemoTests(TestCase):
         self.assertGreaterEqual(RatingContribution.objects.filter(is_current=True).count(), 5)
         self.assertTrue(AthleteRating.objects.filter(athlete__email="demo.athlete@example.test", coefficient="1.20").exists())
         self.assertTrue(RatingContribution.objects.filter(athlete__email="demo.athlete@example.test", publication__isnull=False, is_current=True).exists())
+        self.assertEqual(SportRankHistory.objects.count(), 2)
+        self.assertEqual(Competition.objects.filter(title__startswith="Демо: Приём заявок", registration_deadline__gt=timezone.now()).count(), 1)
+        self.assertEqual(Competition.objects.filter(title__startswith="Демо: Приём заявок", registration_deadline__lte=timezone.now()).count(), 1)
+        self.assertEqual(RegionalTeam.objects.filter(memberships__removed_at__isnull=True, memberships__athlete__isnull=False).distinct().count(), 2)
         history_count = TeamDecisionHistory.objects.count()
         call_command("seed_demo", stdout=StringIO())
-        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 2)
+        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 3)
         self.assertEqual(TeamDecisionHistory.objects.count(), history_count)
 
     @override_settings(DEBUG=True)

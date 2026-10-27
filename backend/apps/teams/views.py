@@ -105,6 +105,7 @@ class TeamMembersView(APIView):
         serializer = MemberAddSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         add_member(actor=request.user, team=team, athlete=serializer.validated_data["athlete"], note=serializer.validated_data.get("note", ""))
+        team.refresh_from_db()
         return Response(RegionalTeamSerializer(team).data, status=201)
 
 

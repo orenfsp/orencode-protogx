@@ -21,6 +21,11 @@ from apps.competitions.models import (
     Result,
 )
 from apps.competitions.services import audit, publish_protocol, validate_result_data
+from apps.qualifications.models import RankApplication, SportRank
+from apps.qualifications.services import (
+    create_rank_application,
+    decide_rank_application,
+)
 from apps.ratings.models import AthleteRestriction
 from apps.ratings.services import season_for_year
 from apps.teams.models import RegionalTeam
@@ -51,6 +56,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             users = self._seed_accounts()
             self._seed_competitions(users)
+            self._seed_rank_history(users)
             self._seed_teams(users)
         self.stdout.write(self.style.SUCCESS("Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved"))
 
@@ -193,6 +199,33 @@ class Command(BaseCommand):
             defaults={"status": "confirmed"},
         )
 
+        # Period-keyed fixtures stay useful across calendar months without rewriting
+        # an earlier fixture that a federation user might have edited.
+        today = timezone.localdate()
+        first = timezone.make_aware(datetime(today.year, today.month, 1, 12))
+        discipline = Discipline.objects.get(code="algorithmic")
+        template = ProtocolTemplate.objects.filter(discipline=discipline).order_by("-version").first()
+        for label, deadline, starts in (
+            ("Приём заявок открыт", first + timedelta(days=35), first + timedelta(days=45)),
+            ("Приём заявок закрыт", first - timedelta(days=1), first + timedelta(days=10)),
+        ):
+            event, created = Competition.objects.get_or_create(
+                title=f"Демо: {label} {today:%Y-%m}",
+                defaults={"discipline": discipline, "level": "Regional", "competition_type": "championship", "format": "online", "starts_at": starts, "ends_at": starts + timedelta(days=1), "registration_deadline": deadline, "age_reference_date": starts.date(), "location": "Оренбург", "regulations": "Демонстрационное соревнование.", "template": template, "state": Competition.State.PUBLISHED, "created_by": federation},
+            )
+            if created:
+                event.age_groups.add(adult_group)
+
+    def _seed_rank_history(self, users):
+        federation = users["demo.federation@example.test"]
+        today = timezone.localdate()
+        for email, rank in (("demo.athlete@example.test", SportRank.ADULT_3), ("demo.athlete2@example.test", SportRank.ADULT_2)):
+            athlete = users[email]
+            result = Result.objects.filter(application__athlete=athlete, application__competition__title__startswith="Демо Russian Championship").select_related("application__competition").first()
+            if not result or RankApplication.objects.filter(result=result, requested_rank=rank).exists():
+                continue
+            application = create_rank_application(users["demo.coach@example.test"], "coach", {"result": result.pk, "requested_rank": rank, "request_type": "assign", "comment": "Вымышленный демонстрационный пример, не подтверждение ЕВСК."})
+            decide_rank_application(application.pk, federation, {"status": "approved", "order_number": f"ДЕМО-{result.pk}", "assigned_on": today, "valid_until": today + timedelta(days=730)})
     def _seed_teams(self, users):
         federation = users["demo.federation@example.test"]
         athlete2 = users["demo.athlete2@example.test"]
@@ -211,13 +244,15 @@ class Command(BaseCommand):
         if created:
             for athlete in (athlete2, athlete3):
                 add_member(actor=federation, team=populated, athlete=athlete, note="Ручной демонстрационный выбор федерации")
-        RegionalTeam.objects.get_or_create(
+        product_team, product_created = RegionalTeam.objects.get_or_create(
             season=season,
             discipline=product,
             age_group=age_group,
             name="Демо-команда Product 2026",
             defaults={"created_by": federation, "region": "Оренбургская область"},
         )
+        if product_created:
+            add_member(actor=federation, team=product_team, athlete=athlete2, note="Демонстрационный ручной отбор")
         season_2025 = season_for_year(2025)
         RegionalTeam.objects.get_or_create(
             season=season_2025,

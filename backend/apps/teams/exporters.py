@@ -13,6 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from apps.competitions.exporters import _font_path
+from apps.qualifications.models import SportRankHistory
 
 
 def _rows(team):
@@ -21,6 +22,11 @@ def _rows(team):
 
 def _title(team, draft=False):
     return ("ПРОЕКТ ПРИКАЗА" if draft else "СОСТАВ РЕГИОНАЛЬНОЙ КОМАНДЫ")
+
+
+def _rank(team, athlete):
+    record = SportRankHistory.objects.filter(athlete=athlete, discipline=team.discipline, assigned_on__lte=timezone.localdate(), valid_until__gte=timezone.localdate()).order_by("-assigned_on", "-pk").first()
+    return record.get_rank_display() if record else "—"
 
 
 def render_team_docx(team, *, draft=False):
@@ -39,13 +45,13 @@ def render_team_docx(team, *, draft=False):
         doc.add_paragraph("Проект: предлагается утвердить приведённый ниже состав. Документ не является подписанным официальным приказом; форма требует проверки.")
     table = doc.add_table(rows=1, cols=4)
     table.style = "Table Grid"
-    for cell, text in zip(table.rows[0].cells, ("№", "Спортсмен", "Организация / email", "Рейтинг")):
+    for cell, text in zip(table.rows[0].cells, ("№", "Спортсмен", "Спортивный разряд", "Рейтинг")):
         cell.text = text
     for index, membership in enumerate(_rows(team), 1):
         cells = table.add_row().cells
         cells[0].text = str(index)
         cells[1].text = membership.athlete.full_name
-        cells[2].text = membership.athlete.email
+        cells[2].text = _rank(team, membership.athlete)
         cells[3].text = membership.eligibility_snapshot.get("rating_score") or "—"
     doc.add_paragraph("Подпись представителя федерации: ____________________")
     stream = BytesIO()
@@ -64,9 +70,9 @@ def render_team_pdf(team, *, draft=False):
     story = [Paragraph(_title(team, draft=draft), heading), Paragraph(escape(f"Команда: {team.name}"), normal), Paragraph(escape(f"Регион: {team.region}; сезон: {team.season.year}; дисциплина: {team.discipline.name}; возрастная группа: {team.age_group.name}"), normal), Paragraph(f"Сформировано: {timezone.localtime():%d.%m.%Y %H:%M %Z}", normal), Spacer(1, 10)]
     if draft:
         story.append(Paragraph("Предлагается утвердить приведённый ниже состав. Форма требует проверки.", normal))
-    data = [["№", "Спортсмен", "Email", "Рейтинг"]]
-    data.extend([[str(index), item.athlete.full_name, item.athlete.email, item.eligibility_snapshot.get("rating_score") or "—"] for index, item in enumerate(_rows(team), 1)])
-    table = Table(data, colWidths=[12 * mm, 60 * mm, 68 * mm, 22 * mm], repeatRows=1)
+    data = [["№", "Спортсмен", "Спортивный разряд", "Рейтинг"]]
+    data.extend([[str(index), Paragraph(escape(item.athlete.full_name), normal), Paragraph(escape(_rank(team, item.athlete)), normal), item.eligibility_snapshot.get("rating_score") or "—"] for index, item in enumerate(_rows(team), 1)])
+    table = Table(data, colWidths=[12 * mm, 67 * mm, 61 * mm, 22 * mm], repeatRows=1)
     table.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EEEDF9")), ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#221F73")), ("FONTNAME", (0, 0), (-1, -1), font_name), ("FONTSIZE", (0, 0), (-1, -1), 8), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     story.extend([table, Spacer(1, 12), Paragraph("Проект не является подписанным официальным приказом." if draft else "Сформировано из базы данных платформы.", normal), Paragraph("Подпись представителя федерации: ____________________", normal)])
     doc.build(story)

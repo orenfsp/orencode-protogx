@@ -41,7 +41,22 @@ function TeamsWorkspace() {
     }).catch((failure) => setError(failure instanceof Error ? failure.message : "Не удалось загрузить справочники"));
   }, []);
 
-  useEffect(() => { if (options) loadTeams().catch((failure) => setError(failure instanceof Error ? failure.message : "Не удалось загрузить команды")); }, [options, season, discipline, ageGroup]);
+  useEffect(() => {
+    if (!options) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (season) params.set("season", season);
+    if (discipline) params.set("discipline", discipline);
+    if (ageGroup) params.set("age_group", ageGroup);
+    api<RegionalTeam[]>(`teams/?${params.toString()}`, { signal: controller.signal })
+      .then((value) => {
+        if (controller.signal.aborted) return;
+        setTeams(value);
+        setSelected((current) => current ? value.find((item) => item.id === current.id) ?? null : null);
+      })
+      .catch((failure) => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : "Не удалось загрузить команды"); });
+    return () => controller.abort();
+  }, [options, season, discipline, ageGroup]);
 
   async function openTeam(team: RegionalTeam) {
     setSelected(team);

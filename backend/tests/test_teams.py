@@ -87,6 +87,27 @@ class RegionalTeamApiTests(TestCase):
         response = self.client.post("/api/v1/teams/", {"name": "Unauthorized", "season": 1, "discipline": 1, "age_group": 1}, format="json")
         self.assertEqual(response.status_code, 403)
 
+    def test_coach_and_judge_cannot_access_team_or_documents(self):
+        team = RegionalTeam.objects.first()
+        for role in ("coach", "judge"):
+            user = User.objects.get(email=f"demo.{role}@example.test")
+            self.client.force_authenticate(user)
+            session = self.client.session
+            session["active_role"] = role
+            session.save()
+            self.assertEqual(self.client.get(f"/api/v1/teams/{team.pk}/").status_code, 403)
+            self.assertEqual(self.client.get(f"/api/v1/teams/{team.pk}/documents/?type=roster&document_format=docx").status_code, 403)
+            self.assertEqual(self.client.post(f"/api/v1/teams/{team.pk}/publish/", {}, format="json").status_code, 403)
+
+    def test_session_mutation_without_csrf_is_denied(self):
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(self.federation)
+        session = client.session
+        session["active_role"] = "federation"
+        session.save()
+        team = RegionalTeam.objects.first()
+        self.assertEqual(client.post(f"/api/v1/teams/{team.pk}/publish/", {}, format="json").status_code, 403)
+
     def test_manual_membership_is_unique_and_audited(self):
         team = RegionalTeam.objects.get(name="Новая команда для отбора")
         athlete = User.objects.get(email="demo.athlete@example.test")
