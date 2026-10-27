@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from io import BytesIO
+from zipfile import ZipFile
 
 from django.test import TestCase
 from django.utils import timezone
@@ -143,7 +144,12 @@ class CompetitionWorkflowTests(TestCase):
         self.assertEqual(published2.data["correction_reason"], "Исправлен результат после проверки")
         self.assertEqual(ProtocolPublication.objects.get(pk=published.data["id"]).snapshot, immutable)
         previous = self.client.get(f"/api/v1/competitions/{competition}/protocols/1/download/?file_format=docx")
-        self.assertEqual(previous.content, docx.content)
+        # DOCX is a ZIP archive whose entry timestamps can differ between downloads.
+        # Compare the actual archived document data, including XML and media.
+        with ZipFile(BytesIO(previous.content)) as old_export, ZipFile(BytesIO(docx.content)) as original_export:
+            self.assertEqual(set(old_export.namelist()), set(original_export.namelist()))
+            for name in original_export.namelist():
+                self.assertEqual(old_export.read(name), original_export.read(name), name)
         self.as_role(self.athlete, "athlete")
         self.assertEqual(self.client.get("/api/v1/history/").data[0]["row"]["place"], 2)
         self.assertTrue(AuditEvent.objects.filter(action="protocol.published", competition_id=competition).count() == 2)
