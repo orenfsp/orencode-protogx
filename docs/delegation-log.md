@@ -1,5 +1,15 @@
 # DeepSeek delegation log
 
+## PR #1 repair review — 2026-10-27
+
+Two bounded Pro reviews of qualification, competition and consent interfaces returned `deepseek-v4-pro`, `model_mismatch: false`, and `files_written: false`: provenance request `5f369600-3578-4cc9-bb39-53307fe0c80b` and security request `12fb9d4b-ea75-4395-911d-52ac624dfbfc`. Codex adopted published-row provenance and consent tests. The claim that the existing partial unique constraint cannot prevent duplicate rows was rejected; concurrent duplicate requests may still need graceful error handling.
+
+The first final review failed response schema validation (`unknown or unauthorized fields: potential_issue`). A bounded retry succeeded as `deepseek-v4-pro`, request `7237402d-e1ed-4bf4-944a-d06f640e596b`. Codex removed raw snapshot exposure and corrected page-number validation. Restoring revoked coach access conflicts with the task, and row locks remain held until the enclosing atomic transaction ends. Consent expiry/revocation fields do not exist in the current model and remain an explicit limitation. DeepSeek neither edited files nor ran tests.
+
+Codex subsequently added a nullable withdrawal timestamp, with the latest consent deciding its status, and updated the existing competition and dashboard checks. A further bounded Pro review returned `deepseek-v4-pro`, request `5cc05a9e-f2f3-45ad-be0d-1de93370e28f`, with no files written. Its missing-migration warning was rejected: the new migration was outside the supplied diff and has been applied in the isolated environment. Its suggestion to fabricate dates of birth was rejected; missing dates fail closed. A user-facing withdrawal/renewal workflow remains unimplemented.
+
+The final PR #2 frontend review returned `deepseek-v4-pro`, request `1a35d28b-a5ea-430d-b7c4-7dfea95f00a9`. Its claimed stale calendar display on a failed role switch was rejected: the existing `loadedFor !== identity` branch hides the old table, and the focused browser tests passed. No PR #2 code changes were accepted from this review.
+
 ## Документационный спринт — 2026-10-27
 
 После создания `docs/team/` Codex передал в `deepseek_reliable.review_code` только четыре новых несекретных документа (`API_CONTRACTS.md`, `CURRENT_STATUS.md`, `AI_AGENT_RULES.md`, `TESTING.md`) для ограниченного read-only review. Ответ: `status: success`, reported `model: deepseek-v4-pro`, `requested_model: deepseek-v4-pro`, `model_mismatch: false`, `files_written: false`, `tests_executed: false`, request ID `dbef3ed5-36be-478d-a296-3c8338b5a381`. Предложения о публичной видимости шаблонов/черновиков, повторном POST результата и разделении исторических/текущих проверок сверены с `views.py`, `services.py`, тестами и уточнены в документации. Требование указать единственный HTTP статус анонимного dashboard не принято: текущий тест явно допускает 401 или 403, поэтому записана эта фактическая граница. MCP не изменял файлы и не запускал тесты.

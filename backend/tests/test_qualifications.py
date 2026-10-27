@@ -1,12 +1,13 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
+from django.contrib import admin
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from apps.accounts.models import User, UserRole
+from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
 from apps.catalogs.models import Discipline
 from apps.competitions.models import (
     AgeGroup,
@@ -46,6 +47,7 @@ class QualificationTestCase(TestCase):
     def user(self, slug, role):
         user = User.objects.create_user(email=f"{slug}@example.test", password="SafePassphrase2048!", full_name=f"Тест {slug}", date_of_birth=date(1995, 1, 1))
         UserRole.objects.create(user=user, role=role)
+        PersonalDataConsent.objects.create(user=user, text_version="test")
         return user
 
     def as_role(self, user, role):
@@ -71,8 +73,10 @@ class QualificationTestCase(TestCase):
             score=Decimal("10.000") if status == "classified" else None, updated_by=self.federation,
             validated_by=self.federation if validated else None,
         )
-        if published and not ProtocolPublication.objects.filter(competition=competition).exists():
-            ProtocolPublication.objects.create(competition=competition, version=1, template=competition.template, snapshot={}, published_by=self.federation)
+        if published:
+            publication, _ = ProtocolPublication.objects.get_or_create(competition=competition, version=1, defaults={"template": competition.template, "snapshot": {"rows": []}, "published_by": self.federation})
+            publication.snapshot["rows"].append({"application_id": application.pk, "athlete_id": athlete.pk, "status": status, "place": place if validated and status == "classified" else None, "score": "10.000" if validated and status == "classified" else None})
+            publication.save(update_fields=["snapshot"])
         return result
 
     def link(self, coach, athlete, discipline=None, status="confirmed"):
@@ -113,6 +117,81 @@ class QualificationTestCase(TestCase):
 
 
 class RankWorkflowTests(QualificationTestCase):
+    def test_admin_records_are_read_only(self):
+        request = RequestFactory().get("/admin/")
+        request.user = self.federation
+        for model in (RankApplication, SportRankHistory, JudgeCategoryApplication, JudgeCategoryHistory):
+            model_admin = admin.site._registry[model]
+            self.assertFalse(model_admin.has_add_permission(request))
+            self.assertFalse(model_admin.has_change_permission(request))
+            self.assertFalse(model_admin.has_delete_permission(request))
+
+    def test_more_than_300_results_are_discoverable(self):
+        competition = self.competition()
+        users = User.objects.bulk_create([User(email=f"page-{i}@example.test", full_name=f"Fictional {i}", date_of_birth=date(1995, 1, 1)) for i in range(301)])
+        applications = Application.objects.bulk_create([Application(competition=competition, athlete=user, age_group=self.group, submitted_by=user, status="approved") for user in users])
+        Result.objects.bulk_create([Result(application=app, status="classified", place=1, score=10, validated_by=self.federation, updated_by=self.federation) for app in applications])
+        ProtocolPublication.objects.create(competition=competition, version=1, template=competition.template, snapshot={"rows": [{"application_id": app.pk, "athlete_id": app.athlete_id, "status": "classified", "place": 1, "score": "10.000"} for app in applications]}, published_by=self.federation)
+        self.as_role(self.federation, "federation")
+        first = self.client.get("/api/v1/rank-results/?page=1").data
+        last = self.client.get(f"/api/v1/rank-results/?page={first['pages']}").data
+        self.assertEqual(first["count"], 301)
+        self.assertEqual(len(last["items"]), 1)
+
+    def test_published_snapshot_is_preserved_after_correction(self):
+        result = self.result(self.athlete, place=1)
+        result.place = 3
+        result.save(update_fields=["place"])
+        self.as_role(self.athlete, "athlete")
+        created = self.submit_rank(result)
+        self.assertEqual(created.status_code, 201, created.data)
+        self.assertEqual(created.data["place"], 1)
+        publication = result.application.competition.protocols.first()
+        ProtocolPublication.objects.create(competition=publication.competition, version=2, template=publication.template, snapshot={"rows": [{"application_id": result.application_id, "athlete_id": self.athlete.pk, "status": "classified", "place": 3, "score": "10.000"}]}, published_by=self.federation)
+        self.assertEqual(self.client.get("/api/v1/rank-applications/").data[0]["place"], 1)
+        self.assertEqual(RankApplication.objects.get(pk=created.data["id"]).publication_id, publication.pk)
+        later = self.submit_rank(result, rank="adult_2")
+        self.assertEqual(later.status_code, 201, later.data)
+        self.assertEqual(later.data["place"], 3)
+        self.assertNotEqual(later.data["publication"], created.data["publication"])
+
+    def test_unrelated_or_missing_snapshot_row_is_rejected(self):
+        result = self.result(self.athlete)
+        publication = result.application.competition.protocols.first()
+        publication.snapshot = {"rows": [{"application_id": result.application_id, "athlete_id": self.other.pk, "status": "classified", "place": 1}]}
+        publication.save(update_fields=["snapshot"])
+        self.as_role(self.athlete, "athlete")
+        self.assertEqual(self.submit_rank(result).status_code, 400)
+
+    def test_coach_loses_application_access_after_link_revocation(self):
+        result = self.result(self.athlete)
+        link = self.link(self.coach, self.athlete)
+        self.as_role(self.coach, "coach")
+        self.assertEqual(self.submit_rank(result).status_code, 201)
+        link.status = "rejected"
+        link.save(update_fields=["status"])
+        self.assertEqual(self.client.get("/api/v1/rank-applications/").data, [])
+        self.assertEqual(self.submit_rank(result, rank="adult_2").status_code, 403)
+
+    def test_current_consent_and_guardian_required(self):
+        result = self.result(self.athlete)
+        self.as_role(self.athlete, "athlete")
+        PersonalDataConsent.objects.filter(user=self.athlete).delete()
+        self.assertEqual(self.submit_rank(result).status_code, 400)
+        PersonalDataConsent.objects.create(user=self.athlete, text_version="test")
+        latest = PersonalDataConsent.objects.create(user=self.athlete, text_version="test-new")
+        latest.revoked_at = timezone.now()
+        latest.save(update_fields=["revoked_at"])
+        self.assertEqual(self.submit_rank(result).status_code, 400)
+        PersonalDataConsent.objects.create(user=self.athlete, text_version="test-renewed")
+        self.athlete.date_of_birth = self.today - timedelta(days=365 * 10)
+        self.athlete.save(update_fields=["date_of_birth"])
+        guardian = Guardian.objects.create(minor=self.athlete, full_name="Тест", relationship="parent")
+        self.assertEqual(self.submit_rank(result).status_code, 400)
+        guardian.confirmation_status = "verified"
+        guardian.save(update_fields=["confirmation_status"])
+        self.assertEqual(self.submit_rank(result).status_code, 201)
+
     def test_athlete_application_review_and_validity_period(self):
         result = self.result(self.athlete)
         self.as_role(self.athlete, "athlete")
@@ -291,12 +370,12 @@ class RankHintTests(QualificationTestCase):
         match = self.result(self.athlete, place=2)
         miss = self.result(self.other, place=5)
         self.as_role(self.federation, "federation")
-        rows = {row["result"]: row for row in self.client.get("/api/v1/rank-results/").data}
+        rows = {row["result"]: row for row in self.client.get("/api/v1/rank-results/").data["items"]}
         self.assertEqual(rows[match.pk]["hint"]["rank"], "adult_3")
         self.assertFalse(rows[match.pk]["hint"]["source_verified"])
         self.assertIn("не является присвоением", rows[match.pk]["hint"]["disclaimer"])
         self.assertIsNone(rows[miss.pk]["hint"])
-        hinted = self.client.get("/api/v1/rank-results/?hinted=1").data
+        hinted = self.client.get("/api/v1/rank-results/?hinted=1").data["items"]
         self.assertEqual([row["result"] for row in hinted], [match.pk])
         self.assertEqual(QualificationRule.objects.count(), 1)
         self.assertEqual(RankApplication.objects.count(), 0, "подсказка ничего не присваивает")
@@ -308,32 +387,32 @@ class RankHintTests(QualificationTestCase):
         self.rule(rank="ms", discipline=self.robotics)
         result = self.result(self.athlete, place=1)
         self.as_role(self.federation, "federation")
-        self.assertEqual(self.client.get("/api/v1/rank-results/").data[0]["hint"]["rank"], "adult_2")
+        self.assertEqual(self.client.get("/api/v1/rank-results/").data["items"][0]["hint"]["rank"], "adult_2")
         self.assertEqual(len(self.client.get("/api/v1/qualification-rules/").data), 4)
-        self.assertEqual(result.pk, self.client.get("/api/v1/rank-results/").data[0]["result"])
+        self.assertEqual(result.pk, self.client.get("/api/v1/rank-results/").data["items"][0]["result"])
 
     def test_results_list_is_scoped_by_role(self):
         mine, foreign, unvalidated = self.result(self.athlete), self.result(self.other), self.result(self.athlete, validated=False)
         self.link(self.coach, self.athlete)
         self.as_role(self.athlete, "athlete")
-        self.assertEqual([row["result"] for row in self.client.get("/api/v1/rank-results/").data], [mine.pk])
+        self.assertEqual([row["result"] for row in self.client.get("/api/v1/rank-results/").data["items"]], [mine.pk])
         self.as_role(self.coach, "coach")
-        self.assertEqual([row["result"] for row in self.client.get("/api/v1/rank-results/").data], [mine.pk])
+        self.assertEqual([row["result"] for row in self.client.get("/api/v1/rank-results/").data["items"]], [mine.pk])
         self.as_role(self.outsider, "coach")
-        self.assertEqual(self.client.get("/api/v1/rank-results/").data, [])
+        self.assertEqual(self.client.get("/api/v1/rank-results/").data["items"], [])
         self.as_role(self.judge, "judge")
         self.assertEqual(self.client.get("/api/v1/rank-results/").status_code, 403)
         self.assertEqual(self.client.get("/api/v1/qualification-rules/").status_code, 403)
         self.as_role(self.federation, "federation")
-        self.assertEqual({row["result"] for row in self.client.get("/api/v1/rank-results/").data}, {mine.pk, foreign.pk})
-        self.assertNotIn(unvalidated.pk, {row["result"] for row in self.client.get("/api/v1/rank-results/").data})
+        self.assertEqual({row["result"] for row in self.client.get("/api/v1/rank-results/").data["items"]}, {mine.pk, foreign.pk})
+        self.assertNotIn(unvalidated.pk, {row["result"] for row in self.client.get("/api/v1/rank-results/").data["items"]})
 
     def test_pending_rank_and_current_rank_are_reported(self):
         self.grant_rank(self.athlete, "adult_3")
         result = self.result(self.athlete)
         self.as_role(self.athlete, "athlete")
         self.submit_rank(result, rank="adult_2")
-        row = [r for r in self.client.get("/api/v1/rank-results/").data if r["result"] == result.pk][0]
+        row = [r for r in self.client.get("/api/v1/rank-results/").data["items"] if r["result"] == result.pk][0]
         self.assertEqual((row["pending_ranks"], row["current_rank"]), (["adult_2"], "adult_3"))
 
 

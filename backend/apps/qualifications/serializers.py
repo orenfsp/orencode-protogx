@@ -1,4 +1,5 @@
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import (
@@ -27,6 +28,39 @@ class CategoryApplicationCreateSerializer(serializers.Serializer):
     comment = serializers.CharField(required=False, allow_blank=True, max_length=1000)
 
 
+class RankHintSerializer(serializers.Serializer):
+    rank = serializers.CharField()
+    rank_label = serializers.CharField()
+    rule_version = serializers.CharField()
+    source_verified = serializers.BooleanField()
+    disclaimer = serializers.CharField()
+
+
+class RankResultSerializer(serializers.Serializer):
+    result = serializers.IntegerField()
+    athlete = serializers.IntegerField()
+    athlete_name = serializers.CharField()
+    competition = serializers.IntegerField()
+    competition_title = serializers.CharField()
+    competition_level = serializers.CharField()
+    discipline = serializers.IntegerField()
+    discipline_name = serializers.CharField()
+    place = serializers.IntegerField()
+    score = serializers.CharField(allow_null=True)
+    current_rank = serializers.CharField(allow_null=True)
+    current_rank_label = serializers.CharField(allow_null=True)
+    pending_ranks = serializers.ListField(child=serializers.CharField())
+    hint = RankHintSerializer(allow_null=True)
+
+
+class RankResultPageSerializer(serializers.Serializer):
+    items = RankResultSerializer(many=True)
+    page = serializers.IntegerField()
+    pages = serializers.IntegerField()
+    count = serializers.IntegerField()
+    has_next = serializers.BooleanField()
+
+
 class DecisionInputSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=[("approved", "approved"), ("rejected", "rejected")])
     reason = serializers.CharField(required=False, allow_blank=True, max_length=1000)
@@ -46,6 +80,13 @@ class _ValiditySerializer(serializers.ModelSerializer):
         return days_left(obj.valid_until, timezone.localdate())
 
 
+class DecisionRecordSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    order_number = serializers.CharField()
+    assigned_on = serializers.DateField()
+    valid_until = serializers.DateField()
+
+
 class SportRankHistorySerializer(_ValiditySerializer):
     athlete_name = serializers.CharField(source="athlete.full_name", read_only=True)
     discipline_name = serializers.CharField(source="discipline.name", read_only=True)
@@ -53,7 +94,10 @@ class SportRankHistorySerializer(_ValiditySerializer):
     competition_id = serializers.IntegerField(source="application.competition_id", read_only=True)
     competition_title = serializers.CharField(source="application.competition.title", read_only=True)
     result_id = serializers.IntegerField(source="application.result_id", read_only=True)
-    place = serializers.IntegerField(source="application.result.place", read_only=True)
+    place = serializers.SerializerMethodField()
+
+    def get_place(self, obj) -> int | None:
+        return (obj.application.result_snapshot or {}).get("place")
 
     class Meta:
         model = SportRankHistory
@@ -77,16 +121,23 @@ class RankApplicationSerializer(serializers.ModelSerializer):
     competition_title = serializers.CharField(source="competition.title", read_only=True)
     competition_level = serializers.CharField(source="competition.level", read_only=True)
     requested_rank_label = serializers.CharField(source="get_requested_rank_display", read_only=True)
-    place = serializers.IntegerField(source="result.place", read_only=True)
-    score = serializers.DecimalField(source="result.score", max_digits=12, decimal_places=3, read_only=True)
+    place = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
     record = serializers.SerializerMethodField()
 
     class Meta:
         model = RankApplication
         fields = ("id", "athlete", "athlete_name", "submitted_by", "submitted_by_name", "request_type", "requested_rank", "requested_rank_label",
-                  "discipline", "discipline_name", "competition", "competition_title", "competition_level", "result", "place", "score",
+                  "discipline", "discipline_name", "competition", "competition_title", "competition_level", "result", "publication", "place", "score",
                   "comment", "status", "decision_reason", "decided_by", "submitted_at", "decided_at", "record")
 
+    def get_place(self, obj) -> int | None:
+        return (obj.result_snapshot or {}).get("place")
+
+    def get_score(self, obj) -> str | None:
+        return (obj.result_snapshot or {}).get("score")
+
+    @extend_schema_field(DecisionRecordSerializer(allow_null=True))
     def get_record(self, obj):
         record = getattr(obj, "rank_record", None)
         if record is None:
@@ -104,6 +155,7 @@ class JudgeCategoryApplicationSerializer(serializers.ModelSerializer):
         fields = ("id", "judge", "judge_name", "request_type", "requested_category", "requested_category_label", "comment", "status",
                   "decision_reason", "decided_by", "submitted_at", "decided_at", "record")
 
+    @extend_schema_field(DecisionRecordSerializer(allow_null=True))
     def get_record(self, obj):
         record = getattr(obj, "category_record", None)
         if record is None:

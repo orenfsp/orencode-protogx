@@ -65,3 +65,9 @@ class PersonalDataConsent(models.Model):
     confirmation_method = models.CharField(max_length=40, default="registration_checkbox")
     guardian = models.ForeignKey(Guardian, null=True, blank=True, on_delete=models.PROTECT)
     recorded_at = models.DateTimeField(default=timezone.now)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+
+def has_current_consent(user):
+    latest = PersonalDataConsent.objects.filter(user=user).order_by("-recorded_at", "-pk").first()
+    return latest is not None and latest.revoked_at is None

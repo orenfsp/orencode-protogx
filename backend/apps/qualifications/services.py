@@ -6,8 +6,14 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
-from apps.competitions.models import CoachAthleteLink, ProtocolPublication, Result
-from apps.competitions.services import audit
+from apps.accounts.models import Guardian, has_current_consent
+from apps.competitions.models import (
+    CoachAthleteLink,
+    Competition,
+    ProtocolPublication,
+    Result,
+)
+from apps.competitions.services import age_on, audit
 
 from .models import (
     JudgeCategory,
@@ -106,6 +112,8 @@ def validate_rank_submission(user, role, result_id, requested_rank, request_type
         raise ValidationError({"result": "Результат не найден"})
     application = result.application
     athlete, competition = application.athlete, application.competition
+    # Publication and result updates take the competition lock as well.
+    Competition.objects.select_for_update().get(pk=competition.pk)
 
     if role == "athlete":
         if athlete.pk != user.pk:
@@ -118,12 +126,20 @@ def validate_rank_submission(user, role, result_id, requested_rank, request_type
     else:  # защитная ветка: вызывающий код допускает только athlete и coach
         raise PermissionDenied("Недопустимая роль")
 
-    if result.status != Result.Status.CLASSIFIED:
-        raise ValidationError({"result": "Заявка возможна только на классифицированный результат"})
-    if result.validated_by_id is None:
-        raise ValidationError({"result": "Результат ещё не проверен федерацией"})
-    if not ProtocolPublication.objects.filter(competition=competition).exists():
+    if not athlete.date_of_birth:
+        raise ValidationError({"consent": "Дата рождения спортсмена необходима для проверки согласия"})
+    if not has_current_consent(athlete):
+        raise ValidationError({"consent": "Необходимо согласие на обработку персональных данных"})
+    if age_on(athlete.date_of_birth, timezone.localdate()) < 18 and not Guardian.objects.filter(minor=athlete, confirmation_status="verified").exists():
+        raise ValidationError({"consent": "Необходимо подтверждённое согласие законного представителя"})
+
+    publication = ProtocolPublication.objects.filter(competition=competition).order_by("-version").first()
+    if not publication:
         raise ValidationError({"result": "Протокол соревнования не опубликован"})
+    rows = publication.snapshot.get("rows", [])
+    matches = [row for row in rows if row.get("application_id") == application.pk and row.get("athlete_id") == athlete.pk]
+    if len(matches) != 1 or matches[0].get("status") != Result.Status.CLASSIFIED or matches[0].get("place") is None:
+        raise ValidationError({"result": "В последнем опубликованном протоколе нет классифицированного результата"})
     if RankApplication.objects.filter(result=result, requested_rank=requested_rank, status=ReviewStatus.PENDING).exists():
         raise ValidationError("Такая заявка уже находится на рассмотрении")
 
@@ -134,16 +150,16 @@ def validate_rank_submission(user, role, result_id, requested_rank, request_type
             raise ValidationError({"requested_rank": "Запрашиваемый разряд должен быть выше действующего"})
     elif not history.filter(rank=requested_rank).exists():
         raise ValidationError({"requested_rank": "Подтверждать можно только ранее присвоенный разряд"})
-    return result, athlete
+    return result, athlete, publication, matches[0]
 
 
 @transaction.atomic
 def create_rank_application(user, role, data):
-    result, athlete = validate_rank_submission(user, role, data["result"], data["requested_rank"], data["request_type"])
+    result, athlete, publication, snapshot = validate_rank_submission(user, role, data["result"], data["requested_rank"], data["request_type"])
     competition = result.application.competition
     application = RankApplication.objects.create(
         athlete=athlete, submitted_by=user, request_type=data["request_type"], requested_rank=data["requested_rank"],
-        discipline_id=competition.discipline_id, competition=competition, result=result, comment=data.get("comment", ""),
+        discipline_id=competition.discipline_id, competition=competition, result=result, publication=publication, result_snapshot=snapshot, comment=data.get("comment", ""),
     )
     audit(user, "rank_application.submitted", application, competition=competition,
           after={"athlete": athlete.pk, "rank": application.requested_rank, "request_type": application.request_type, "result": result.pk})

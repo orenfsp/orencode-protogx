@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
 import { api } from "@/lib/api";
 
@@ -76,10 +76,16 @@ function CatAppTable({ rows, showJudge }: { rows: CatApp[]; showJudge: boolean }
 
 export default function Qualifications() {
   const me = useCurrentUser();
+  return <QualificationsContent key={`${me?.id ?? "guest"}:${me?.active_role ?? "none"}`} me={me} />;
+}
+
+function QualificationsContent({ me }: { me: ReturnType<typeof useCurrentUser> }) {
   const role = me?.active_role;
   const [options, setOptions] = useState<Options | null>(null);
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [results, setResults] = useState<ResultRow[]>([]);
+  const [resultPage, setResultPage] = useState(1);
+  const [resultPages, setResultPages] = useState(1);
   const [rankApps, setRankApps] = useState<RankApp[]>([]);
   const [rankHistory, setRankHistory] = useState<RankRecord[]>([]);
   const [catApps, setCatApps] = useState<CatApp[]>([]);
@@ -91,23 +97,28 @@ export default function Qualifications() {
   const [requestType, setRequestType] = useState("assign");
   const [category, setCategory] = useState("");
   const [comment, setComment] = useState("");
+  const requestId = useRef(0);
 
   const reload = useCallback(async () => {
     if (!role) return;
+    const request = ++requestId.current;
     try {
       const [nextOptions, nextDeadlines] = await Promise.all([api<Options>("qualification-options/"), api<{ items: Deadline[] }>("qualification-deadlines/")]);
+      if (request !== requestId.current) return;
       setOptions(nextOptions); setDeadlines(nextDeadlines.items);
       if (role !== "judge") {
-        const [nextResults, nextApps, nextHistory] = await Promise.all([api<ResultRow[]>("rank-results/"), api<RankApp[]>("rank-applications/"), api<RankRecord[]>("rank-history/")]);
-        setResults(nextResults); setRankApps(nextApps); setRankHistory(nextHistory);
+        const [nextResults, nextApps, nextHistory] = await Promise.all([api<{ items: ResultRow[]; pages: number }>(`rank-results/?page=${resultPage}`), api<RankApp[]>("rank-applications/"), api<RankRecord[]>("rank-history/")]);
+        if (request !== requestId.current) return;
+        setResults(nextResults.items); setResultPages(nextResults.pages); setRankApps(nextApps); setRankHistory(nextHistory);
       }
       if (role === "judge" || role === "federation") {
         const [nextApps, nextHistory] = await Promise.all([api<CatApp[]>("judge-category-applications/"), api<CatRecord[]>("judge-category-history/")]);
+        if (request !== requestId.current) return;
         setCatApps(nextApps); setCatHistory(nextHistory);
       }
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Не удалось загрузить данные"); }
-  }, [role]);
-  useEffect(() => { const frame = requestAnimationFrame(() => { void reload(); }); return () => cancelAnimationFrame(frame); }, [reload]);
+    } catch (cause) { if (request === requestId.current) setError(cause instanceof Error ? cause.message : "Не удалось загрузить данные"); }
+  }, [role, resultPage]);
+  useEffect(() => { const counter = requestId; const frame = requestAnimationFrame(() => { void reload(); }); return () => { cancelAnimationFrame(frame); counter.current++; }; }, [reload]);
 
   const selected = results.find((row) => String(row.result) === resultId);
   function pickResult(value: string) { setResultId(value); const row = results.find((item) => String(item.result) === value); setRank(row?.hint?.rank ?? ""); }
@@ -136,6 +147,7 @@ export default function Qualifications() {
 
   return <><header className="dashboard-head"><span className="kick"><Link className="workflow-link" href="/dashboard">← Кабинет</Link></span><h1>Разряды и судейские категории</h1><p className="lead">Заявка, решение федерации, приказ и срок действия. Подача в Госуслугах выполняется вне платформы.</p></header>
     {error && <div className="note wn workflow-spaced" role="alert">{error}</div>}{notice && <div className="note workflow-spaced" role="status">{notice}</div>}
+    {role !== "judge" && role && resultPages > 1 && <div className="workflow-actions"><button type="button" className="btn" disabled={resultPage <= 1} onClick={() => { setResultId(""); setResultPage((page) => page - 1); }}>Предыдущие результаты</button><span>Страница {resultPage} из {resultPages}</span><button type="button" className="btn" disabled={resultPage >= resultPages} onClick={() => { setResultId(""); setResultPage((page) => page + 1); }}>Следующие результаты</button></div>}
     {!me ? <section className="blk"><h2><b>01</b><span>Вход</span></h2><div className="note wn">Для доступа <Link href="/login">войдите</Link>.</div></section> : <>
       {role === "federation" && <>
         <section className="blk"><h2><b>01</b><span>Заявки на разряд</span></h2><div className="workflow-stack">{pendingRank.length ? pendingRank.map((app) => <div className="workflow-record" key={app.id}><strong>{app.athlete_name}</strong><span>{typeName[app.request_type]}: {app.requested_rank_label} · {app.discipline_name}</span><span>Основание: <Link className="workflow-link" href={`/competitions/${app.competition}`}>{app.competition_title}</Link>{app.place ? `, ${app.place} место` : ""}. Подал: {app.submitted_by_name}</span>{app.comment && <span>{app.comment}</span>}<DecisionForm approveLabel="Присвоить" onDecide={(body) => decide("rank-applications", app.id, body)} /></div>) : <div className="note">Заявок на рассмотрении нет.</div>}</div></section>

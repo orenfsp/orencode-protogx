@@ -81,6 +81,8 @@ class RankApplication(models.Model):
     discipline = models.ForeignKey("catalogs.Discipline", on_delete=models.PROTECT, related_name="rank_applications")
     competition = models.ForeignKey("competitions.Competition", on_delete=models.PROTECT, related_name="rank_applications")
     result = models.ForeignKey("competitions.Result", on_delete=models.PROTECT, related_name="rank_applications")
+    publication = models.ForeignKey("competitions.ProtocolPublication", null=True, blank=True, on_delete=models.PROTECT, related_name="rank_applications")
+    result_snapshot = models.JSONField(null=True, blank=True)
     comment = models.TextField(blank=True)
     status = models.CharField(max_length=16, choices=ReviewStatus.choices, default=ReviewStatus.PENDING)
     decision_reason = models.TextField(blank=True)

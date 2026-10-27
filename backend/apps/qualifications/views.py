@@ -1,3 +1,6 @@
+from copy import copy
+
+from django.core.paginator import EmptyPage, Paginator
 from django.db.models import Q
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
@@ -6,7 +9,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.competitions.models import CoachAthleteLink, Result
+from apps.competitions.models import CoachAthleteLink, ProtocolPublication, Result
 from apps.competitions.services import require_role
 
 from .models import (
@@ -28,6 +31,7 @@ from .serializers import (
     QualificationRuleSerializer,
     RankApplicationCreateSerializer,
     RankApplicationSerializer,
+    RankResultPageSerializer,
     SportRankHistorySerializer,
 )
 from .services import (
@@ -45,7 +49,7 @@ from .services import (
     validity_state,
 )
 
-RESULT_LIMIT = 300
+RESULT_PAGE_SIZE = 50
 
 
 def coach_scope(user, athlete_field, discipline_field):
@@ -85,17 +89,25 @@ class QualificationRulesView(APIView):
 class RankResultsView(APIView):
     """Результаты, на основании которых можно подать заявку, с предварительной подсказкой по правилам."""
 
-    @extend_schema(parameters=[OpenApiParameter("hinted", OpenApiTypes.BOOL)], responses=OpenApiTypes.OBJECT)
+    @extend_schema(parameters=[OpenApiParameter("hinted", OpenApiTypes.BOOL), OpenApiParameter("page", int)], responses=RankResultPageSerializer)
     def get(self, request):
         role = require_role(request, "federation", "athlete", "coach")
-        queryset = Result.objects.filter(
-            status=Result.Status.CLASSIFIED, validated_by__isnull=False, application__competition__protocols__isnull=False,
-        ).select_related("application__athlete", "application__competition__discipline")
+        queryset = Result.objects.filter(application__competition__protocols__isnull=False).select_related("application__athlete", "application__competition__discipline")
         if role == "athlete":
             queryset = queryset.filter(application__athlete=request.user)
         elif role == "coach":
             queryset = queryset.filter(coach_scope(request.user, "application__athlete_id", "application__competition__discipline_id"))
-        results = list(queryset.distinct().order_by("-id")[:RESULT_LIMIT])
+        paginator = Paginator(queryset.distinct().order_by("-id"), RESULT_PAGE_SIZE)
+        page_number = int_param(request, "page")
+        page_number = 1 if page_number is None else page_number
+        try:
+            page = paginator.page(page_number)
+        except EmptyPage:
+            raise ValidationError({"page": "Страница не существует"})
+        results = list(page.object_list)
+        publications = {}
+        for publication in ProtocolPublication.objects.filter(competition_id__in={r.application.competition_id for r in results}).order_by("competition_id", "-version"):
+            publications.setdefault(publication.competition_id, publication)
 
         rules = active_rules()
         athlete_ids = {r.application.athlete_id for r in results}
@@ -109,7 +121,15 @@ class RankResultsView(APIView):
         rows = []
         for result in results:
             app = result.application
-            rule = hint_for(result, rules)
+            publication = publications.get(app.competition_id)
+            matching = [row for row in (publication.snapshot.get("rows", []) if publication else []) if row.get("application_id") == app.pk and row.get("athlete_id") == app.athlete_id]
+            if len(matching) != 1 or matching[0].get("status") != Result.Status.CLASSIFIED or matching[0].get("place") is None:
+                continue
+            snapshot = matching[0]
+            published_result = copy(result)
+            published_result.status = snapshot["status"]
+            published_result.place = snapshot["place"]
+            rule = hint_for(published_result, rules)
             if request.query_params.get("hinted") in ("1", "true") and rule is None:
                 continue
             current = most_significant(history.get(app.athlete_id, []), rank_level)
@@ -117,7 +137,7 @@ class RankResultsView(APIView):
                 "result": result.pk, "athlete": app.athlete_id, "athlete_name": app.athlete.full_name,
                 "competition": app.competition_id, "competition_title": app.competition.title, "competition_level": app.competition.level,
                 "discipline": app.competition.discipline_id, "discipline_name": app.competition.discipline.name,
-                "place": result.place, "score": str(result.score) if result.score is not None else None,
+                "place": snapshot["place"], "score": snapshot.get("score"),
                 "current_rank": current.rank if current else None,
                 "current_rank_label": current.get_rank_display() if current else None,
                 "pending_ranks": pending.get(result.pk, []),
@@ -126,7 +146,7 @@ class RankResultsView(APIView):
                     "source_verified": rule.source_verified, "disclaimer": HINT_DISCLAIMER,
                 },
             })
-        return Response(rows)
+        return Response({"items": rows, "page": page.number, "pages": paginator.num_pages, "count": paginator.count, "has_next": page.has_next()})
 
 
 class RankApplicationsView(APIView):
@@ -137,7 +157,7 @@ class RankApplicationsView(APIView):
         if role == "athlete":
             queryset = queryset.filter(athlete=request.user)
         elif role == "coach":
-            queryset = queryset.filter(coach_scope(request.user, "athlete_id", "discipline_id") | Q(submitted_by=request.user))
+            queryset = queryset.filter(coach_scope(request.user, "athlete_id", "discipline_id"))
         status = request.query_params.get("status")
         if status:
             queryset = queryset.filter(status=status)

@@ -12,7 +12,7 @@ Status is based on executed evidence. `partial` means a foundation exists but th
 | AC-06 | implemented | Backend end-to-end test verifies two approved participants in preview and published snapshot, including one with `pending_result`; no fabricated score/place. |
 | AC-07 | implemented | Six seeded discipline-specific demo templates; backend test proves algorithmic `solved_tasks` and product `project_note` columns and metric types differ. Federation can create new template versions through API/UI. Official source remains unverified. |
 | AC-08 | implemented | Backend test verifies latest immutable protocol version flows into only the athlete's own history; Chrome E2E confirms the visible history after publication. |
-| AC-09 | not_implemented | Rank/category review tests pending |
+| AC-09 | partial | Qualifications APIs, federation decisions, audited history, published-row evidence and revocation-aware consent have PostgreSQL tests. End-to-end verification and reviewed source rules remain required; withdrawal/renewal UI and audited historical correction are not implemented. |
 | AC-10 | not_implemented | Dashboard and SMTP delivery test pending |
 | AC-11 | not_implemented | Two-year XLSX test pending |
 | AC-12 | not_implemented | Rating fixtures and formula test pending |
