@@ -1193,6 +1193,242 @@ paths:
               schema:
                 $ref: '#/components/schemas/Result'
           description: ''
+  /api/v1/teams/:
+    get:
+      operationId: v1_teams_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+    post:
+      operationId: v1_teams_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/:
+    get:
+      operationId: v1_teams_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/candidates/:
+    get:
+      operationId: v1_teams_candidates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamCandidate'
+          description: ''
+  /api/v1/teams/{id}/documents/:
+    get:
+      operationId: v1_teams_documents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDocumentResponse'
+          description: ''
+  /api/v1/teams/{id}/history/:
+    get:
+      operationId: v1_teams_history_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamHistory'
+          description: ''
+  /api/v1/teams/{id}/members/:
+    post:
+      operationId: v1_teams_members_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/members/{membership_id}/remove/:
+    post:
+      operationId: v1_teams_members_remove_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: membership_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/reorder/:
+    post:
+      operationId: v1_teams_reorder_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+  /api/v1/teams/options/:
+    get:
+      operationId: v1_teams_options_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
   /api/v1/templates/:
     get:
       operationId: v1_templates_list
@@ -1256,12 +1492,14 @@ components:
           maxLength: 100
         min_age:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         max_age:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
       required:
       - id
       - max_age
@@ -1371,8 +1609,9 @@ components:
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         prize_count:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         coefficient:
           type: string
           format: decimal
@@ -1469,8 +1708,9 @@ components:
           maxLength: 200
         year:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         reference_url:
           oneOf:
           - type: string
@@ -1973,6 +2213,16 @@ components:
       - full_name
       - id
       - roles
+    MemberAdd:
+      type: object
+      properties:
+        athlete:
+          type: integer
+        note:
+          type: string
+          maxLength: 500
+      required:
+      - athlete
     PatchedCompetition:
       type: object
       properties:
@@ -2068,8 +2318,9 @@ components:
           type: integer
         version:
           type: integer
-          maximum: 2147483647
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         template:
           type: integer
         snapshot: {}
@@ -2242,8 +2493,9 @@ components:
           maxLength: 100
         max_place:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         rule_version:
           type: string
           default: demo-1
@@ -2565,8 +2817,9 @@ components:
           maxLength: 100
         place:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         points:
           type: string
           format: decimal
@@ -2644,16 +2897,18 @@ components:
           nullable: true
         coefficient_threshold:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         stability_coefficient:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
         rounding_places:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         rounding_mode:
           type: string
           maxLength: 20
@@ -2698,16 +2953,18 @@ components:
           nullable: true
         coefficient_threshold:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         stability_coefficient:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
         rounding_places:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         rounding_mode:
           type: string
           maxLength: 20
@@ -2729,8 +2986,9 @@ components:
           readOnly: true
         year:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         name:
           type: string
           maxLength: 100
@@ -2761,6 +3019,80 @@ components:
       - page_size
       - pages
       - total
+    RegionalTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        region:
+          type: string
+          maxLength: 120
+        status:
+          $ref: '#/components/schemas/RegionalTeamStatusEnum'
+        season:
+          type: integer
+        season_year:
+          type: integer
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+          readOnly: true
+        discipline_name:
+          type: string
+          readOnly: true
+        age_group:
+          type: integer
+        age_group_name:
+          type: string
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        member_count:
+          type: integer
+          readOnly: true
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembership'
+          readOnly: true
+      required:
+      - age_group
+      - age_group_name
+      - created_at
+      - created_by
+      - discipline
+      - discipline_code
+      - discipline_name
+      - id
+      - member_count
+      - members
+      - name
+      - season
+      - season_year
+      - updated_at
+    RegionalTeamStatusEnum:
+      enum:
+      - draft
+      - published
+      type: string
+      description: |-
+        * `draft` - Черновик
+        * `published` - Сформирован
     Register:
       type: object
       properties:
@@ -2822,8 +3154,9 @@ components:
           $ref: '#/components/schemas/ResultStatusEnum'
         place:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
           nullable: true
         score:
           type: string
@@ -2976,8 +3309,9 @@ components:
           readOnly: true
         order:
           type: integer
-          maximum: 32767
+          maximum: 9223372036854775807
           minimum: 0
+          format: int64
         name:
           type: string
           maxLength: 150
@@ -3010,6 +3344,134 @@ components:
       $ref: '#/components/schemas/QualificationReviewStatusEnum'
     StatusDc7Enum:
       $ref: '#/components/schemas/DecisionStatusEnum'
+    TeamCandidate:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        eligible:
+          type: boolean
+        selected:
+          type: boolean
+        eligibility:
+          type: object
+          additionalProperties: {}
+        rating:
+          type: object
+          additionalProperties: {}
+          nullable: true
+      required:
+      - eligibility
+      - eligible
+      - email
+      - full_name
+      - id
+      - rating
+      - selected
+    TeamCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        region:
+          type: string
+          maxLength: 120
+        season:
+          type: integer
+        discipline:
+          type: integer
+        age_group:
+          type: integer
+      required:
+      - age_group
+      - discipline
+      - name
+      - season
+    TeamDocumentResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+    TeamHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        action:
+          type: string
+          maxLength: 32
+        actor:
+          type: integer
+        actor_name:
+          type: string
+          readOnly: true
+        membership:
+          type: integer
+          nullable: true
+        before: {}
+        after: {}
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - action
+      - actor
+      - actor_name
+      - id
+    TeamMembership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+          readOnly: true
+        athlete_email:
+          type: string
+          format: email
+          readOnly: true
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        selected_by:
+          type: integer
+          readOnly: true
+        selected_at:
+          type: string
+          format: date-time
+          readOnly: true
+        removed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        removal_reason:
+          type: string
+        eligibility_snapshot:
+          readOnly: true
+        selection_note:
+          type: string
+      required:
+      - athlete
+      - athlete_email
+      - athlete_name
+      - eligibility_snapshot
+      - id
+      - removed_at
+      - selected_at
+      - selected_by
     UserChoice:
       type: object
       properties:

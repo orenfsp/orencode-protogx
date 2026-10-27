@@ -8,6 +8,10 @@ Phase 2 competition workflow on the Phase 1 platform. The mandatory design sourc
 
 Copy `.env.example` to `.env` and replace the local passwords and Django secret. Run `docker compose up --build`. The frontend is at `http://localhost:3000`, API at `http://localhost:8000/api/v1/health/`, OpenAPI at `/api/schema/`, docs at `/api/docs/`. The API applies migrations and, with `DJANGO_DEBUG=1`, idempotently seeds five fictional demo accounts before becoming healthy. Next.js waits for that healthcheck. The database persists in a named Compose volume; `seed_demo` refuses non-debug environments.
 
+## Regional team demo and automatic seeding
+
+Compose startup performs migrations before seeding. Demo seeding requires both `DJANGO_DEBUG=1` and `DEMO_SEED_ENABLED=1`; production and staging should set both to `0`. The idempotent command creates fictional users, catalogs and three regional teams. See [docs/demo-scenarios.md](docs/demo-scenarios.md) for credentials, the manual team workflow and rerun instructions.
+
 ## Local development and checks
 
 Backend: install `backend/requirements.txt`; set `DATABASE_ENGINE=sqlite` only for local tests, then run `python backend/manage.py migrate` and `python backend/manage.py test` (or `pytest backend/tests`). For the deployed path, use PostgreSQL.

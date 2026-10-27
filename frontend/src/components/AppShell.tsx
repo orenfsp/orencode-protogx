@@ -97,6 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><b>03</b>Календарь</Link>
           <Link href="/dashboard"><b>04</b>Кабинет</Link>
           <Link className={path.startsWith("/ratings") ? "on" : ""} href="/ratings"><b>05</b>Рейтинги</Link>
+          <Link className={path.startsWith("/teams") ? "on" : ""} href="/teams"><b>06</b>Команды</Link>
         </nav>
         <div className="rb">
           {me ? <>
@@ -111,6 +112,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{!me.active_role && <option value="" disabled>Выбор роли</option>}{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}{me.active_role === role ? " ✓" : ""}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <p className="mobile-role-error" role="alert">{roleError}</p>}<CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
     </div>
-    <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link className={path === "/dashboard" || path === "/history" || path === "/coach-links" ? "on" : ""} href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
+    <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link className={path.startsWith("/teams") ? "on" : ""} href="/teams"><svg className="ic"><use href="#i-dots" /></svg>Команды</Link><Link className={path === "/dashboard" || path === "/history" || path === "/coach-links" ? "on" : ""} href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
   </>;
 }

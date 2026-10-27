@@ -1,4 +1,5 @@
 from io import StringIO
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -26,8 +27,22 @@ class SeedDemoTests(TestCase):
         self.assertEqual(PersonalDataConsent.objects.filter(confirmation_method="demo_seed").count(), 5)
         self.assertEqual(Guardian.objects.get(minor__email="demo.junior@example.test").confirmation_status, "pending_verification")
 
+        from apps.teams.models import RegionalTeam, TeamDecisionHistory, TeamMembership
+        self.assertEqual(RegionalTeam.objects.count(), 3)
+        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 1)
+        history_count = TeamDecisionHistory.objects.count()
+        call_command("seed_demo", stdout=StringIO())
+        self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 1)
+        self.assertEqual(TeamDecisionHistory.objects.count(), history_count)
+
     @override_settings(DEBUG=False)
     def test_seed_refuses_non_debug_environment(self):
         with self.assertRaises(CommandError):
             call_command("seed_demo", stdout=StringIO())
         self.assertFalse(User.objects.filter(email__startswith="demo.").exists())
+
+    @override_settings(DEBUG=True)
+    @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "0"}, clear=False)
+    def test_seed_requires_explicit_opt_in_when_disabled(self):
+        with self.assertRaises(CommandError):
+            call_command("seed_demo", stdout=StringIO())

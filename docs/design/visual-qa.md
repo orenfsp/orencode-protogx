@@ -41,3 +41,7 @@ The role-aware `/my-competitions` page reuses the shell, stamps and bordered tab
 ## Phase 3.1 ratings review — 2026-10-27
 
 The `/ratings` page was rebuilt with the existing shell, numbered indigo navigation, document rail, bordered table, stamp status and responsive mobile layout. `tests/ratings.spec.ts` passed against the live Compose web/API services for both an empty state and an expandable published-result breakdown. The backend test `test_protocol_publication_recalculates_rating_from_its_snapshot` covers the live domain sequence from publication to rating, while `test_ratings_api_returns_breakdown_and_deterministic_placement` verifies the API DTO consumed by the page. The page build, typecheck and lint passed. A separate screenshot capture for the populated table was not required for the functional gate; the reference HTML remains unchanged.
+
+## Phase 3.2 regional teams review — 2026-10-27
+
+The `/teams` page reuses the numbered sidebar, document rail, orange actions, bordered tables, stamps, Rubik/Inter/JetBrains Mono tokens and mobile navigation. It adds no new global styles or changes to `fsp-reference.html`. TypeScript and ESLint pass; live screenshot and Playwright verification remain pending.
