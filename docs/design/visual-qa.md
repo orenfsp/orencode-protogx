@@ -45,3 +45,7 @@ The `/ratings` page was rebuilt with the existing shell, numbered indigo navigat
 ## Phase 3.2 regional teams review — 2026-10-27
 
 The `/teams` page reuses the numbered sidebar, document rail, orange actions, bordered tables, stamps, Rubik/Inter/JetBrains Mono tokens and mobile navigation. It adds no new global styles or changes to `fsp-reference.html`. The existing targeted Playwright test uses intercepted API data and checks page rendering; it does not verify manual selection or finalization. A dedicated side-by-side screenshot capture remains a follow-up visual review item.
+
+## Phase 3.2 document and live workflow review — 2026-10-28
+
+On an isolated PostgreSQL Compose project, the live `teams-live.spec.ts` scenario logged in, opened rating provenance, created a team, manually selected and reordered athletes, reloaded the persisted roster, finalized it and downloaded all four documents. The roster and draft-order PDFs and both DOCX files converted with LibreOffice were rendered using PDFium. Their single pages were inspected: Cyrillic names, ranks, team metadata, order and signature placeholders were visible without table clipping for this two-athlete sample. Longer rosters and names remain a separate pagination/overflow gate. The draft form is a demonstration and requires regulatory review against a primary source.
