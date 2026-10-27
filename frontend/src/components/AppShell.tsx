@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { api, Me, Role } from "@/lib/api";
 
 const roleName: Record<Role, string> = { federation: "Федерация", athlete: "Спортсмен", coach: "Тренер", judge: "Судья" };
@@ -18,6 +18,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [dark, setDark] = useState(false);
   const [roleError, setRoleError] = useState("");
+  const identityRevision = useRef(0);
+  const roleQueue = useRef<Promise<void>>(Promise.resolve());
+  const activeRoleRequest = useRef<AbortController | null>(null);
+  const logoutPending = useRef(false);
 
   function toggleTheme() {
     const next = !dark;
@@ -31,21 +35,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    api<Me>("auth/me/").then(setMe).catch(() => setMe(null));
+    let current = true;
+    const revision = identityRevision.current;
+    api<Me>("auth/me/").then((user) => { if (current && revision === identityRevision.current) setMe(user); }).catch(() => { if (current && revision === identityRevision.current) setMe(null); });
+    return () => { current = false; };
   }, [path]);
 
   async function switchRole(role: Role) {
-    try {
-      setRoleError("");
-      setMe(await api<Me>("auth/active-role/", { method: "POST", body: JSON.stringify({ role }) }));
-    } catch (error) { setRoleError(error instanceof Error ? error.message : "Ошибка выбора роли"); }
+    if (logoutPending.current) return;
+    const revision = ++identityRevision.current;
+    setRoleError("");
+    const operation = roleQueue.current.then(async () => {
+      if (revision !== identityRevision.current) return;
+      const controller = new AbortController();
+      activeRoleRequest.current = controller;
+      try {
+        const user = await api<Me>("auth/active-role/", { method: "POST", body: JSON.stringify({ role }), signal: controller.signal });
+        if (revision === identityRevision.current) setMe(user);
+      } catch (error) {
+        if (revision === identityRevision.current) setRoleError(error instanceof Error ? error.message : "Ошибка выбора роли");
+      } finally {
+        if (activeRoleRequest.current === controller) activeRoleRequest.current = null;
+      }
+    });
+    roleQueue.current = operation;
+    await operation;
   }
 
   async function signOut() {
-    await api<void>("auth/logout/", { method: "POST" });
-    setMe(null);
-    router.push("/");
-    router.refresh();
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    ++identityRevision.current;
+    activeRoleRequest.current?.abort();
+    try {
+      await roleQueue.current;
+      await api<void>("auth/logout/", { method: "POST" });
+      setMe(null);
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      setRoleError(error instanceof Error ? error.message : "Не удалось выйти");
+    } finally {
+      logoutPending.current = false;
+    }
   }
 
   return <>
@@ -67,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="rb">
           {me ? <>
-            <div className="menu" aria-label="Роль"><div className="a">{me.active_role ? roleName[me.active_role] : "Выбор роли"}</div>{me.roles.map((role) => <button type="button" key={role} className={me.active_role === role ? "a" : ""} onClick={() => switchRole(role)} aria-pressed={me.active_role === role}>{roleName[role]}</button>)}</div>
+            <div className="menu" aria-label="Роль">{!me.active_role && <div className="a">Выбор роли</div>}{me.roles.map((role) => <button type="button" key={role} className={me.active_role === role ? "a" : ""} onClick={() => switchRole(role)} aria-pressed={me.active_role === role}>{roleName[role]}{me.active_role === role && <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" style={{ marginLeft: "auto" }}><path d="M4 12.5l5 5L20 6.5" /></svg>}</button>)}</div>
             {roleError && <p role="alert">{roleError}</p>}
             <div className="rbtn"><span>{me.full_name}<small>Роль: {me.active_role ? roleName[me.active_role] : "не выбрана"}</small></span></div>
             <button type="button" className="tgl" onClick={signOut}>Выйти</button>
@@ -76,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <small>Платформа ФСП Оренбургской области</small>
         </div>
       </aside>
-      <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <p className="mobile-role-error" role="alert">{roleError}</p>}<CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
+      <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{!me.active_role && <option value="" disabled>Выбор роли</option>}{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}{me.active_role === role ? " ✓" : ""}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <p className="mobile-role-error" role="alert">{roleError}</p>}<CurrentUserContext.Provider value={me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
     </div>
     <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link className={path === "/dashboard" || path === "/history" || path === "/coach-links" ? "on" : ""} href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
   </>;

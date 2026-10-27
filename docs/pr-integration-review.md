@@ -1,5 +1,11 @@
 # PR integration review — 2026-10-27
 
+## Post-merge update
+
+PR #2 was merged with explicit authorization as `e3903fbfe14420d83e9043b744854209bf00318a`. Its reviewed head was unchanged; GitHub reported no branch protection, applicable rulesets, required reviews, check runs or blocking comments. PR #1 was updated in an isolated worktree by a non-destructive merge from that main commit. The dashboard resolution keeps both links; a separate regression exercises all four roles at desktop and mobile widths. During post-merge review, a reproducible out-of-order role-switch response race was fixed by serializing switch requests, ignoring stale identity responses, and aborting pending role/CSRF requests on logout. This merge does not authorize merging PR #1 into main.
+
+The integrated PostgreSQL suite passed 55/55. The production build, TypeScript, ESLint, Ruff, migration consistency, warning-free OpenAPI validation and checked-in schema comparison, and design-contract check passed. The browser suite passed 28/28, including the live competition-to-qualification workflow; a separate regression for logout during a stalled CSRF request also passed. The original reference HTML remains unchanged.
+
 Base `main`: `f7beaa6312147513a14e1362d6f89c3b679e5db3`. PR #1 original head: `61c2839ffcca863f4a7a88f5794130f20c84728b`. PR #2 head: `ebe2189b39487db053378b94cfd69f40c5f3bfa1`.
 
 ## PR #1 — qualifications

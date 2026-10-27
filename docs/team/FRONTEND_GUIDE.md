@@ -13,6 +13,7 @@
 | `/competitions/[id]` | `src/app/competitions/[id]/page.tsx` | детализация, роли, заявки, moderation, судьи, результаты, preview/publication/export |
 | `/coach-links` | `src/app/coach-links/page.tsx` | запрос и подтверждение связи по дисциплине |
 | `/history` | `src/app/history/page.tsx` | собственная история спортсмена |
+| `/my-competitions` | `src/app/my-competitions/page.tsx` | заявки спортсмена/тренера или назначения судьи из существующих API; доступ из кабинета |
 
 `src/app/layout.tsx` загружает шрифты, `globals.css` и `app.css`, оборачивает все страницы в `src/components/AppShell.tsx`. Отдельных role-specific layout-файлов нет. `AppShell` строит нумерованную боковую навигацию, мобильную нижнюю панель, выбор активной роли, logout и переключение темы; `useCurrentUser()` читает контекст оболочки. Защитой данных служит API, а не этот контекст. После изменения роли `dashboard/page.tsx` заново запрашивает метрики.
 

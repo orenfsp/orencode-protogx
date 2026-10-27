@@ -1,5 +1,13 @@
 # DeepSeek delegation log
 
+## Post-PR #2 integration — 2026-10-27
+
+Two bounded final reviews reported `deepseek-v4-pro`, `model_mismatch: false`, `files_written: false`, and `tests_executed: false`: frontend and role scope `52a4f5ce-2ff2-45b9-ba4e-6ee5cdbd7503`; qualifications and consent `16e6fe26-61ae-4342-b0a2-f17e17949ca5`. Claims that an old React component can write into the state of a newly keyed component and that latest-version ordering chooses an older publication were rejected after inspecting the code and tests; `(competition, version)` is unique. Independent testing reproduced an actual out-of-order role-switch response race, which Codex fixed by serializing role updates and suppressing stale identity responses.
+
+Two follow-up Pro reviews of that fix returned requests `9ff8988c-716e-4992-b17e-fb43f2c6f573` and `c4f9b7ea-e82b-4e3c-ba55-33b661d1b66b`. Codex accepted the risk of logout waiting on a stalled switch and added cancellation for the switch and its CSRF fetch, plus a guard against new switches during logout. The claims that logout increments the revision only after waiting and that the `auth/me` callback lacks a revision check contradict the inspected code. DeepSeek did not edit files or run tests.
+
+The final bounded Pro review of the revised queue and `api()` returned request `33b93b4f-c519-472f-bfde-138332fa9b75`, reporting `deepseek-v4-pro`, `model_mismatch: false`, `files_written: false`, and `tests_executed: false`. Its claim that an aborted CSRF fetch permits the POST was rejected: the awaited fetch rejects and the browser regression confirms no role POST is sent. Logout increments the revision before aborting, so the stale switch catch cannot set an error. `auth/me` checks the captured revision and a successful switch supplies the new `Me` response directly. HTTP-status-specific UI handling remains a separate enhancement.
+
 ## PR #1 repair review — 2026-10-27
 
 Two bounded Pro reviews of qualification, competition and consent interfaces returned `deepseek-v4-pro`, `model_mismatch: false`, and `files_written: false`: provenance request `5f369600-3578-4cc9-bb39-53307fe0c80b` and security request `12fb9d4b-ea75-4395-911d-52ac624dfbfc`. Codex adopted published-row provenance and consent tests. The claim that the existing partial unique constraint cannot prevent duplicate rows was rejected; concurrent duplicate requests may still need graceful error handling.
