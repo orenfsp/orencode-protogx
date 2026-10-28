@@ -189,6 +189,11 @@ class RegistryApiTests(TestCase):
         self.assertEqual(self.client.post(path, body, format="json").status_code, 400)
         self.assertEqual(self.client.post("/api/v1/registry/profiles/judge/", body, format="json").status_code, 400)
         self.assertFalse(coach.role_assignments.filter(role="judge").exists())
+        judge = User.objects.create_user(email="judge-create@example.test", full_name="Judge", date_of_birth=date(1980, 1, 1))
+        UserRole.objects.create(user=judge, role="judge")
+        PersonalDataConsent.objects.create(user=judge, text_version="test")
+        self.assertEqual(self.client.post("/api/v1/registry/profiles/judge/", {"user": judge.pk}, format="json").status_code, 201)
+        self.assertTrue(StaffProfile.objects.filter(user=judge, role="judge").exists())
         self.client.force_authenticate(self.athlete)
         session = self.client.session
         session["active_role"] = "athlete"
