@@ -1,12 +1,22 @@
-# Проверка mandatory part 1 — 2026-10-28
+# Итог проверки mandatory part 1 — 2026-10-28
 
-Ветка: `codex/mandatory-case-completion`. Исходный SHA: `ee60893d2278001aaa6b704943230c0bd2db6eeb`. Реализация: `b41ca965d4bae2246732caac8095d0ee96397f66`; завершающие исправления кода: `99cc63da252cab311d7209ce86354e8cad84627d`. Последующий коммит документации/скриншотов не меняет runtime. PR не создан, ветка не отправлялась, merge не выполнялся. `gh pr view` после разрешённого сетевого доступа подтвердил отсутствие PR текущей ветки; hosted CI этого SHA отсутствует.
+Ветка `codex/mandatory-case-completion`; baseline `ee60893d2278001aaa6b704943230c0bd2db6eeb`; финальный код **`223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd`**. Последующая фиксация отчётов, журналов и PNG не меняет runtime или тесты. PR не создан, push/merge не выполнялись; hosted CI этого SHA не запускался. Локальные проверки ниже не выдаются за GitHub Actions.
 
-## Окружение и команды
+## Фактически выполненные проверки
 
-Изолированный Compose project `fspmandatory`: PostgreSQL 16, Python 3.13/Django 5.2.18, Node 24/Next 16.4.3, Google Chrome/Playwright. Стенд: web `http://127.0.0.1:13001`, API порт 18001, БД порт 55433, Mailpit `http://127.0.0.1:18025`. Исходный `fsp-platform` и его данные не сбрасывались. Изолированный PostgreSQL volume создавался новым, миграции/фиктивный seed прошли при первом запуске; повторные старты сохраняют данные.
+- PostgreSQL/Django: **139 passed, 0 failed, 0 skipped, 367.625s**. Включены роли/объекты/consent, история и поиск, документы, рейтинги/сборная, уведомления, конкурентные worker и дедупликация.
+- Полный Chrome/Playwright, один worker: **118 passed, 0 failed, 0 skipped, 7.6m** на финальном коде. Это единый полный успешный запуск, а не сумма целевых повторов. Включены live процессы соревнования/разряда, категории/SMTP Mailpit, реестров/двухлетнего XLSX, рейтинга/ручной сборной и файлов, role/logout races, visual/axe.
+- `npm.cmd run typecheck`, `npm.cmd run lint` — exit 0. Production `docker compose -p fspmandatory build web` — exit 0: Next.js 16.4.3, TypeScript, 17 страниц.
+- Backend `ruff check .` — `All checks passed!`; `makemigrations --check --dry-run` — `No changes detected`; Django system check — без ошибок.
+- `scripts/check_openapi_schema.py` в контейнере — `PASS: docs/openapi.yaml matches warning-free generation`.
+- `python scripts/check_design_contract.py` — PASS; `git diff --check` — exit 0. Reference HTML и extracted `globals.css` неизменны.
+- Изолированный Compose `fspmandatory`: пять сервисов работают; db/api/mailpit имеют статус healthy. Fresh migrations/фиктивный seed выполнены при создании отдельного volume, повторные старты сохраняют данные. Исходный `fsp-platform` не сбрасывался.
 
-Настройки стенда PowerShell:
+Фактические журналы: [evidence](evidence/mandatory-2026-10-28/README.md). Backend проверен до коммита на том же содержимом Python; после него менялись только frontend/тест и документация. Full browser выполнен после фиксации `223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd`. SHA и контрольные суммы снимков записаны в manifest.
+
+## Воспроизведение
+
+Из корня в PowerShell:
 
 ```powershell
 $env:FSP_DB_PORT='55433'
@@ -17,52 +27,44 @@ $env:DEMO_SEED_ENABLED='1'
 $env:DEMO_ENVIRONMENT='local'
 $env:DJANGO_CSRF_TRUSTED_ORIGINS='http://127.0.0.1:13001,http://localhost:13001'
 docker compose -p fspmandatory up -d --build --wait
+docker compose -p fspmandatory exec -T api python manage.py test --noinput
+docker compose -p fspmandatory exec -T api python manage.py makemigrations --check --dry-run
+docker compose -p fspmandatory exec -T api ruff check .
+python scripts/check_design_contract.py
 ```
 
-Backend: `docker compose -p fspmandatory run --rm --no-deps -v C:/Users/User/Documents/ChatGPT/fsp-platform/backend:/app api python manage.py test --noinput` — **137 passed, 0 failed, 0 skipped, 409.272s**. Выполнен на реализации до финальной текстовой локализации формата в exporter; после неё `tests.test_competitions` — **10 passed, 13.548s**. Более ранние 118/126/134 и целевые 44 теста также прошли, но не заменяют эти результаты.
+Полный backend прогон здесь исполнялся в одноразовом API-контейнере с mount `backend:/app`: `docker compose -p fspmandatory run --rm --no-deps -v C:/Users/User/Documents/ChatGPT/fsp-platform/backend:/app api python manage.py test --noinput`. Схема проверялась с mount корня в `/workspace`, workdir `/workspace/backend`: `python /workspace/scripts/check_openapi_schema.py`.
 
-`docker compose -p fspmandatory exec -T api ruff check .` — прошёл после упорядочения импортов. `python manage.py makemigrations --check --dry-run` — `No changes detected`. `python manage.py check` — без ошибок. `scripts/check_openapi_schema.py` внутри одноразового контейнера — `PASS: docs/openapi.yaml matches warning-free generation`. Все новые поля/маршруты включены в сохранённую схему.
-
-Frontend: `npm.cmd run typecheck`, `npm.cmd run lint` — exit 0. `docker compose ... up -d --build ... --wait` выполнил production build: компиляция/TypeScript и 17 страниц прошли; все пять сервисов запущены. `python scripts/check_design_contract.py` — PASS; `git diff --check` — без whitespace ошибок.
-
-Браузерная среда (из `frontend`):
+Из `frontend` после `npm ci` (Chrome установлен):
 
 ```powershell
 $env:FSP_WEB_URL='http://127.0.0.1:13001'
 $env:FSP_MAILPIT_URL='http://127.0.0.1:18025'
 $env:FSP_E2E_COMPOSE_PROJECT='fspmandatory'
-$env:PYTHONPATH='C:/Users/User/Documents/ChatGPT/fsp-platform/tmp/xlsx-test-deps'
+npm.cmd run typecheck
+npm.cmd run lint
 npm.cmd run test:e2e -- --workers=1
 ```
 
-`PYTHONPATH` здесь нужен лишь локальной машине, где openpyxl установлен во временную папку; на CI зависимость устанавливается штатным шагом. На чистой машине достаточно установить openpyxl согласно CI. Реальный login throttle не отключался: последовательный запуск необходим, чтобы live tests не конкурировали за общий лимит 5 входов/минуту.
+Live XLSX test требует Python/openpyxl, как указано в CI. На этой машине зависимость установлена во временный каталог и передан `PYTHONPATH=C:/Users/User/Documents/ChatGPT/fsp-platform/tmp/xlsx-test-deps`; на обычной машине достаточно доступного openpyxl. Реальный login throttle 5/min не отключался, поэтому live tests запускаются одним worker. Backend проверяет PostgreSQL locks/constraints; SQLite не заменяет этот прогон.
 
-## Итог браузерной проверки
+## Новые сценарии и исправленные сбои
 
-Полный последовательный запуск на runtime `99cc63d`: **115 passed / 1 failed, 7.5m**. Единственный сбой — гонка ожидания logout в `registry-live.spec.ts`, runtime не менялся. После добавления `await expect(page).toHaveURL(/\/$/)` перед следующим переходом целевой повтор: **1 passed, 10.1s**. Все 116 сценариев имеют успешное свидетельство, но единый полный прогон 116/116 после этой тестовой правки **не выполнялся**; результат не переименовывается в 116 passed. Логи сохранены в `docs/evidence/mandatory-2026-10-28/`.
+Поиск тренером → запрос → подтверждение спортсменом → приостановление → журнал обоих владельцев; федерация исправляет реквизиты → видит прежние/новые значения и причину. Отдельно 2 passed / 25.0s, затем оба вошли в полный успешный набор. 6 новых coach screenshot/keyboard/axe состояний входят в первый live test.
 
-Полный прогон включил live конкурсы/модерацию/судью/результаты/публикации/разряд, категорию и SMTP Mailpit, четыре реестра/двухлетнюю XLSX, рейтинги/ручную сборную/файлы, role/logout races и axe/визуальные состояния. Шесть новых viewport/theme тестов прошли, созданы все 24 PNG. TypeScript/lint/production build и API/design проверки прошли отдельно.
+Предыдущий полный набор 118 тестов дал 117 passed / 1 failed: повторяющаяся причина в сохранённой истории делала locator неоднозначным. Тест теперь использует уникальную причину, история не очищается. Новая мобильная проверка обнаружила native select вне контейнера формы: длинное название дисциплины расширяло страницу. Поле перенесено в существующий `workflow-form`, overflow устранён без правок reference/CSS. Более ранние тестовые logout races, неполные mocks, mobile aria-label и временный контраст toast исправлены ранее; ошибки не скрывались ослаблением axe.
 
-## Разобранные сбои и ограничения доказательств
+## Файлы и визуальная приёмка
 
-- Первый полный браузерный набор: 95 passed / 21 failed. Мобильная тема имела несовпадающее visible/accessibility имя; toast имел временно низкий контраст при opacity-анимации. Исправлены исходники, правила axe не ослаблялись.
-- Устаревшие тесты ожидали текст закрытой страницы вместо уже реализованного перенаправления в кабинет; теперь проверяют redirect и отсутствие прежних данных. Один mock не описывал новый consent DTO — исправлен mock.
-- Второй полный набор с двумя worker: 114 passed / 2 failed; живые login запросы упёрлись в throttle, повторный перевод организации создал несколько исторических строк. Перевод теперь выбирает другую организацию и следующую дату от текущего периода; проверки учитывают несколько записей. При повторе обнаружены ещё два старых ожидания закрытой страницы в live registry — обновлены на фактическую навигацию.
-- Последовательный прогон на `99cc63d` прошёл live регистрацию/перевод/сопоставление XLSX, но обнаружил ещё одну гонку в тесте: после клика «Выйти» переход на аналитику прерывал незавершённый logout. Добавлено ожидание главной страницы до следующего перехода. Это исправление только теста; session/logout API не изменялся.
-- Новый отдельный `mandatory-live.spec.ts` неоднократно прошёл: категория → решение → сохранённое уведомление → SMTP capture; IDOR отказ; read через клавиатуру; согласие withdrawal/renewal; профиль РУСАДА; реальный XLSX download.
+30 live PNG: dashboard/profile/history/qualifications/coach-links × 1440/768/390 × light/dark, `docs/design/screenshots/mandatory/`. Проверки page overflow и axe serious/critical проходят; coach search и summary работают клавиатурой. Ранее registry и рейтинги также покрыты viewport/theme/state тестами полного набора. Осмотрены представительные desktop/tablet/mobile снимки, включая новый coach desktop light/mobile dark. Сохранены sidebar numbering, dotted navigation, document rail, stamps, indigo/orange, темы и bottom nav. Широкие таблицы прокручиваются в своём контейнере; full-page screenshot фиксирует sidebar/bottom nav в положении последнего viewport. Это особенность capture, не заявление о ручном обходе каждого элемента.
 
-## Файлы, приватность и визуальный осмотр
+Образцы реальных защищённых API: protocol PDF/DOCX, regulations DOCX, athlete XLSX, personal protocol PDF. DOCX проверены как OOXML, XLSX открыт openpyxl и содержит сохранённую версию/данные, кириллица PDF извлечена, страницы отрендерены и осмотрены. Тесты проверяют latest publication, пустой файл, formula injection и приватность. Личная выписка содержит только собственную строку, полный демонстрационный протокол — три. Прежние snapshots с историческими англоязычными названиями не переписывались.
 
-Новые backend тесты открывают ZIP/DOCX/XLSX, проверяют содержимое, latest publication, пустые результаты, formula injection и object scope. Образцы реальных защищённых API скачаны в `tmp/mandatory-documents/`: protocol PDF/DOCX, regulations DOCX, athlete XLSX, personal-protocol PDF. DOCX разобраны как OOXML, XLSX открыт openpyxl: 7 строк, имя фиктивного спортсмена, version=1. PDF содержат текст на кириллице, по одной странице; отрендерены и осмотрены: таблицы/заголовки/версия/предупреждение/подвал читаемы, выписка содержит одну строку, полный протокол — три. Временные образцы не входят в deliverable и не выдаются за официальные формы.
+## Точные внешние ограничения
 
-Скриншоты: `docs/design/screenshots/mandatory/` — dashboard/profile/history/qualifications × 1440/768/390 × light/dark. Осмотрены dashboard desktop light/mobile dark, profile mobile light, history tablet dark, qualifications desktop dark. Сохранены numbered sidebar, dotted navigation, document rail, orange accents, stamp borders, theme и mobile nav. На узких экранах широкая таблица имеет горизонтальную прокрутку. Bottom nav перекрывает фиксированную полосу viewport на full-page скриншоте; контент доступен прокруткой, поля/кнопки проверяются браузером. Полный ручной обход всех элементов каждой роли не подменяется axe.
+1. Email: SMTP adapter/worker и реальное принятие Mailpit проверены. Credentials production-провайдера и получение внешним ящиком не предоставлены/не проверены. `sent` означает принятие SMTP, возможен at-least-once повтор при аварии. Процедура — [notifications.md](notifications.md).
+2. Нормативы: часть файлов ФСП скачана и выборочно осмотрена, обнаружено расхождение названия ссылки ЕВСК с содержимым. Действующая консолидированная редакция всех норм/шести форм не установлена. Непроверенные правила не дают подсказок, шаблоны остаются демонстрационными. URL/хеши/границы — [regulatory-source-review.md](regulatory-source-review.md).
+3. Представитель: сведения/согласие/история и проверки сохранены; личность и реальная подпись представителя организационно не подтверждаются онлайн checkbox. Демо-личности вымышленные.
+4. Hosted CI: нет запуска на финальном SHA; push/Draft PR требуют отдельного разрешения по пользовательскому заданию. Ветка остаётся локальной, merge не выполнялся.
 
-## Незакрытые gates
-
-- Первичные актуальные ЕВСК/формы/нормативы не верифицированы: web connector вернул 401 `token_revoked`. Непроверенные правила не дают подсказку. Для официального применения нужна сверка источника и версии, а не смена флага ради демонстрации.
-- Production SMTP credentials отсутствуют, доставка в реальный внешний ящик не проверена. Mailpit подтверждает локальный SMTP, `sent` — принятие SMTP сервером; после аварии возможна at-least-once повторная доставка.
-- Hosted CI на итоговый SHA не запускался; PR/push требуют отдельного явного разрешения согласно пользовательскому заданию.
-- Тренер запрашивает связь по известному email; отдельного поиска спортсменов по имени в реестре и пользовательского экрана полного журнала связей эта ветка не добавляет. История переходов сохранена в AuditEvent. UI просмотра ledger исправлений квалификаций остаётся через API; форма исправления федерации реализована.
-- В исходных демонстрационных опубликованных протоколах встречаются английские названия событий/уровней. Исторические snapshots не переписывались; служебная подпись формата переведена на русский. Новые события вводятся на русском.
-
-Все восемь групп получили работающие дополнения и проверки, но общий статус — **partial** до закрытия перечисленных gates. D1–D12 не включены в оценку. Детали AC-01–AC-18 — в `docs/acceptance-matrix.md`.
+Работающие программные сценарии восьми групп реализованы и локально проверены; полное официальное/production соответствие не объявляется. D1–D12 не входят в задачу. Статусы проектных AC отдельно зафиксированы в [матрице](acceptance-matrix.md).

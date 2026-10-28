@@ -120,3 +120,10 @@ Two defects found during acceptance were corrected in application code: mobile t
 Final suite history, exact code revisions and remaining gates: [mandatory-verification.md](../mandatory-verification.md). Earlier results below remain historical.
 
 Typecheck/lint/build and design-contract check passed. Existing mocked published-result Playwright test passed; it now captures 1440/768/390 px in both themes and checks page overflow and nowrap statuses. Reviewed desktop dark and mobile light captures in `frontend/test-results/ratings-ratings-page-expands-a-published-result-breakdown/`. Desktop column spacing was then tightened to fit the available document column; mobile horizontal scrolling is intentional. Live backend was not exercised.
+
+
+### Финальная локальная приёмка — код 223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd
+
+Полный Chrome: 118 passed / 0 failed / 0 skipped. Снимки `mandatory/`: 30 PNG (dashboard/profile/history/qualifications/coach-links × 1440/768/390 × light/dark). Coach search и открытая история проверены keyboard Tab/Enter, axe serious/critical и page overflow; новые тесты включены в полный набор. Native select вне workflow-form создавал 390 px overflow; перемещён в существующую форму, reference/CSS не менялись. Осмотрены coach desktop light/mobile dark и ранее перечисленные состояния других экранов. Фиксированные sidebar/bottom nav на full-page capture находятся в позиции последнего viewport. Полного ручного обхода каждого элемента не заявляем.
+
+Design-contract PASS; reference/extracted CSS SHA сохранены вместе с PNG в `docs/evidence/mandatory-2026-10-28/screenshots.json`. Точные команды, предыдущие failed runs и внешние границы: [mandatory-verification.md](../mandatory-verification.md). Предыдущие результаты выше относятся к указанным старым ревизиям.

@@ -1,0 +1,13 @@
+
+> fsp-frontend@0.1.0 test:e2e
+> playwright test tests/coach-history-live.spec.ts --workers=1
+
+
+Running 2 tests using 1 worker
+
+(node:13188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests\coach-history-live.spec.ts:6:5 › coach finds consenting athlete, requests link and both owners see lifecycle history (19.4s)
+  ✓  2 tests\coach-history-live.spec.ts:70:5 › federation correction ledger is readable from the qualification history (3.2s)
+
+  2 passed (25.0s)

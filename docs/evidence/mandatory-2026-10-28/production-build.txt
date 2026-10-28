@@ -1,0 +1,105 @@
+ Image fspmandatory-web Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.03kB 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 250B 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for docker.io/library/node:24-alpine
+#3 DONE 2.7s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 104B 0.1s done
+#4 DONE 0.2s
+
+#5 [internal] load build context
+#5 DONE 0.0s
+
+#6 [1/6] FROM docker.io/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+#6 resolve docker.io/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53
+#6 resolve docker.io/library/node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 0.2s done
+#6 DONE 0.2s
+
+#5 [internal] load build context
+#5 transferring context: 14.22kB 0.2s done
+#5 DONE 0.3s
+
+#7 [2/6] WORKDIR /app
+#7 CACHED
+
+#8 [3/6] COPY package*.json ./
+#8 CACHED
+
+#9 [4/6] RUN npm ci
+#9 CACHED
+
+#10 [5/6] COPY . .
+#10 DONE 0.5s
+
+#11 [6/6] RUN npm run build
+#11 5.801 
+#11 5.801 > fsp-frontend@0.1.0 build
+#11 5.801 > next build
+#11 5.801 
+#11 8.985 ▲ Next.js 16.4.3 (Turbopack)
+#11 9.401 ✓ Running next.config.ts took 411ms
+#11 9.411 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#11 9.411 This information is used to shape Next.js' roadmap and prioritize features.
+#11 9.411 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#11 9.411 https://nextjs.org/telemetry
+#11 9.411 
+#11 9.464 
+#11 9.510   Creating an optimized production build ...
+#11 15.68 ✓ Compiled successfully in 6.2s
+#11 15.69   Running TypeScript ...
+#11 29.80   Finished TypeScript in 14.1s ...
+#11 29.81   Collecting page data using 3 workers ...
+#11 31.78   Generating static pages using 3 workers (0/17) ...
+#11 32.36   Generating static pages using 3 workers (4/17) 
+#11 32.36   Generating static pages using 3 workers (8/17) 
+#11 32.79   Generating static pages using 3 workers (12/17) 
+#11 32.88 ✓ Generating static pages using 3 workers (17/17) in 1093ms
+#11 32.90   Finalizing page optimization ...
+#11 32.94 
+#11 32.95 Route (app)
+#11 32.95 ┌ ○ /
+#11 32.95 ├ ○ /_not-found
+#11 32.95 ├ ○ /analytics/participation
+#11 32.95 ├ ○ /coach-links
+#11 32.95 ├ ○ /competitions
+#11 32.95 ├ ƒ /competitions/[id]
+#11 32.95 ├ ○ /dashboard
+#11 32.95 ├ ○ /history
+#11 32.95 ├ ○ /login
+#11 32.95 ├ ○ /my-competitions
+#11 32.95 ├ ○ /privacy
+#11 32.95 ├ ○ /profile
+#11 32.95 ├ ○ /qualifications
+#11 32.95 ├ ○ /ratings
+#11 32.95 ├ ○ /register
+#11 32.95 ├ ○ /registry
+#11 32.95 └ ○ /teams
+#11 32.95 
+#11 32.95 
+#11 32.96 ○  (Static)   prerendered as static content
+#11 32.96 ƒ  (Dynamic)  server-rendered on demand
+#11 32.96 
+#11 DONE 34.2s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 3.6s done
+#12 exporting manifest sha256:3b13544c83fbeec0640d6a1dec907987c041ca2facc020d1a6a21695e5025efa 0.0s done
+#12 exporting config sha256:a2277967a5c639eb894ad8881f33598184a7916c981a8e6d823133f0935d3ab1 0.0s done
+#12 exporting attestation manifest sha256:aa14d2ef3af0fa1f156e56236ad7178f7a9946fbc51e5db715ce99a0a152c60e 0.0s done
+#12 exporting manifest list sha256:a3a9c6f777d7ca352ac0fe7f56cb44db95275728029da591d8780c4876f43664 0.0s done
+#12 naming to docker.io/library/fspmandatory-web:latest done
+#12 unpacking to docker.io/library/fspmandatory-web:latest
+#12 unpacking to docker.io/library/fspmandatory-web:latest 1.0s done
+#12 DONE 4.9s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.3s
+ Image fspmandatory-web Built 

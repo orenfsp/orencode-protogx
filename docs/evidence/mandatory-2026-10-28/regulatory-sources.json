@@ -1,0 +1,27 @@
+[
+  {
+    "file": "evsk-2025.doc",
+    "bytes": 489472,
+    "sha256": "9f944bfdf93f8d404879a34ad01d6ad60b2f6489b03868655b65bee259fe8c17"
+  },
+  {
+    "file": "evsk-2025.pdf",
+    "bytes": 488592,
+    "sha256": "a6aed4f434f8ff865adc129e5ef2abcd0417f81817415d7eafab53529eb5960c"
+  },
+  {
+    "file": "evsk-sport-2024.pdf",
+    "bytes": 1402701,
+    "sha256": "fe014588f02a6dc9c296cd05dbf5a77c17528a63c629993de42b4bb73fced7b6"
+  },
+  {
+    "file": "judge-categories.pdf",
+    "bytes": 786708,
+    "sha256": "63bf8141db8d442891ccd7eb174848bbacf3836fc2693881d8de9c15aad4733f"
+  },
+  {
+    "file": "rules-584.pdf",
+    "bytes": 4110682,
+    "sha256": "d87d6597ed42dd80ab0903b3a5119f6c19cdeef4e2f6c6415a89c6a4ea4018bc"
+  }
+]

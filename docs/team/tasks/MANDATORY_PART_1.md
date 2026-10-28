@@ -13,3 +13,6 @@ DeepSeek: фактические инструменты обнаружены; `g
 Внешние gates: production email receipt/credentials, сверка действующих первоисточников, hosted CI на final SHA. Демо/локальная интеграция не заменяет эти gates. Они описываются как unverified/blocked, а не passed.
 
 Результат реализации: `b41ca96`, завершающие исправления `99cc63d`. Точное свидетельство команд, статусы восьми групп и ограничения — [mandatory-verification.md](../../mandatory-verification.md), [case-mandatory-traceability.md](../../case-mandatory-traceability.md). Общий статус сохраняется partial при незакрытых внешних и продуктовых gates.
+
+
+Завершение по прямому указанию пользователя: `223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd` закрывает поиск спортсмена по имени, object-scoped journal и читаемые correction ledgers. Контракт directory/history и ограниченное MCP review: [coach-links-and-history.md](../../coach-links-and-history.md). Финальная локальная проверка: PostgreSQL 139 passed, полный Chrome 118 passed; build/schema/migrations/design прошли. Предыдущая фраза о продуктовых пробелах выше историческая; остаются внешние gates, не незаконченные coach/history функции.

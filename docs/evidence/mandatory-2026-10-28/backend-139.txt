@@ -1,0 +1,42 @@
+ Container fspmandatory-api-run-41cbc816d54f Creating 
+ Container fspmandatory-api-run-41cbc816d54f Created 
+Found 139 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.....................................................................................................................Forbidden: /api/v1/teams/17/
+Forbidden: /api/v1/teams/17/documents/
+Forbidden: /api/v1/teams/17/publish/
+Forbidden: /api/v1/teams/17/
+Forbidden: /api/v1/teams/17/documents/
+Forbidden: /api/v1/teams/17/publish/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Bad Request: /api/v1/teams/24/publish/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Bad Request: /api/v1/teams/25/members/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Bad Request: /api/v1/teams/
+Bad Request: /api/v1/teams/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+..Bad Request: /api/v1/teams/40/members/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Forbidden: /api/v1/teams/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Forbidden: /api/v1/teams/45/
+Forbidden: /api/v1/teams/45/documents/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+...Forbidden: /api/v1/teams/57/publish/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+.Not Found: /api/v1/teams/
+Not Found: /api/v1/teams/61/candidates/
+Seeded fictional demo accounts, competitions, ratings and regional teams; existing passwords preserved
+...........
+----------------------------------------------------------------------
+Ran 139 tests in 367.625s
+
+OK
+Destroying test database for alias 'default'...
