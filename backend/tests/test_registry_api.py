@@ -65,3 +65,16 @@ class RegistryApiTests(TestCase):
         session.save()
         self.assertEqual(self.client.get("/api/v1/athletes/").status_code, 403)
         self.assertEqual(self.client.get("/api/v1/analytics/participation/export/?start_year=2024&end_year=2025").status_code, 403)
+
+    def test_filters_must_overlap_at_the_same_time(self):
+        before = Discipline.objects.create(code="before-transfer", name="До перевода")
+        DisciplinePeriod.objects.create(athlete=self.athlete, discipline=before, starts_on=date(2024, 1, 1), ends_on=date(2024, 6, 30))
+        OrganizationPeriod.objects.filter(athlete=self.athlete, organization=self.first).update(ends_on=date(2024, 6, 30))
+        OrganizationPeriod.objects.filter(athlete=self.athlete, organization=self.second).update(starts_on=date(2024, 7, 1))
+        result = self.client.get(f"/api/v1/analytics/participation/?start_year=2024&end_year=2025&organization={self.second.pk}&discipline={before.pk}")
+        self.assertEqual([row["unique_athletes"] for row in result.data], [0, 0])
+
+    def test_invalid_query_and_organization_code_are_rejected(self):
+        self.assertEqual(self.client.get("/api/v1/analytics/participation/?start_year=2025&end_year=2025").status_code, 400)
+        response = self.client.patch(f"/api/v1/organizations/{self.first.pk}/", {"code": "changed"}, format="json")
+        self.assertEqual(response.status_code, 400)
