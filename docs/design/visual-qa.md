@@ -1,5 +1,22 @@
 # Visual QA
 
+## AC-11 accessibility continuation — 2026-10-28
+
+The registry visual suite now runs axe-core with WCAG 2 A/AA, 2.1 AA and 2.2 AA tags before capturing each supported state. An initial 18-test run passed on the isolated Compose production frontend: correction/validation, coach/judge/organization details, and loading/empty/API-error/forbidden states at 1440, 768 and 390 px in both themes. Those responses are intercepted fictional fixtures. Automated scans do not establish full WCAG conformance or replace manual comparison.
+
+The correction form now moves focus to its required reason, associates server feedback with that field, and supports Escape with focus restoration to the invoking button. The regression checks initial focus, Tab/Enter submission, Shift+Tab, the error association and Escape. These forms are inline regions, not modal dialogs; modal focus containment does not apply.
+
+Acceptance coverage:
+
+- Correction and validation: six viewport/theme combinations captured and scanned; keyboard regression covers the sequence above. A mobile dark screenshot was manually inspected for rail, controls, borders, focus and readability.
+- Coach/judge/organization details: six combinations scanned and captured for each; complete new manual comparison is pending.
+- Loading/empty/API-error/forbidden: six combinations scanned and captured for each; complete new manual comparison is pending.
+- Creation, success, conflict, long tables and analytics: existing functional coverage remains; exhaustive keyboard-only journeys and manual comparison are not newly verified by this continuation.
+
+The in-app browser inspection attempt timed out. A subsequent Computer Use inventory returned no apps or browsers and `Computer Use native pipe is unavailable` (Windows error 2). Manual interactive acceptance could not be completed through that tool. Screenshot review and automated browser execution remain distinct evidence. Keep the outstanding manual gates open until actually inspected; the unchanged design reference and a passing axe scan alone cannot close them.
+
+The user subsequently limited this run to critical checks for a test demonstration. The 108-test PostgreSQL suite passed, as did production build, typecheck, ESLint, Ruff, migration checks, design contract and container OpenAPI validation. The live registry/history/analytics/XLSX scenario passed on a fresh isolated Compose database, including workbook parsing and totals 2/3. A complete final browser-suite run was not completed: earlier attempts exposed local origin/Python setup issues and reused-fixture state, and the final full run was stopped at the user's request. This is demonstration readiness evidence, not final AC-11 acceptance or hosted CI evidence for the new commit.
+
 Reference: `fsp-reference.html` (SHA-256 `2362C4D1AEC5D54FA075215D6FDF986416D23D8402FBF33342D29671C5D043A2`). It is immutable.
 
 Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numbered indigo sidebar and role selector to `AppShell`, the document rail to `.main::before`, and the fixed mobile bottom navigation to `.mobtab`. Rubik, Inter, and JetBrains Mono are loaded with the same font weights. The light/dark token values and 900px/520px breakpoints come from the reference CSS.

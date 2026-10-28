@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
@@ -18,16 +19,23 @@ for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: "Демо спортсмен", exact: true }).click();
     await page.getByRole("button", { name: "Исправить", exact: true }).first().click();
     await expect(page.getByLabel("Причина исправления")).toBeVisible();
-    await page.getByLabel("Причина исправления").focus();
     await expect(page.getByLabel("Причина исправления")).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
     if (width <= 900) await expect(page.getByRole("navigation", { name: "Основная навигация" })).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-form-${width}-${theme}.png`), fullPage: true });
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Сохранить исправление" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("p[role=alert]")).toContainText("Укажите причину исправления");
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-validation-${width}-${theme}.png`), fullPage: true });
+    await expect(page.getByLabel("Причина исправления")).toHaveAttribute("aria-describedby", "correction-error");
+    await page.keyboard.press("Shift+Tab");
+    await expect(page.getByLabel("Причина исправления")).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByLabel("Причина исправления")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Исправить", exact: true }).first()).toBeFocused();
   });
 }
 
@@ -64,7 +72,8 @@ for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
       if (width <= 900) await expect(page.getByRole("navigation", { name: "Основная навигация" })).toBeVisible();
-      await page.screenshot({ path: testInfo.outputPath(`registry-${kind}-${width}-${theme}.png`), fullPage: true });
+      expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
+    await page.screenshot({ path: testInfo.outputPath(`registry-${kind}-${width}-${theme}.png`), fullPage: true });
     }
   });
 }
@@ -91,15 +100,19 @@ for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
     await page.goto("/registry");
     await requestStarted;
     await expect(page.getByText("Загрузка…").first()).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-loading-${width}-${theme}.png`), fullPage: true });
     release();
     await expect(page.getByText("Записей не найдено.")).toBeVisible();
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-empty-${width}-${theme}.png`), fullPage: true });
     await page.getByLabel("Поиск", { exact: true }).fill("error");
     await expect(page.locator("p[role=alert]")).toContainText("Демо ошибка");
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-error-${width}-${theme}.png`), fullPage: true });
     await page.getByLabel("Поиск", { exact: true }).fill("denied");
     await expect(page.locator("p[role=alert]")).toContainText("Доступ");
+    expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-denied-${width}-${theme}.png`), fullPage: true });
   });
 }
