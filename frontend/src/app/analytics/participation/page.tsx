@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
 import { useRegistryOptions } from "@/components/RegistryOptions";
-import { api, downloadDocument } from "@/lib/api";
+import { api, ApiError, downloadDocument } from "@/lib/api";
 
 type Row = { name: string; participants: number };
 type Annual = { year: number; unique_athletes: number; started: number; ceased: number; change: number | null; growth_percent: number | null; breakdowns: Record<string, Row[]> };
@@ -16,7 +16,7 @@ export default function ParticipationPage() {
 }
 
 function Workspace() {
-  const { options, optionsError } = useRegistryOptions();
+  const { options, optionsError, optionsForbidden } = useRegistryOptions();
   const [start, setStart] = useState("2024");
   const [end, setEnd] = useState("2025");
   const [organization, setOrganization] = useState("");
@@ -28,11 +28,13 @@ function Workspace() {
   const selectedName = (items: { id: number; name: string }[] | undefined, value: string | null) => items?.find((item) => String(item.id) === value)?.name ?? "Все";
   const [rows, setRows] = useState<Annual[] | null>(null);
   const [error, setError] = useState("");
+  const [denied, setDenied] = useState(false);
   const downloadController = useRef<AbortController | null>(null);
   useEffect(() => () => downloadController.current?.abort(), []);
+  useEffect(() => { if (denied || optionsForbidden) downloadController.current?.abort(); }, [denied, optionsForbidden]);
   useEffect(() => {
     const controller = new AbortController();
-    api<Annual[]>(`analytics/participation/?${query}`, { signal: controller.signal }).then((value) => { if (!controller.signal.aborted) { setRows(value); setError(""); } }).catch((failure) => { if (!controller.signal.aborted) { setRows(null); setError(failure.message); } });
+    api<Annual[]>(`analytics/participation/?${query}`, { signal: controller.signal }).then((value) => { if (!controller.signal.aborted) { setRows(value); setError(""); } }).catch((failure) => { if (!controller.signal.aborted) { setRows(null); if (failure instanceof ApiError && (failure.status === 401 || failure.status === 403)) setDenied(true); else setError(failure.message); } });
     return () => controller.abort();
   }, [query]);
   function apply() {
@@ -48,8 +50,9 @@ function Workspace() {
     downloadController.current?.abort();
     const controller = new AbortController();
     downloadController.current = controller;
-    try { const blob = await downloadDocument(`analytics/participation/export/?${query}`, controller.signal); if (controller.signal.aborted) return; const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "participation.xlsx"; a.click(); URL.revokeObjectURL(url); } catch (failure) { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : "Ошибка скачивания"); }
+    try { const blob = await downloadDocument(`analytics/participation/export/?${query}`, controller.signal); if (controller.signal.aborted) return; const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "participation.xlsx"; a.click(); URL.revokeObjectURL(url); } catch (failure) { if (!controller.signal.aborted) { if (failure instanceof ApiError && (failure.status === 401 || failure.status === 403)) setDenied(true); else setError(failure instanceof Error ? failure.message : "Ошибка скачивания"); } }
   }
+  if (denied || optionsForbidden) return <p className="note wn" role="alert">Доступ к отчёту недоступен. Войдите снова или выберите роль федерации.</p>;
   return <div className="participation-workspace"><header className="dashboard-head"><span className="kick">ФЕДЕРАЦИЯ · исторические данные</span><h1>Участие в спортивном программировании</h1><p className="lead">Уникальные спортсмены за календарный год; записи соревнований не учитываются.</p></header>
     <section className="blk"><h2><b>01</b><span>Период и фильтры</span></h2>{optionsError && <p className="note wn" role="alert">{optionsError}</p>}<div className="form-grid"><label className="lb">С года<input className="inp" type="number" value={start} onChange={(e) => setStart(e.target.value)} /></label><label className="lb">По год<input className="inp" type="number" value={end} onChange={(e) => setEnd(e.target.value)} /></label><label className="lb">Организация<select className="inp" value={organization} onChange={(e) => setOrganization(e.target.value)} disabled={!options}><option value="">Все</option>{options?.organizations.map((o) => <option value={o.id} key={o.id}>{o.name}</option>)}</select></label><label className="lb">Дисциплина<select className="inp" value={discipline} onChange={(e) => setDiscipline(e.target.value)} disabled={!options}><option value="">Все</option>{options?.disciplines.map((o) => <option value={o.id} key={o.id}>{o.name}</option>)}</select></label><label className="lb">Муниципалитет<select className="inp" value={municipality} onChange={(e) => setMunicipality(e.target.value)} disabled={!options}><option value="">Все</option>{options?.municipalities.map((o) => <option value={o} key={o}>{o}</option>)}</select></label><label className="lb">Возрастная группа<select className="inp" value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)} disabled={!options}><option value="">Все</option>{options?.age_groups.map((o) => <option value={o.id} key={o.id}>{o.name}</option>)}</select></label></div><div className="btns"><button className="btn p" type="button" onClick={apply}>Построить отчёт</button><button className="btn" type="button" onClick={() => { setOrganization(""); setDiscipline(""); setMunicipality(""); setAgeGroup(""); const next = new URLSearchParams({ start_year: start, end_year: end }).toString(); if (next !== query) { setRows(null); setQuery(next); } }}>Сбросить фильтры</button><button className="btn" type="button" onClick={download} disabled={!rows}>Скачать XLSX</button></div></section>
     <p className="note">Применено: {applied.get("start_year")}–{applied.get("end_year")}; организация: {selectedName(options?.organizations, applied.get("organization"))}; дисциплина: {selectedName(options?.disciplines, applied.get("discipline"))}; муниципалитет: {applied.get("municipality") || "Все"}; возрастная группа: {selectedName(options?.age_groups, applied.get("age_group"))}.</p>

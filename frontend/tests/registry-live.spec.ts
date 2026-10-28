@@ -6,7 +6,7 @@ test("live registry history and two-year XLSX agree", async ({ page }, testInfo)
   await signIn(page, "demo.federation@example.test");
   await page.getByRole("button", { name: "Федерация", exact: true }).click();
   await page.goto("/registry");
-  await page.getByLabel("Поиск").fill("Демо Спортсмен");
+  await page.getByLabel("Поиск", { exact: true }).fill("Демо Спортсмен");
   await page.getByRole("button", { name: "Демо Спортсмен", exact: true }).click();
   await expect(page.locator("li").filter({ hasText: "Демо центр Вектор" })).toBeVisible();
   await expect(page.locator("li").filter({ hasText: "Демо клуб Орбита" })).toBeVisible();
