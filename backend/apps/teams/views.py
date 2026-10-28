@@ -1,7 +1,8 @@
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +14,7 @@ from apps.ratings.models import RatingSeason
 from .exporters import render_team_docx, render_team_pdf
 from .models import RegionalTeam, TeamDecisionHistory, TeamMembership
 from .serializers import (
+    CandidatePageSerializer,
     MemberAddSerializer,
     MemberRemoveSerializer,
     RegionalTeamSerializer,
@@ -22,6 +24,7 @@ from .serializers import (
     TeamDocumentResponseSerializer,
     TeamHistorySerializer,
     TeamMembershipSerializer,
+    TeamPageSerializer,
 )
 from .services import (
     add_member,
@@ -32,6 +35,10 @@ from .services import (
     reorder_members,
     require_federation,
 )
+
+
+class TeamPagination(PageNumberPagination):
+    page_size = 50
 
 
 class TeamOptionsView(APIView):
@@ -47,18 +54,28 @@ class TeamsView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = RegionalTeamSerializer
 
-    @extend_schema(responses=RegionalTeamSerializer(many=True))
+    @extend_schema(operation_id="v1_teams_list", parameters=[OpenApiParameter("season", int, description="Season year"), OpenApiParameter("discipline", str, description="Discipline code or ID"), OpenApiParameter("age_group", int, description="Age group ID"), OpenApiParameter("page", int, description="Page number (50 teams per page)")], responses=TeamPageSerializer)
     def get(self, request):
         require_federation(request)
         qs = RegionalTeam.objects.select_related("season", "discipline", "age_group", "created_by").prefetch_related("memberships__athlete")
         if request.query_params.get("season"):
-            qs = qs.filter(season__year=request.query_params["season"])
+            try:
+                year = int(request.query_params["season"])
+            except (TypeError, ValueError):
+                return Response({"season": ["Must be an integer"]}, status=400)
+            qs = qs.filter(season__year=year)
         if request.query_params.get("discipline"):
             value = request.query_params["discipline"]
             qs = qs.filter(discipline__code=value) if not value.isdigit() else qs.filter(discipline_id=value)
         if request.query_params.get("age_group"):
-            qs = qs.filter(age_group_id=request.query_params["age_group"])
-        return Response(RegionalTeamSerializer(qs, many=True).data)
+            try:
+                age_group_id = int(request.query_params["age_group"])
+            except (TypeError, ValueError):
+                return Response({"age_group": ["Must be an integer"]}, status=400)
+            qs = qs.filter(age_group_id=age_group_id)
+        paginator = TeamPagination()
+        page = paginator.paginate_queryset(qs.order_by("pk"), request, view=self)
+        return paginator.get_paginated_response(RegionalTeamSerializer(page, many=True).data)
 
     @extend_schema(request=TeamCreateSerializer, responses=RegionalTeamSerializer)
     @transaction.atomic
@@ -86,9 +103,12 @@ class TeamCandidatesView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TeamCandidateSerializer
 
+    @extend_schema(parameters=[OpenApiParameter("page", int, description="Page number (50 candidates per page)")], responses=CandidatePageSerializer)
     def get(self, request, pk):
         team = TeamDetailView().get_team(request, pk)
-        return Response(TeamCandidateSerializer(candidate_rows(team), many=True).data)
+        paginator = TeamPagination()
+        page = paginator.paginate_queryset(candidate_rows(team), request, view=self)
+        return paginator.get_paginated_response(TeamCandidateSerializer(page, many=True).data)
 
 
 class TeamMembersView(APIView):

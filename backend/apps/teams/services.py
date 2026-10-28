@@ -145,11 +145,16 @@ def publish_team(*, actor, team):
 def candidate_rows(team):
     # Include all athlete accounts so federation can manually select an eligible athlete without a rating.
     from apps.accounts.models import User
-    users = User.objects.filter(role_assignments__role=UserRole.Role.ATHLETE).distinct().order_by("full_name")
+    from apps.qualifications.models import SportRankHistory
+
+    users = User.objects.filter(role_assignments__role=UserRole.Role.ATHLETE).distinct().order_by("full_name", "pk")
     selected = set(team.memberships.filter(removed_at__isnull=True).values_list("athlete_id", flat=True))
+    ratings = list(AthleteRating.objects.filter(season=team.season, discipline=team.discipline).select_related("athlete").order_by("-rating_score", "athlete__full_name", "athlete_id"))
+    rating_map = {rating.athlete_id: (index, rating) for index, rating in enumerate(ratings, 1)}
     rows = []
     for athlete in users:
         snap = eligibility_snapshot(athlete=athlete, team=team)
-        rating = AthleteRating.objects.filter(athlete=athlete, season=team.season, discipline=team.discipline).first()
-        rows.append({"id": athlete.pk, "full_name": athlete.full_name, "email": athlete.email, "eligible": snap["eligible"], "selected": athlete.pk in selected, "eligibility": snap, "rating": {"score": str(rating.rating_score), "base_score": str(rating.base_score), "prize_count": rating.prize_count} if rating else None})
+        position, rating = rating_map.get(athlete.pk, (None, None))
+        rank = SportRankHistory.objects.filter(athlete=athlete, discipline=team.discipline, assigned_on__lte=timezone.localdate(), valid_until__gte=timezone.localdate()).order_by("-assigned_on", "-pk").first()
+        rows.append({"id": athlete.pk, "full_name": athlete.full_name, "email": athlete.email, "sport_rank": rank.get_rank_display() if rank else None, "eligible": snap["eligible"], "selected": athlete.pk in selected, "eligibility": snap, "rating": {"score": str(rating.rating_score), "base_score": str(rating.base_score), "prize_count": rating.prize_count, "position": position} if rating else None})
     return sorted(rows, key=lambda row: (not row["eligible"], -(float(row["rating"]["score"]) if row["rating"] else 0), row["full_name"]))

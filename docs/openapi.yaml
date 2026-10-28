@@ -1196,6 +1196,27 @@ paths:
   /api/v1/teams/:
     get:
       operationId: v1_teams_list
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+        description: Age group ID
+      - in: query
+        name: discipline
+        schema:
+          type: string
+        description: Discipline code or ID
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number (50 teams per page)
+      - in: query
+        name: season
+        schema:
+          type: integer
+        description: Season year
       tags:
       - v1
       security:
@@ -1205,9 +1226,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RegionalTeam'
+                $ref: '#/components/schemas/TeamPage'
           description: ''
     post:
       operationId: v1_teams_create
@@ -1263,6 +1282,11 @@ paths:
         schema:
           type: integer
         required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number (50 candidates per page)
       tags:
       - v1
       security:
@@ -1272,7 +1296,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TeamCandidate'
+                $ref: '#/components/schemas/CandidatePage'
           description: ''
   /api/v1/teams/{id}/documents/:
     get:
@@ -1756,6 +1780,28 @@ components:
       - source
       - title
       - year
+    CandidatePage:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamCandidate'
+      required:
+      - count
+      - next
+      - previous
+      - results
     CategoryApplicationCreate:
       type: object
       properties:
@@ -3386,6 +3432,9 @@ components:
         email:
           type: string
           format: email
+        sport_rank:
+          type: string
+          nullable: true
         eligible:
           type: boolean
         selected:
@@ -3405,6 +3454,7 @@ components:
       - id
       - rating
       - selected
+      - sport_rank
     TeamCreate:
       type: object
       properties:
@@ -3472,6 +3522,10 @@ components:
           type: string
           format: email
           readOnly: true
+        organization_name:
+          type: string
+          nullable: true
+          readOnly: true
         position:
           type: integer
           maximum: 9223372036854775807
@@ -3506,9 +3560,32 @@ components:
       - current_eligibility
       - eligibility_snapshot
       - id
+      - organization_name
       - removed_at
       - selected_at
       - selected_by
+    TeamPage:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegionalTeam'
+      required:
+      - count
+      - next
+      - previous
+      - results
     UserChoice:
       type: object
       properties:

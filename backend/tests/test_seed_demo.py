@@ -6,7 +6,14 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
+from apps.accounts.models import (
+    AthleteProfile,
+    Guardian,
+    PersonalDataConsent,
+    User,
+    UserRole,
+)
+from apps.catalogs.models import Organization
 from apps.competitions.models import Application, Competition, ProtocolPublication
 from apps.qualifications.models import SportRankHistory
 from apps.ratings.models import AthleteRating, RatingContribution
@@ -29,6 +36,9 @@ class SeedDemoTests(TestCase):
         self.assertTrue(federation.check_password("AnotherLocalPassword2026!"))
         self.assertEqual(User.objects.filter(email__endswith="@example.test").count(), 8)
         self.assertEqual(UserRole.objects.count(), 9)
+        self.assertEqual(Organization.objects.filter(code__startswith="demo-").count(), 3)
+        self.assertEqual(AthleteProfile.objects.count(), 4)
+        self.assertIsNone(AthleteProfile.objects.get(user__email="demo.junior.verified@example.test").organization)
         self.assertEqual(PersonalDataConsent.objects.filter(confirmation_method="demo_seed").count(), 8)
         self.assertEqual(Guardian.objects.get(minor__email="demo.junior@example.test").confirmation_status, "pending_verification")
         self.assertEqual(Guardian.objects.get(minor__email="demo.junior.verified@example.test").confirmation_status, "verified")
@@ -53,6 +63,17 @@ class SeedDemoTests(TestCase):
         call_command("seed_demo", stdout=StringIO())
         self.assertEqual(TeamMembership.objects.filter(removed_at__isnull=True).count(), 3)
         self.assertEqual(TeamDecisionHistory.objects.count(), history_count)
+
+    @override_settings(DEBUG=True)
+    @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "1", "DEMO_ENVIRONMENT": "local"}, clear=False)
+    def test_seed_preserves_manually_changed_affiliation(self):
+        call_command("seed_demo", stdout=StringIO())
+        profile = AthleteProfile.objects.get(user__email="demo.athlete2@example.test")
+        profile.organization = None
+        profile.save(update_fields=["organization"])
+        call_command("seed_demo", stdout=StringIO())
+        profile.refresh_from_db()
+        self.assertIsNone(profile.organization)
 
     @override_settings(DEBUG=True)
     @patch.dict("os.environ", {"DEMO_SEED_ENABLED": "1", "DEMO_ENVIRONMENT": "local"}, clear=False)

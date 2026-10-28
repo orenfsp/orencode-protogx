@@ -9,8 +9,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.models import Guardian, PersonalDataConsent, User, UserRole
-from apps.catalogs.models import Discipline
+from apps.accounts.models import (
+    AthleteProfile,
+    Guardian,
+    PersonalDataConsent,
+    User,
+    UserRole,
+)
+from apps.catalogs.models import Discipline, Organization
 from apps.competitions.models import (
     AgeGroup,
     Application,
@@ -55,6 +61,7 @@ class Command(BaseCommand):
             raise CommandError("seed_demo refuses non-local database hosts")
         with transaction.atomic():
             users = self._seed_accounts()
+            self._seed_organizations(users)
             self._seed_competitions(users)
             self._seed_rank_history(users)
             self._seed_teams(users)
@@ -87,6 +94,22 @@ class Command(BaseCommand):
                 defaults={"guardian": guardian},
             )
         return users
+
+    def _seed_organizations(self, users):
+        organizations = {}
+        for code, name in (
+            ("demo-orbit", "Демо клуб Орбита"),
+            ("demo-programming-school", "Демонстрационная областная школа спортивного программирования и информационных технологий"),
+            ("demo-vector", "Демо центр Вектор"),
+        ):
+            organizations[code], _ = Organization.objects.get_or_create(code=code, defaults={"name": name})
+        for email, code in (
+            ("demo.athlete@example.test", "demo-vector"),
+            ("demo.athlete2@example.test", "demo-programming-school"),
+            ("demo.athlete3@example.test", "demo-orbit"),
+            ("demo.junior.verified@example.test", None),
+        ):
+            AthleteProfile.objects.get_or_create(user=users[email], defaults={"organization": organizations.get(code)})
 
     def _seed_competitions(self, users):
         federation = users["demo.federation@example.test"]

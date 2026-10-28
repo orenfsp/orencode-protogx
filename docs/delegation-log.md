@@ -62,3 +62,5 @@ Codex requested one bounded read-only `deepseek_reliable.review_code` review of 
 Finalization requested a second bounded Pro review covering `seed_demo.py`, competition publication, rating provenance and production safety. The MCP again returned `provider_http_503` / `Request budget exhausted`; no files were written and no review findings were available. Codex completed independent SQLite and PostgreSQL test suites, isolated Compose startup/reseed checks, OpenAPI validation and document assertions.
 
 On 2026-10-28 a single bounded Pro review of team locking, eligibility, seeding and document access was attempted. The provider again returned `provider_http_503` / `Request budget exhausted`, with `files_written: false`. No DeepSeek findings were available; Codex independently implemented and ran PostgreSQL transaction tests and a live browser workflow.
+
+The subsequent bounded Pro review of the minimal organization relationship also returned `provider_http_503` / `Request budget exhausted` on its single attempt; no review findings or file changes resulted. Codex reviewed the additive migration, nullable affiliation and seed preservation independently.

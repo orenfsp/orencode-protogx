@@ -12,6 +12,8 @@ Copy `.env.example` to `.env` and replace the local passwords and Django secret.
 
 Compose startup performs migrations before seeding. Copy `.env.example` to `.env` to opt in locally. The command requires `DJANGO_DEBUG=1`, `DEMO_SEED_ENABLED=1`, `DEMO_ENVIRONMENT=local` and a local database host. Production and staging must disable these settings. The command creates fictional users, competitions, published protocols, calculated ratings and regional teams; see [docs/demo-scenarios.md](docs/demo-scenarios.md).
 
+Team lists and candidates use 50-item API pages; the team screen loads the pages and provides a candidate search. Team exports include an optional current organization affiliation. This minimal affiliation is not the future AC-11 registry or its historical reporting.
+
 ## Local development and checks
 
 Backend: install `backend/requirements.txt`; set `DATABASE_ENGINE=sqlite` only for local tests, then run `python backend/manage.py migrate` and `python backend/manage.py test` (or `pytest backend/tests`). For the deployed path, use PostgreSQL.

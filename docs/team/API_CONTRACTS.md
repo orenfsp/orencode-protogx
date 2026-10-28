@@ -71,6 +71,10 @@
 
 `ResultDTO = {id,application,status,place,score,metrics,validated_by,updated_by,updated_at}`; `status=classified|no_show|unclassified|disqualified`. `ProtocolSnapshot` содержит `competition_id/title`, `discipline`, `template_id/version`, `source_verified/note/url`, `sections`, `signature_roles`, `sort`, `metadata`, `judges`, `columns:[{key,label}]`, `rows`. В каждой row есть `application_id`, `athlete_id`, `athlete`, `age_group`, `status`, `place`, `score` и метрики шаблона. Строка approved без результата получает `pending_result`, `place=null`, `score=null`. Публикация содержит `id,competition,version,template,snapshot,correction_reason,published_by,published_at`.
 
+## Региональные команды
+
+`GET /api/v1/teams/` и `GET /api/v1/teams/{id}/candidates/` доступны только с активной ролью федерации и возвращают `{count,next,previous,results}` по 50 записей; номер страницы задаётся параметром `page`. В `members` поле `organization_name` содержит текущее название организации либо `null`. Состав формируется только вручную; доступ к истории и скачиванию документов также проверяется на сервере. Полный контракт приведён в `docs/openapi.yaml`.
+
 ## Право менять контракт
 
 `docs/openapi.yaml`, backend сериализаторы/routes, `frontend/src/lib/api.ts`, аутентификация и модели — общие интерфейсы. Независимый агент **не меняет** их по собственной инициативе. Он передаёт руководителю: проблему, текущий endpoint/DTO, предложенный diff полей/статусов, потребителей, миграцию/обратную совместимость, требования доступа и тесты. Руководитель утверждает контракт и назначает владельца реализации; после изменений регенерирует/сверяет OpenAPI и frontend DTO. До утверждения не публикуйте новый endpoint в документации как существующий.
