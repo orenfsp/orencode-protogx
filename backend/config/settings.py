@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.qualifications",
     "apps.ratings",
     "apps.teams",
+    "apps.registry",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
