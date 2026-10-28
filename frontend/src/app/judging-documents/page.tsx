@@ -1,0 +1,4 @@
+import { FeatureWorkspace } from "@/components/FeatureWorkspace";
+export default function JudgingDocumentsPage() {
+  return <FeatureWorkspace title="Документы о судействе" endpoint="judging-documents/" columns={[{key:"id",label:"№"},{key:"kind",label:"Вид"},{key:"title",label:"Документ"}]} actions={[{label:"Сформировать документ",path:"judging-documents/",fields:[{name:"kind",label:"Форма",choices:[{value:"panel",label:"Состав судейской коллегии"},{value:"judge_work",label:"Отчёт о судействе"}]},{name:"competition",label:"Соревнование для справки",options:"competitions",optional:true},{name:"judge",label:"Судья для отчёта",options:"judges",optional:true},{name:"start_year",label:"Начальный год отчёта",type:"number",optional:true},{name:"end_year",label:"Последний год отчёта",type:"number",optional:true}]}]}/>;
+}

@@ -32,3 +32,11 @@ class ParticipationCertificate(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["athlete", "application", "publication"], name="extension_certificate_version_once")]
+
+
+class JudgingDocument(models.Model):
+    kind = models.CharField(max_length=20, choices=[("panel", "Состав коллегии"), ("judge_work", "Отчёт о судействе")])
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="generated_judging_documents")
+    snapshot = models.JSONField()
+    created_at = models.DateTimeField(default=timezone.now)
