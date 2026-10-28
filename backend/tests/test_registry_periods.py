@@ -2,7 +2,13 @@ from datetime import date
 from threading import Barrier, Thread
 from unittest import skipUnless
 
-from django.db import IntegrityError, close_old_connections, connection, transaction
+from django.db import (
+    IntegrityError,
+    OperationalError,
+    close_old_connections,
+    connection,
+    transaction,
+)
 from django.test import TestCase, TransactionTestCase
 from rest_framework.exceptions import ValidationError
 
@@ -118,6 +124,12 @@ class RegistryConcurrencyTests(TransactionTestCase):
                 ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2025, 1, 1))
                 outcomes.append("created")
             except IntegrityError:
+                outcomes.append("overlap")
+            except OperationalError as error:
+                # Concurrent GiST exclusion inserts may deadlock; PostgreSQL
+                # aborts one writer rather than allowing overlapping rows.
+                if getattr(error.__cause__, "sqlstate", None) != "40P01":
+                    raise
                 outcomes.append("overlap")
             finally:
                 close_old_connections()

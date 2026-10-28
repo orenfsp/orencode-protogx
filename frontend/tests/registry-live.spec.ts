@@ -27,4 +27,16 @@ test("live registry history and two-year XLSX agree", async ({ page }, testInfo)
   await download.saveAs(file);
   const python = process.env.FSP_PYTHON || "python";
   execFileSync(python, ["-c", "import sys; from openpyxl import load_workbook; w=load_workbook(sys.argv[1],data_only=True); assert w['Итоги']['B4'].value==2 and w['Итоги']['B5'].value==3; assert 'Дисциплины' in w.sheetnames", file]);
+  await page.goto("/registry");
+  for (const label of ["Тренеры", "Судьи", "Организации"]) {
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await expect(page.getByRole("heading", { name: label })).toBeVisible();
+  }
+  await page.getByRole("button", { name: "Спортсмен", exact: true }).click();
+  await expect(page.getByText("Для просмотра реестров выберите роль федерации.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Спортсмен", exact: true })).toHaveAttribute("aria-pressed", "true");
+  expect((await page.request.get("/api/v1/organizations/")).status()).toBe(403);
+  await page.getByRole("button", { name: "Выйти", exact: true }).click();
+  await page.goto("/analytics/participation");
+  await expect(page.getByText("Для просмотра аналитики выберите роль федерации.")).toBeVisible();
 });
