@@ -1,0 +1,13 @@
+
+> fsp-frontend@0.1.0 test:e2e
+> playwright test tests/registry-live.spec.ts --workers=1
+
+
+Running 1 test using 1 worker
+
+(node:24084) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+  вњ“  1 tests\registry-live.spec.ts:5:5 вЂє live registry history and two-year XLSX agree (8.0s)
+
+  1 passed (10.1s)

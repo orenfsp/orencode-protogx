@@ -53,6 +53,7 @@ test("live registry history and two-year XLSX agree", async ({ page }, testInfo)
   await expect(page.getByRole("button", { name: "Спортсмен", exact: true })).toHaveAttribute("aria-pressed", "true");
   expect((await page.request.get("/api/v1/organizations/")).status()).toBe(403);
   await page.getByRole("button", { name: "Выйти", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
   await page.goto("/analytics/participation");
   await expect(page.locator('main a[href="/login"]')).toBeVisible();
 });

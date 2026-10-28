@@ -11,3 +11,5 @@
 DeepSeek: фактические инструменты обнаружены; `get_project_context` проверил существующий `backend/apps/competitions/services.py`. Ограниченная задача checklist негативных проверок уведомлений с allowlist `backend/tests/test_notifications.py` завершилась `provider_http_503`, proposal отсутствует, файлы не записывались. Модель и endpoint не предполагались. Дальнейшую реализацию выполнил интегратор.
 
 Внешние gates: production email receipt/credentials, сверка действующих первоисточников, hosted CI на final SHA. Демо/локальная интеграция не заменяет эти gates. Они описываются как unverified/blocked, а не passed.
+
+Результат реализации: `b41ca96`, завершающие исправления `99cc63d`. Точное свидетельство команд, статусы восьми групп и ограничения — [mandatory-verification.md](../../mandatory-verification.md), [case-mandatory-traceability.md](../../case-mandatory-traceability.md). Общий статус сохраняется partial при незакрытых внешних и продуктовых gates.

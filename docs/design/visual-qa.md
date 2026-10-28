@@ -109,4 +109,14 @@ Verification: `FSP_WEB_URL=http://localhost:3100`, `npm.cmd run test:e2e -- test
 
 Scoped `.ratings-table` styling removes native gray button backgrounds, aligns numeric columns right, emphasizes the rating total and keeps publication stamps on one line. Athlete buttons expose expansion with a chevron and `aria-controls`; the calculation uses a separate full-width table row. The table has a keyboard-focusable horizontal scroll region on narrow screens. Existing reference colors, borders, typography and stamps remain unchanged.
 
+### 2026-10-28 — mandatory continuation, code 99cc63d
+
+`frontend/tests/mandatory-visual.spec.ts` captures the live athlete dashboard, profile/RUSADA, history and qualifications at 1440, 768 and 390 px in both themes, under `docs/design/screenshots/mandatory/` (24 PNGs). Each view checks page overflow and axe serious/critical violations. The repeated full run passed all six viewport/theme cases after fixing the mobile theme control's accessible name. The test does not waive accessibility rules. Keyboard Enter activation of notification read is covered by `mandatory-live.spec.ts`.
+
+Inspected images: dashboard desktop light and mobile dark; profile mobile light; history tablet dark; qualifications desktop dark. Sidebar numbering, dotted links, indigo/orange tokens, document rail, outlined tables, stamps and mobile navigation remain. Screens contain real fictional data from the isolated `fspmandatory` database. Reference HTML and `globals.css` are unchanged; the design-contract checker reports PASS.
+
+Two defects found during acceptance were corrected in application code: mobile theme button aria-label now contains the visible label; toast entrance translates vertically without fading the text through insufficient contrast. Dashboard notifications initially show five cards with an explicit expansion button, so the consent section remains practical to reach. A full-page mobile PNG includes the fixed bottom navigation at the viewport edge; the page scrolls below it. Wide history tables retain intentional horizontal scrolling. Manual inspection is representative, not a claim of an exhaustive keyboard audit of every screen.
+
+Final suite history, exact code revisions and remaining gates: [mandatory-verification.md](../mandatory-verification.md). Earlier results below remain historical.
+
 Typecheck/lint/build and design-contract check passed. Existing mocked published-result Playwright test passed; it now captures 1440/768/390 px in both themes and checks page overflow and nowrap statuses. Reviewed desktop dark and mobile light captures in `frontend/test-results/ratings-ratings-page-expands-a-published-result-breakdown/`. Desktop column spacing was then tightened to fit the available document column; mobile horizontal scrolling is intentional. Live backend was not exercised.
