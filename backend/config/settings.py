@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.qualifications",
     "apps.ratings",
     "apps.teams",
+    "apps.extensions",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -90,3 +91,16 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+
+# Optional features reuse the existing identities, session/CSRF and audit models.
+# SMTP is opt-in; local default does not contact an external provider.
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "1025"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "0") == "1"
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "fsp@example.test")
+PROTOCOL_PDF_FONT = os.environ.get("PROTOCOL_PDF_FONT", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+FSP_PUBLIC_URL = os.environ.get("FSP_PUBLIC_URL", "http://127.0.0.1:3000").rstrip("/")
