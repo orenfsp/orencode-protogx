@@ -9,6 +9,7 @@ from .models import (
     MunicipalityPeriod,
     OrganizationPeriod,
     ParticipationPeriod,
+    StaffProfile,
     TrainingStagePeriod,
 )
 
@@ -21,6 +22,10 @@ class PersonSerializer(serializers.ModelSerializer):
         fields = ("id", "full_name", "date_of_birth", "is_active", "organization")
 
     def get_organization(self, obj) -> str | None:
+        role = self.context.get("registry_role")
+        if role in ("coach", "judge"):
+            profile = next((p for p in obj.registry_staff_profiles.all() if p.role == role), None)
+            return profile.organization.name if profile and profile.organization else None
         profile = getattr(obj, "athlete_profile", None)
         return profile.organization.name if profile and profile.organization else None
 
@@ -34,6 +39,24 @@ class PersonUpdateSerializer(serializers.ModelSerializer):
         if value and value > timezone.localdate():
             raise serializers.ValidationError("Date of birth cannot be in the future")
         return value
+
+
+class ProfileCreateSerializer(serializers.Serializer):
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_active=True))
+    organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.filter(is_active=True), required=False, allow_null=True)
+
+
+class StaffProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StaffProfile
+        fields = ("organization", "disciplines")
+
+
+class RegistryPersonContextSerializer(serializers.Serializer):
+    ranks = serializers.ListField(child=serializers.DictField())
+    categories = serializers.ListField(child=serializers.DictField())
+    coach_links = serializers.ListField(child=serializers.DictField())
+    assignments = serializers.ListField(child=serializers.DictField())
 
 
 class PersonFilterSerializer(serializers.Serializer):
@@ -106,6 +129,14 @@ class PeriodCorrectionSerializer(serializers.Serializer):
     expected = serializers.JSONField()
     corrected = serializers.JSONField()
     reason = serializers.CharField(max_length=500, trim_whitespace=True, allow_blank=False)
+
+
+class PeriodAuditSerializer(serializers.Serializer):
+    actor = serializers.CharField(source="actor.full_name")
+    action = serializers.CharField()
+    created_at = serializers.DateTimeField()
+    before = serializers.JSONField()
+    after = serializers.JSONField()
 
 
 class OptionSerializer(serializers.Serializer):

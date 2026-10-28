@@ -5,7 +5,13 @@ from django.test import TestCase
 from openpyxl import load_workbook
 from rest_framework.test import APIClient
 
-from apps.accounts.models import AthleteProfile, User, UserRole
+from apps.accounts.models import (
+    AthleteProfile,
+    Guardian,
+    PersonalDataConsent,
+    User,
+    UserRole,
+)
 from apps.catalogs.models import Discipline, Organization
 from apps.competitions.models import AgeGroup, AuditEvent
 from apps.registry.models import (
@@ -96,6 +102,8 @@ class RegistryApiTests(TestCase):
         self.assertEqual(event.before, body["expected"])
         self.assertEqual(event.after["values"], body["corrected"])
         self.assertEqual(event.after["reason"], "Уточнена дата")
+        audit_path = f"/api/v1/athletes/{self.athlete.pk}/history/participation/{period.pk}/audit/"
+        self.assertEqual(self.client.get(audit_path).data[0]["after"]["reason"], "Уточнена дата")
         self.assertEqual(self.client.post(path, body, format="json").status_code, 409)
         report = self.client.get("/api/v1/analytics/participation/?start_year=2024&end_year=2025")
         self.assertEqual([row["unique_athletes"] for row in report.data], [0, 1])
@@ -104,6 +112,7 @@ class RegistryApiTests(TestCase):
         session["active_role"] = "athlete"
         session.save()
         self.assertEqual(self.client.post(path, body, format="json").status_code, 403)
+        self.assertEqual(self.client.get(audit_path).status_code, 403)
         self.assertEqual(AuditEvent.objects.filter(action="registry.period_corrected").count(), 1)
 
     def test_overlapping_correction_is_rejected_without_audit(self):
@@ -157,3 +166,58 @@ class RegistryApiTests(TestCase):
         response = client.post("/api/v1/organizations/", {"code": "csrf-test", "name": "Тест"}, format="json")
         self.assertEqual(response.status_code, 403)
         self.assertFalse(Organization.objects.filter(code="csrf-test").exists())
+
+    def test_profile_creation_requires_existing_role_and_consent(self):
+        from apps.registry.models import StaffProfile
+
+        coach = User.objects.create_user(email="coach-new@example.test", full_name="Coach", date_of_birth=date(1980, 1, 1))
+        UserRole.objects.create(user=coach, role="coach")
+        path = "/api/v1/registry/profiles/coach/"
+        body = {"user": coach.pk, "organization": self.first.pk}
+        self.assertEqual(self.client.post(path, body, format="json").status_code, 400)
+        PersonalDataConsent.objects.create(user=coach, text_version="test")
+        self.assertEqual(self.client.post(path, body, format="json").status_code, 201)
+        self.assertEqual(StaffProfile.objects.get(user=coach, role="coach").organization_id, self.first.pk)
+        discipline = Discipline.objects.get(code="api-a")
+        self.first.municipality = "Орск"
+        self.first.save(update_fields=["municipality"])
+        staff_path = f"/api/v1/registry/profiles/coach/{coach.pk}/staff/"
+        self.assertEqual(self.client.patch(staff_path, {"disciplines": [discipline.pk]}, format="json").status_code, 200)
+        self.assertEqual(self.client.get(f"/api/v1/coaches/?discipline={discipline.pk}&municipality=Орск").data["count"], 1)
+        self.assertTrue(AuditEvent.objects.filter(action="registry.staff_profile_updated").exists())
+        self.assertEqual(self.client.post(path, body, format="json").status_code, 400)
+        self.assertEqual(self.client.post("/api/v1/registry/profiles/judge/", body, format="json").status_code, 400)
+        self.assertFalse(coach.role_assignments.filter(role="judge").exists())
+        self.client.force_authenticate(self.athlete)
+        session = self.client.session
+        session["active_role"] = "athlete"
+        session.save()
+        self.assertEqual(self.client.post(path, body, format="json").status_code, 403)
+
+    def test_minor_profile_requires_verified_guardian_on_current_consent(self):
+        junior = User.objects.create_user(email="junior-new@example.test", full_name="Junior", date_of_birth=date(2015, 1, 1))
+        UserRole.objects.create(user=junior, role="athlete")
+        guardian = Guardian.objects.create(minor=junior, full_name="Fictional guardian", relationship="parent")
+        PersonalDataConsent.objects.create(user=junior, guardian=guardian, text_version="test")
+        path = "/api/v1/registry/profiles/athlete/"
+        self.assertEqual(self.client.post(path, {"user": junior.pk}, format="json").status_code, 400)
+        guardian.confirmation_status = "verified"
+        guardian.save(update_fields=["confirmation_status"])
+        self.assertEqual(self.client.post(path, {"user": junior.pk}, format="json").status_code, 201)
+        self.assertTrue(AthleteProfile.objects.filter(user=junior).exists())
+
+    def test_context_and_staff_update_are_restricted(self):
+        from apps.registry.models import StaffProfile
+
+        judge = User.objects.create_user(email="judge-new@example.test", full_name="Judge")
+        UserRole.objects.create(user=judge, role="judge")
+        StaffProfile.objects.create(user=judge, role="judge")
+        staff = f"/api/v1/registry/profiles/judge/{judge.pk}/staff/"
+        self.assertEqual(self.client.patch(staff, {"organization": self.first.pk}, format="json").status_code, 200)
+        self.assertEqual(self.client.get(f"/api/v1/registry/profiles/judge/{judge.pk}/context/").status_code, 200)
+        self.client.force_authenticate(self.athlete)
+        session = self.client.session
+        session["active_role"] = "athlete"
+        session.save()
+        self.assertEqual(self.client.get(f"/api/v1/registry/profiles/judge/{judge.pk}/context/").status_code, 403)
+        self.assertEqual(self.client.patch(staff, {"organization": self.second.pk}, format="json").status_code, 403)

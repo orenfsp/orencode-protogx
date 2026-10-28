@@ -118,6 +118,7 @@ class Command(BaseCommand):
             MunicipalityPeriod,
             OrganizationPeriod,
             ParticipationPeriod,
+            StaffProfile,
             TrainingStagePeriod,
         )
         from apps.registry.services import add_period
@@ -125,6 +126,11 @@ class Command(BaseCommand):
         actor = users["demo.federation@example.test"]
         algorithmic = Discipline.objects.get(code="algorithmic")
         product = Discipline.objects.get(code="product")
+        for email, role, org_code in (("demo.coach@example.test", "coach", "demo-orbit"), ("demo.judge@example.test", "judge", "demo-vector")):
+            profile, created = StaffProfile.objects.get_or_create(user=users[email], role=role, defaults={"organization": Organization.objects.get(code=org_code)})
+            if created:
+                profile.disciplines.add(algorithmic)
+                audit(actor, "registry.profile_created", profile, after={"user_id": users[email].pk, "role": role, "seed_demo": True})
         fixtures = (
             ("demo.athlete@example.test", "demo-vector", date(2024, 1, 1), None, "Оренбург", (algorithmic, product)),
             ("demo.athlete2@example.test", "demo-programming-school", date(2025, 1, 1), None, "Орск", (algorithmic,)),

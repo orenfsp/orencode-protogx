@@ -3,6 +3,18 @@ from django.db import models
 from django.db.models import F, Q
 
 
+class StaffProfile(models.Model):
+    """Registry metadata for existing coach/judge roles; identity stays on User."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="registry_staff_profiles")
+    role = models.CharField(max_length=16, choices=[("coach", "Coach"), ("judge", "Judge")])
+    organization = models.ForeignKey("catalogs.Organization", null=True, blank=True, on_delete=models.PROTECT)
+    disciplines = models.ManyToManyField("catalogs.Discipline", blank=True, related_name="registry_staff_profiles")
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("user", "role"), name="registry_staff_user_role_unique"), models.CheckConstraint(condition=Q(role__in=["coach", "judge"]), name="registry_staff_role_valid")]
+
+
 class Period(models.Model):
     """Inclusive effective dates; a null end means the period is open."""
 

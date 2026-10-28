@@ -13,10 +13,22 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.models import User, UserRole
+from apps.accounts.models import (
+    AthleteProfile,
+    Guardian,
+    User,
+    UserRole,
+    has_current_consent,
+)
 from apps.catalogs.models import Discipline, Organization
-from apps.competitions.models import AgeGroup
-from apps.competitions.services import audit
+from apps.competitions.models import (
+    AgeGroup,
+    AuditEvent,
+    CoachAthleteLink,
+    JudgeAssignment,
+)
+from apps.competitions.services import age_on, audit
+from apps.qualifications.models import JudgeCategoryHistory, SportRankHistory
 from apps.teams.services import require_federation
 
 from .analytics import consistent_report_read, participation_report, report_fingerprint
@@ -26,6 +38,7 @@ from .models import (
     MunicipalityPeriod,
     OrganizationPeriod,
     ParticipationPeriod,
+    StaffProfile,
     TrainingStagePeriod,
 )
 from .serializers import (
@@ -36,12 +49,16 @@ from .serializers import (
     OrganizationPeriodSerializer,
     OrganizationSerializer,
     ParticipationSerializer,
+    PeriodAuditSerializer,
     PeriodCorrectionSerializer,
     PersonFilterSerializer,
     PersonSerializer,
     PersonUpdateSerializer,
+    ProfileCreateSerializer,
     RegistryOptionsSerializer,
+    RegistryPersonContextSerializer,
     ReportQuerySerializer,
+    StaffProfileSerializer,
     TrainingStagePeriodSerializer,
     TransferSerializer,
 )
@@ -80,27 +97,36 @@ class PeopleList(FederationMixin, generics.ListAPIView):
     search_fields = ["full_name"]
     role = None
 
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), "registry_role": self.role}
+
     def get_queryset(self):
         query = PersonFilterSerializer(data=self.request.query_params.dict())
         query.is_valid(raise_exception=True)
         values = query.validated_data
-        qs = User.objects.filter(role_assignments__role=self.role).select_related("athlete_profile__organization")
+        qs = User.objects.filter(role_assignments__role=self.role).select_related("athlete_profile__organization").prefetch_related("registry_staff_profiles__organization")
         if "active" in values:
             qs = qs.filter(is_active=values["active"])
         if "organization" in values:
-            qs = qs.filter(athlete_profile__organization_id=values["organization"])
+            if self.role == UserRole.Role.ATHLETE:
+                qs = qs.filter(athlete_profile__organization_id=values["organization"])
+            else:
+                qs = qs.filter(registry_staff_profiles__role=self.role, registry_staff_profiles__organization_id=values["organization"])
         today = timezone.localdate()
         if "discipline" in values:
             if self.role == UserRole.Role.ATHLETE:
                 ids = DisciplinePeriod.objects.filter(discipline_id=values["discipline"], starts_on__lte=today).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today)).values("athlete_id")
                 qs = qs.filter(pk__in=ids)
             elif self.role == UserRole.Role.COACH:
-                qs = qs.filter(coached_links__discipline_id=values["discipline"], coached_links__status="confirmed")
+                qs = qs.filter(Q(coached_links__discipline_id=values["discipline"], coached_links__status="confirmed") | Q(registry_staff_profiles__role=self.role, registry_staff_profiles__disciplines__id=values["discipline"]))
             else:
-                qs = qs.filter(judge_assignments__competition__discipline_id=values["discipline"])
+                qs = qs.filter(Q(judge_assignments__competition__discipline_id=values["discipline"]) | Q(registry_staff_profiles__role=self.role, registry_staff_profiles__disciplines__id=values["discipline"]))
         if "municipality" in values:
-            ids = MunicipalityPeriod.objects.filter(municipality=values["municipality"], starts_on__lte=today).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today)).values("athlete_id")
-            qs = qs.filter(pk__in=ids)
+            if self.role == UserRole.Role.ATHLETE:
+                ids = MunicipalityPeriod.objects.filter(municipality=values["municipality"], starts_on__lte=today).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=today)).values("athlete_id")
+                qs = qs.filter(pk__in=ids)
+            else:
+                qs = qs.filter(registry_staff_profiles__role=self.role, registry_staff_profiles__organization__municipality=values["municipality"])
         return qs.distinct().order_by("full_name", "pk")
 
     @extend_schema(parameters=[OpenApiParameter("active", bool), OpenApiParameter("organization", int), OpenApiParameter("discipline", int), OpenApiParameter("municipality", str)])
@@ -120,10 +146,84 @@ class JudgesList(PeopleList):
     role = UserRole.Role.JUDGE
 
 
+class EligibleUsers(FederationMixin, generics.ListAPIView):
+    serializer_class = PersonSerializer
+    pagination_class = RegistryPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["full_name"]
+
+    @extend_schema(parameters=[OpenApiParameter("role", str, required=True)])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        role = self.request.query_params.get("role")
+        if role not in ("athlete", "coach", "judge"):
+            raise serializers.ValidationError({"role": "Choose athlete, coach or judge"})
+        users = User.objects.filter(is_active=True, role_assignments__role=role)
+        if role == "athlete":
+            users = users.filter(athlete_profile__isnull=True)
+        else:
+            users = users.exclude(pk__in=StaffProfile.objects.filter(role=role).values("user_id"))
+        return users.select_related("athlete_profile__organization").order_by("full_name", "pk")
+
+
+class CreateRegistryProfile(FederationMixin, APIView):
+    serializer_class = ProfileCreateSerializer
+
+    @extend_schema(request=ProfileCreateSerializer, responses={201: PersonSerializer})
+    @transaction.atomic
+    def post(self, request, role):
+        if role not in ("athlete", "coach", "judge"):
+            raise serializers.ValidationError({"role": "Unknown registry role"})
+        serializer = ProfileCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = User.objects.select_for_update().get(pk=serializer.validated_data["user"].pk)
+        if not user.is_active or not user.role_assignments.filter(role=role).exists():
+            raise serializers.ValidationError({"user": "An active user with the assigned role is required"})
+        if not has_current_consent(user):
+            raise serializers.ValidationError({"user": "Current personal-data consent is required"})
+        if not user.date_of_birth or user.date_of_birth > timezone.localdate():
+            raise serializers.ValidationError({"user": "A valid date of birth is required"})
+        if age_on(user.date_of_birth, timezone.localdate()) < 18:
+            consent = user.consents.order_by("-recorded_at", "-pk").first()
+            if not consent or not consent.guardian_id or not Guardian.objects.filter(pk=consent.guardian_id, minor=user, confirmation_status="verified").exists():
+                raise serializers.ValidationError({"user": "Verified guardian consent is required"})
+        if role == "athlete":
+            if AthleteProfile.objects.filter(user=user).exists():
+                raise serializers.ValidationError({"user": "Profile already exists"})
+            profile = AthleteProfile.objects.create(user=user, organization=serializer.validated_data.get("organization"))
+        else:
+            if StaffProfile.objects.filter(user=user, role=role).exists():
+                raise serializers.ValidationError({"user": "Profile already exists"})
+            profile = StaffProfile.objects.create(user=user, role=role, organization=serializer.validated_data.get("organization"))
+        audit(request.user, "registry.profile_created", profile, after={"user_id": user.pk, "role": role, "organization_id": profile.organization_id})
+        return Response(PersonSerializer(user, context={"registry_role": role}).data, status=201)
+
+
+class RegistryPersonContext(FederationMixin, APIView):
+    serializer_class = RegistryPersonContextSerializer
+
+    @extend_schema(responses=RegistryPersonContextSerializer)
+    def get(self, request, role, pk):
+        if role not in ("athlete", "coach", "judge"):
+            raise serializers.ValidationError({"role": "Unknown registry role"})
+        user = get_object_or_404(User, pk=pk, role_assignments__role=role)
+        ranks = SportRankHistory.objects.filter(athlete=user).select_related("discipline") if role == "athlete" else []
+        categories = JudgeCategoryHistory.objects.filter(judge=user) if role == "judge" else []
+        links = CoachAthleteLink.objects.filter(athlete=user) if role == "athlete" else CoachAthleteLink.objects.filter(coach=user) if role == "coach" else CoachAthleteLink.objects.none()
+        links = links.select_related("coach", "athlete", "discipline").order_by("pk")
+        assignments = JudgeAssignment.objects.filter(judge=user).select_related("competition__discipline").order_by("-competition__starts_at", "-pk") if role == "judge" else []
+        return Response({"ranks": [{"rank": item.get_rank_display(), "discipline": item.discipline.name, "assigned_on": item.assigned_on, "valid_until": item.valid_until} for item in ranks], "categories": [{"category": item.get_category_display(), "assigned_on": item.assigned_on, "valid_until": item.valid_until} for item in categories], "coach_links": [{"coach": item.coach.full_name, "athlete": item.athlete.full_name, "discipline": item.discipline.name, "status": item.status} for item in links], "assignments": [{"competition": item.competition.title, "discipline": item.competition.discipline.name, "starts_at": item.competition.starts_at, "role": item.role_label} for item in assignments]})
+
+
 class PersonDetail(FederationMixin, generics.RetrieveUpdateAPIView):
     serializer_class = PersonSerializer
     http_method_names = ["get", "patch", "head", "options"]
     role = None
+
+    def get_serializer_context(self):
+        return {**super().get_serializer_context(), "registry_role": self.role}
 
     def get_queryset(self):
         return User.objects.filter(role_assignments__role=self.role).select_related("athlete_profile__organization")
@@ -142,7 +242,7 @@ class PersonDetail(FederationMixin, generics.RetrieveUpdateAPIView):
         after = {"full_name": user.full_name, "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else None}
         if before != after:
             audit(request.user, "registry.person_updated", user, before=before, after=after)
-        return Response(PersonSerializer(user).data)
+        return Response(PersonSerializer(user, context={"registry_role": self.role}).data)
 
 class AthleteDetail(PersonDetail):
     role = UserRole.Role.ATHLETE
@@ -154,6 +254,30 @@ class CoachDetail(PersonDetail):
 
 class JudgeDetail(PersonDetail):
     role = UserRole.Role.JUDGE
+
+
+class StaffProfileDetail(FederationMixin, generics.RetrieveUpdateAPIView):
+    serializer_class = StaffProfileSerializer
+    http_method_names = ["get", "patch", "head", "options"]
+
+    def get_queryset(self):
+        role = self.kwargs["role"]
+        if role not in ("coach", "judge"):
+            raise serializers.ValidationError({"role": "Choose coach or judge"})
+        return StaffProfile.objects.filter(role=role, user__role_assignments__role=role)
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), user_id=self.kwargs["pk"])
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        profile = StaffProfile.objects.select_for_update().get(pk=serializer.instance.pk)
+        before = {"organization_id": profile.organization_id, "disciplines": list(profile.disciplines.order_by("pk").values_list("pk", flat=True))}
+        serializer.instance = profile
+        profile = serializer.save()
+        after = {"organization_id": profile.organization_id, "disciplines": list(profile.disciplines.order_by("pk").values_list("pk", flat=True))}
+        if before != after:
+            audit(self.request.user, "registry.staff_profile_updated", profile, before=before, after=after)
 
 
 class Organizations(FederationMixin, generics.ListCreateAPIView):
@@ -254,6 +378,17 @@ class CorrectPeriodView(FederationMixin, APIView):
         corrected.is_valid(raise_exception=True)
         period = correct_period(actor=request.user, model=model, athlete=athlete, period_id=period_id, expected=serializer.validated_data["expected"], corrected=corrected.validated_data, reason=serializer.validated_data["reason"])
         return Response(period_serializer(period).data)
+
+
+class PeriodAuditView(FederationMixin, APIView):
+    serializer_class = PeriodAuditSerializer
+
+    @extend_schema(responses=PeriodAuditSerializer(many=True))
+    def get(self, request, pk, kind, period_id):
+        athlete, model, _ = PeriodView().get_data(pk, kind)
+        period = get_object_or_404(model, pk=period_id, athlete=athlete)
+        events = AuditEvent.objects.filter(target_type=period._meta.model_name, target_id=period.pk, action__startswith="registry.").select_related("actor").order_by("-created_at", "-pk")
+        return Response(PeriodAuditSerializer(events, many=True).data)
 
 
 REPORT_PARAMETERS = [OpenApiParameter(name, typ, required=name in ("start_year", "end_year")) for name, typ in (("start_year", int), ("end_year", int), ("organization", int), ("discipline", int), ("municipality", str), ("age_group", int))]

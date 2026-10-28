@@ -4,6 +4,10 @@ from . import views
 
 urlpatterns = [
     path("registry/options/", views.RegistryOptions.as_view()),
+    path("registry/eligible-users/", views.EligibleUsers.as_view()),
+    path("registry/profiles/<str:role>/", views.CreateRegistryProfile.as_view()),
+    path("registry/profiles/<str:role>/<int:pk>/context/", views.RegistryPersonContext.as_view()),
+    path("registry/profiles/<str:role>/<int:pk>/staff/", views.StaffProfileDetail.as_view()),
     path("athletes/", views.AthletesList.as_view()),
     path("athletes/<int:pk>/", views.AthleteDetail.as_view()),
     path("coaches/", views.CoachesList.as_view()),
@@ -15,6 +19,7 @@ urlpatterns = [
     path("athletes/<int:pk>/history/<str:kind>/", views.PeriodView.as_view()),
     path("athletes/<int:pk>/history/<str:kind>/<int:period_id>/close/", views.ClosePeriodView.as_view()),
     path("athletes/<int:pk>/history/<str:kind>/<int:period_id>/correct/", views.CorrectPeriodView.as_view()),
+    path("athletes/<int:pk>/history/<str:kind>/<int:period_id>/audit/", views.PeriodAuditView.as_view()),
     path("athletes/<int:pk>/transfer/", views.TransferView.as_view()),
     path("analytics/participation/", views.ParticipationReport.as_view()),
     path("analytics/participation/export/", views.ParticipationExport.as_view()),
