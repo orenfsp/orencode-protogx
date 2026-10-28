@@ -42,6 +42,9 @@ def period_values(period):
 def correct_period(*, actor, model, athlete, period_id, expected, corrected, reason):
     if model not in PERIOD_MODELS:
         raise ValueError("Unsupported period model")
+    if not isinstance(reason, str) or not reason.strip() or len(reason.strip()) > 500:
+        raise ValidationError({"reason": "Provide a correction reason of at most 500 characters"})
+    reason = reason.strip()
     athlete = User.objects.select_for_update().get(pk=athlete.pk)
     period = model.objects.select_for_update().filter(pk=period_id, athlete=athlete).first()
     if not period:

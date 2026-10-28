@@ -74,6 +74,14 @@ class RegistryPeriodTests(TestCase):
         self.athlete.athlete_profile.refresh_from_db()
         self.assertEqual(self.athlete.athlete_profile.organization, self.first)
 
+    def test_correction_service_requires_a_reason(self):
+        period = ParticipationPeriod.objects.create(athlete=self.athlete, starts_on=date(2024, 1, 1))
+        with self.assertRaises(ValidationError):
+            correct_period(actor=self.actor, model=ParticipationPeriod, athlete=self.athlete, period_id=period.pk, expected={"starts_on": "2024-01-01", "ends_on": None}, corrected={"starts_on": date(2024, 1, 2), "ends_on": None}, reason="  ")
+        period.refresh_from_db()
+        self.assertEqual(period.starts_on, date(2024, 1, 1))
+        self.assertFalse(AuditEvent.objects.filter(action="registry.period_corrected").exists())
+
 
 @skipUnless(connection.vendor == "postgresql", "Row-lock concurrency requires PostgreSQL")
 class RegistryConcurrencyTests(TransactionTestCase):
