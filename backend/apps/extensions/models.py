@@ -214,3 +214,38 @@ class ReviewHistory(models.Model):
     reason = models.TextField()
     state = models.CharField(max_length=20)
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class AwardScheme(models.Model):
+    year = models.PositiveSmallIntegerField()
+    version = models.PositiveIntegerField()
+    name = models.CharField(max_length=200)
+    aggregation = models.CharField(max_length=20, choices=[("sum", "Сумма результатов"), ("best", "Лучший результат")], default="best")
+    source_url = models.URLField(blank=True)
+    source_version = models.CharField(max_length=200, default="fictional-demo")
+    source_verified = models.BooleanField(default=False)
+    verified_on = models.DateField(null=True, blank=True)
+    deadline = models.DateField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["year", "version"], name="extension_award_scheme_version")]
+
+
+class AwardRate(models.Model):
+    scheme = models.ForeignKey(AwardScheme, on_delete=models.PROTECT, related_name="rates")
+    level = models.CharField(max_length=100)
+    place = models.PositiveSmallIntegerField()
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["scheme", "level", "place"], name="extension_award_rate_once")]
+
+
+class AwardPetition(models.Model):
+    scheme = models.ForeignKey(AwardScheme, on_delete=models.PROTECT)
+    status = models.CharField(max_length=16, choices=[("prepared", "Подготовлено"), ("sent", "Направлено (демо)"), ("awarded", "Назначено (демо)")], default="prepared")
+    snapshot = models.JSONField()
+    fingerprint = models.CharField(max_length=64)
+    revision = models.PositiveIntegerField(default=1)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(default=timezone.now)

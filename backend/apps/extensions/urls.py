@@ -7,6 +7,13 @@ from .assessment import (
     AttestationCreateView,
     NormCreateView,
 )
+from .awards import (
+    AwardActionView,
+    AwardDownloadView,
+    AwardPrepareView,
+    AwardSchemeCreateView,
+    AwardsView,
+)
 from .certificates import (
     CertificateDownloadView,
     CertificateRevokeView,
@@ -36,6 +43,11 @@ from .training import (
 )
 
 urlpatterns = [
+    path("awards/", AwardsView.as_view()),
+    path("awards/schemes/", AwardSchemeCreateView.as_view()),
+    path("awards/prepare/", AwardPrepareView.as_view()),
+    path("awards/<int:pk>/action/", AwardActionView.as_view()),
+    path("awards/<int:pk>/download/", AwardDownloadView.as_view()),
     path("reviews/", ReviewCasesView.as_view()),
     path("reviews/policies/", ReviewPolicyView.as_view()),
     path("reviews/<int:pk>/action/", ReviewActionView.as_view()),
