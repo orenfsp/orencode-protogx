@@ -162,3 +162,12 @@ class ProgressionRule(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["discipline", "target_rank", "version"], name="extension_progression_version")]
+
+
+class IndicatorEvidence(models.Model):
+    year = models.PositiveSmallIntegerField()
+    indicator = models.CharField(max_length=20, choices=[("participation", "Численность"), ("organizations", "Организации"), ("events", "Соревнования")])
+    title = models.CharField(max_length=250)
+    document_url = models.URLField()
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(default=timezone.now)
