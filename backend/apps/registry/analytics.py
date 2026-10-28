@@ -1,6 +1,11 @@
 """Calendar-year participation report; see docs/participation-methodology.md."""
+import hashlib
+import json
 from collections import defaultdict
+from contextlib import contextmanager
 from datetime import date, timedelta
+
+from django.db import connection, transaction
 
 from apps.competitions.models import AgeGroup
 from apps.competitions.services import age_on
@@ -11,6 +16,21 @@ from .models import (
     OrganizationPeriod,
     ParticipationPeriod,
 )
+
+
+@contextmanager
+def consistent_report_read():
+    already_atomic = connection.in_atomic_block
+    with transaction.atomic():
+        if connection.vendor == "postgresql" and not already_atomic:
+            with connection.cursor() as cursor:
+                cursor.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        yield
+
+
+def report_fingerprint(filters, rows):
+    payload = json.dumps({"method": "calendar-year-v1", "filters": filters, "rows": rows}, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def intersect(a, b):

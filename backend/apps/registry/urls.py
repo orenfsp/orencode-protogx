@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("registry/options/", views.RegistryOptions.as_view()),
     path("athletes/", views.AthletesList.as_view()),
     path("athletes/<int:pk>/", views.AthleteDetail.as_view()),
     path("coaches/", views.CoachesList.as_view()),
@@ -13,6 +14,7 @@ urlpatterns = [
     path("organizations/<int:pk>/", views.OrganizationDetail.as_view()),
     path("athletes/<int:pk>/history/<str:kind>/", views.PeriodView.as_view()),
     path("athletes/<int:pk>/history/<str:kind>/<int:period_id>/close/", views.ClosePeriodView.as_view()),
+    path("athletes/<int:pk>/history/<str:kind>/<int:period_id>/correct/", views.CorrectPeriodView.as_view()),
     path("athletes/<int:pk>/transfer/", views.TransferView.as_view()),
     path("analytics/participation/", views.ParticipationReport.as_view()),
     path("analytics/participation/export/", views.ParticipationExport.as_view()),

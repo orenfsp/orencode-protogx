@@ -208,6 +208,22 @@ paths:
     get:
       operationId: v1_athletes_list
       parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+      - in: query
+        name: discipline
+        schema:
+          type: integer
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -242,6 +258,36 @@ paths:
         required: true
       tags:
       - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+    patch:
+      operationId: v1_athletes_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
       security:
       - cookieAuth: []
       responses:
@@ -345,6 +391,48 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ClosePeriod'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryPeriod'
+          description: ''
+  /api/v1/athletes/{id}/history/{kind}/{period_id}/correct/:
+    post:
+      operationId: v1_athletes_history_correct_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: period_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PeriodCorrection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PeriodCorrection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PeriodCorrection'
         required: true
       security:
       - cookieAuth: []
@@ -636,6 +724,22 @@ paths:
     get:
       operationId: v1_coaches_list
       parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+      - in: query
+        name: discipline
+        schema:
+          type: integer
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -670,6 +774,36 @@ paths:
         required: true
       tags:
       - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+    patch:
+      operationId: v1_coaches_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
       security:
       - cookieAuth: []
       responses:
@@ -1108,6 +1242,22 @@ paths:
     get:
       operationId: v1_judges_list
       parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+      - in: query
+        name: discipline
+        schema:
+          type: integer
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -1142,6 +1292,36 @@ paths:
         required: true
       tags:
       - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+    patch:
+      operationId: v1_judges_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPersonUpdate'
       security:
       - cookieAuth: []
       responses:
@@ -1626,6 +1806,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RatingRecalculateResponse'
+          description: ''
+  /api/v1/registry/options/:
+    get:
+      operationId: v1_registry_options_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryOptions'
           description: ''
   /api/v1/results/:
     get:
@@ -2905,6 +3099,16 @@ components:
       - id
       - municipality
       - starts_on
+    Option:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
     Organization:
       type: object
       properties:
@@ -3117,6 +3321,28 @@ components:
         contact:
           type: string
           maxLength: 300
+    PatchedPersonUpdate:
+      type: object
+      properties:
+        full_name:
+          type: string
+          maxLength: 200
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+    PeriodCorrection:
+      type: object
+      properties:
+        expected: {}
+        corrected: {}
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - corrected
+      - expected
+      - reason
     Person:
       type: object
       properties:
@@ -3967,6 +4193,30 @@ components:
       - email
       - full_name
       - password
+    RegistryOptions:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        disciplines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        age_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        municipalities:
+          type: array
+          items:
+            type: string
+      required:
+      - age_groups
+      - disciplines
+      - municipalities
+      - organizations
     RegistryPeriod:
       oneOf:
       - $ref: '#/components/schemas/Participation'

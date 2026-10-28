@@ -10,12 +10,12 @@ def safe_text(value):
     return "'" + value if value.startswith(("=", "+", "-", "@")) else value
 
 
-def export_participation(rows, filters):
+def export_participation(rows, filters, fingerprint):
     workbook = Workbook()
     summary = workbook.active
     summary.title = "Итоги"
     summary.append(["Численность занимающихся спортивным программированием в Оренбургской области"])
-    summary.append(["Годы", f"{rows[0]['year']}–{rows[-1]['year']}", "Дата формирования", timezone.localdate().isoformat()])
+    summary.append(["Годы", f"{rows[0]['year']}–{rows[-1]['year']}", "Время формирования", timezone.localtime().isoformat(timespec="seconds")])
     summary.append(["Год", "Уникальных спортсменов", "Начали", "Завершили", "Изменение", "Рост, %"])
     for row in rows:
         summary.append([row[key] for key in ("year", "unique_athletes", "started", "ceased", "change", "growth_percent")])
@@ -26,6 +26,7 @@ def export_participation(rows, filters):
             for item in row["breakdowns"][key]:
                 sheet.append([row["year"], safe_text(item["name"]), item["participants"]])
     methodology = workbook.create_sheet("Методика")
+    methodology.append(["Отпечаток содержимого отчёта SHA-256: " + fingerprint])
     methodology.append([safe_text("Фильтры: " + str(filters))])
     methodology.append(["Уникальные спортсмены: отдельные люди с периодом участия, пересекающим календарный год и все выбранные фильтры одновременно."])
     methodology.append(["Исторические организации, муниципалитеты и дисциплины учитываются по пересечению периодов; суммы категорий не равны числу людей."])

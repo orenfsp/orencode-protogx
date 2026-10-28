@@ -20,7 +20,12 @@ from apps.registry.models import (
     OrganizationPeriod,
     ParticipationPeriod,
 )
-from apps.registry.services import add_period, transfer_organization
+from apps.registry.services import (
+    StalePeriod,
+    add_period,
+    correct_period,
+    transfer_organization,
+)
 
 
 class RegistryPeriodTests(TestCase):
@@ -72,6 +77,33 @@ class RegistryPeriodTests(TestCase):
 
 @skipUnless(connection.vendor == "postgresql", "Row-lock concurrency requires PostgreSQL")
 class RegistryConcurrencyTests(TransactionTestCase):
+    def test_concurrent_corrections_reject_stale_writer(self):
+        actor = User.objects.create_user(email="editor@example.test", full_name="Editor")
+        athlete = User.objects.create_user(email="corrected@example.test", full_name="Athlete")
+        period = ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2024, 1, 1))
+        barrier = Barrier(2)
+        results = []
+
+        def worker(day):
+            close_old_connections()
+            try:
+                barrier.wait(timeout=10)
+                correct_period(actor=actor, model=ParticipationPeriod, athlete=athlete, period_id=period.pk, expected={"starts_on": "2024-01-01", "ends_on": None}, corrected={"starts_on": date(2024, 1, day), "ends_on": None}, reason="Fictional correction")
+                results.append("corrected")
+            except StalePeriod:
+                results.append("stale")
+            finally:
+                close_old_connections()
+
+        threads = [Thread(target=worker, args=(day,)) for day in (2, 3)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=15)
+        self.assertTrue(all(not thread.is_alive() for thread in threads))
+        self.assertCountEqual(results, ["corrected", "stale"])
+        self.assertEqual(AuditEvent.objects.filter(action="registry.period_corrected").count(), 1)
+
     def test_database_rejects_direct_overlap_and_allows_adjacent_and_other_discipline(self):
         athlete = User.objects.create_user(email="direct@example.test", full_name="Athlete")
         first = Discipline.objects.create(code="direct-a", name="Direct A")

@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.accounts.models import User
@@ -22,6 +23,24 @@ class PersonSerializer(serializers.ModelSerializer):
     def get_organization(self, obj) -> str | None:
         profile = getattr(obj, "athlete_profile", None)
         return profile.organization.name if profile and profile.organization else None
+
+
+class PersonUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("full_name", "date_of_birth")
+
+    def validate_date_of_birth(self, value):
+        if value and value > timezone.localdate():
+            raise serializers.ValidationError("Date of birth cannot be in the future")
+        return value
+
+
+class PersonFilterSerializer(serializers.Serializer):
+    active = serializers.BooleanField(required=False)
+    organization = serializers.IntegerField(required=False, min_value=1)
+    discipline = serializers.IntegerField(required=False, min_value=1)
+    municipality = serializers.CharField(required=False, max_length=200)
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -81,6 +100,24 @@ class TransferSerializer(serializers.Serializer):
 
 class ClosePeriodSerializer(serializers.Serializer):
     ends_on = serializers.DateField()
+
+
+class PeriodCorrectionSerializer(serializers.Serializer):
+    expected = serializers.JSONField()
+    corrected = serializers.JSONField()
+    reason = serializers.CharField(max_length=500, trim_whitespace=True, allow_blank=False)
+
+
+class OptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class RegistryOptionsSerializer(serializers.Serializer):
+    organizations = OptionSerializer(many=True)
+    disciplines = OptionSerializer(many=True)
+    age_groups = OptionSerializer(many=True)
+    municipalities = serializers.ListField(child=serializers.CharField())
 
 
 class ReportQuerySerializer(serializers.Serializer):

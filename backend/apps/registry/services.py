@@ -5,10 +5,10 @@ dimension is exclusive. Missing periods mean unknown, not an inferred value.
 """
 from datetime import timedelta
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException, ValidationError
 
 from apps.accounts.models import AthleteProfile, User, UserRole
 from apps.competitions.services import audit
@@ -22,6 +22,65 @@ from .models import (
 )
 
 PERIOD_MODELS = (ParticipationPeriod, DisciplinePeriod, OrganizationPeriod, MunicipalityPeriod, TrainingStagePeriod)
+
+
+class StalePeriod(APIException):
+    status_code = 409
+    default_detail = "The period changed since it was loaded; refresh and retry"
+    default_code = "stale_period"
+
+
+def period_values(period):
+    values = {"starts_on": period.starts_on.isoformat(), "ends_on": period.ends_on.isoformat() if period.ends_on else None}
+    for field in ("discipline_id", "organization_id", "municipality", "stage"):
+        if hasattr(period, field):
+            values[field.removesuffix("_id")] = getattr(period, field)
+    return values
+
+
+@transaction.atomic
+def correct_period(*, actor, model, athlete, period_id, expected, corrected, reason):
+    if model not in PERIOD_MODELS:
+        raise ValueError("Unsupported period model")
+    athlete = User.objects.select_for_update().get(pk=athlete.pk)
+    period = model.objects.select_for_update().filter(pk=period_id, athlete=athlete).first()
+    if not period:
+        raise ValidationError({"period": "Period not found for athlete"})
+    before = period_values(period)
+    if expected != before:
+        raise StalePeriod()
+    start, end = corrected["starts_on"], corrected.get("ends_on")
+    if end is not None and end < start:
+        raise ValidationError({"ends_on": "End must not precede start"})
+    if athlete.date_of_birth and start < athlete.date_of_birth:
+        raise ValidationError({"starts_on": "Period cannot start before the athlete's birth"})
+    if model is OrganizationPeriod and ((period.ends_on is None) != (end is None)):
+        raise ValidationError({"ends_on": "Use an organization transfer to change current status"})
+    if model is OrganizationPeriod and end is None and start > timezone.localdate():
+        raise ValidationError({"starts_on": "Current affiliation cannot start in the future"})
+    overlap = model.objects.filter(athlete=athlete).exclude(pk=period.pk).filter(Q(ends_on__isnull=True) | Q(ends_on__gte=start))
+    if end is not None:
+        overlap = overlap.filter(starts_on__lte=end)
+    if model is DisciplinePeriod:
+        overlap = overlap.filter(discipline=corrected["discipline"])
+    if overlap.exists():
+        raise ValidationError({"starts_on": "Period overlaps an existing period"})
+    for key, value in corrected.items():
+        setattr(period, key, value)
+    try:
+        with transaction.atomic():
+            period.save()
+    except IntegrityError as exc:
+        raise ValidationError({"starts_on": "Period conflicts with another record"}) from exc
+    if model is OrganizationPeriod and end is None:
+        profile = AthleteProfile.objects.select_for_update().filter(user=athlete).first()
+        if not profile or profile.organization_id != before["organization"]:
+            raise ValidationError({"organization": "Current profile and history are inconsistent"})
+        profile.organization = period.organization
+        profile.save(update_fields=["organization"])
+    after = period_values(period)
+    audit(actor, "registry.period_corrected", period, before=before, after={"values": after, "reason": reason})
+    return period
 
 
 @transaction.atomic
