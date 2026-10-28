@@ -1548,14 +1548,12 @@ components:
           maxLength: 100
         min_age:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         max_age:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
       required:
       - id
       - max_age
@@ -1665,9 +1663,8 @@ components:
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         prize_count:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         coefficient:
           type: string
           format: decimal
@@ -1764,9 +1761,8 @@ components:
           maxLength: 200
         year:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         reference_url:
           oneOf:
           - type: string
@@ -2396,9 +2392,8 @@ components:
           type: integer
         version:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         template:
           type: integer
         snapshot: {}
@@ -2571,9 +2566,8 @@ components:
           maxLength: 100
         max_place:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         rule_version:
           type: string
           default: demo-1
@@ -2895,9 +2889,8 @@ components:
           maxLength: 100
         place:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         points:
           type: string
           format: decimal
@@ -2975,18 +2968,16 @@ components:
           nullable: true
         coefficient_threshold:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         stability_coefficient:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
         rounding_places:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         rounding_mode:
           type: string
           maxLength: 20
@@ -3031,18 +3022,16 @@ components:
           nullable: true
         coefficient_threshold:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         stability_coefficient:
           type: string
           format: decimal
           pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
         rounding_places:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         rounding_mode:
           type: string
           maxLength: 20
@@ -3064,9 +3053,8 @@ components:
           readOnly: true
         year:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         name:
           type: string
           maxLength: 100
@@ -3232,9 +3220,8 @@ components:
           $ref: '#/components/schemas/ResultStatusEnum'
         place:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
           nullable: true
         score:
           type: string
@@ -3387,9 +3374,8 @@ components:
           readOnly: true
         order:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 32767
           minimum: 0
-          format: int64
         name:
           type: string
           maxLength: 150
@@ -3528,9 +3514,8 @@ components:
           readOnly: true
         position:
           type: integer
-          maximum: 9223372036854775807
+          maximum: 2147483647
           minimum: 0
-          format: int64
         selected_by:
           type: integer
           readOnly: true
