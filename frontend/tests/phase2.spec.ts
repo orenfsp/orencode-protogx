@@ -44,7 +44,8 @@ test("competition application, moderation, result, protocol and athlete history"
   await athletePage.getByLabel("Пароль").fill("DemoOnly2026!");
   await athletePage.getByRole("checkbox", { name: /Согласие на обработку/ }).check();
   await athletePage.getByRole("button", { name: "Создать аккаунт" }).click();
-  await expect(athletePage).toHaveURL(/\/dashboard$/);
+  // Registration performs password hashing and a database write before navigation.
+  await expect(athletePage).toHaveURL(/\/dashboard$/, { timeout: 20000 });
   await athletePage.goto(competitionUrl);
   await athletePage.getByRole("combobox", { name: "Возрастная группа" }).selectOption({ label: "Демо: 18+" });
   await athletePage.getByRole("button", { name: "Отправить заявку" }).click();
