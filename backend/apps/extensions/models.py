@@ -52,3 +52,6 @@ class TrainingOrganization(models.Model):
     coaches = models.ManyToManyField(settings.AUTH_USER_MODEL, limit_choices_to={"role_assignments__role": "coach"})
     contact_url = models.URLField(blank=True)
     public = models.BooleanField(default=False)
+
+    class Meta:
+        permissions = [("view_ministry_dashboard", "Read ministry reports, calendar and published teams")]
