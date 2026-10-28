@@ -18,6 +18,8 @@ Three fictional organizations and optional athlete profiles demonstrate short an
 
 The registry seed adds explicit fictional participation and affiliation periods for 2024–2025 only when the demo athlete has no registry history and the current profile matches the fixture. In a clean seed, the report has 2 unique athletes in 2024 and 3 in 2025; one athlete has two disciplines and a historical organization transfer, and one has no organization. Existing manually edited history is not overwritten. The reporting methodology is described in [participation-methodology.md](participation-methodology.md); the implementation remains partial.
 
+As federation, open **Реестры**, search for «Демо Спортсмен» and open its history. An incorrect date can be corrected using **Исправить**, with an explicit reason; the old and new values are retained in the audit log. The separate transfer form records an actual new affiliation event. Open **Аналитика**, choose a year range and named filters, build the report and download XLSX. The sheet «Методика» contains the report fingerprint; correcting source data may change a later report. These demo records are fictional, and the log is not a legal verification of their facts.
+
 An isolated fresh Compose run on 2026-10-28 produced 8 users, 3 organizations, 4 athlete profiles, 6 competitions, 14 applications, 4 protocol publications, 7 ratings, 13 total rating-contribution records (10 current), 4 teams and 3 memberships. A second seed kept these counts and the 3 team decision records unchanged. Browser workflows may add independent test records.
 
 ## Automatic Compose startup

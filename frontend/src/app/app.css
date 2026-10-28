@@ -54,3 +54,12 @@
 .workflow-regulations{white-space:pre-wrap;border-left:4px solid var(--sg);padding:12px 18px;background:var(--acs)}
 .result-editor{border-bottom:1px dotted var(--rl2);padding-bottom:16px}
 @media(max-width:650px){.form-grid{grid-template-columns:1fr}.workflow-actions{align-items:stretch}.workflow-actions .inp{width:100%}}
+
+/* Registry controls inherit the document layout without expanding the page. */
+.registry-workspace,.participation-workspace{min-width:0}
+.registry-workspace .blk>*:not(h2),.participation-workspace .blk>*:not(h2){grid-column:2;min-width:0}
+.registry-workspace .form-grid,.participation-workspace .form-grid{min-width:0}
+.registry-workspace label,.participation-workspace label{min-width:0}
+.registry-workspace input.inp,.registry-workspace select.inp,.participation-workspace input.inp,.participation-workspace select.inp{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;background:transparent;color:var(--ink);border:0;border-bottom:2px solid var(--ink);border-radius:0;font:500 15px var(--fb)}
+.registry-workspace .workflow-link{background:transparent;border:0;color:var(--ink);cursor:pointer;font:inherit;text-align:left}
+@media(max-width:900px){.registry-workspace .blk>*:not(h2),.participation-workspace .blk>*:not(h2){grid-column:1}}
