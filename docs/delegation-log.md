@@ -72,3 +72,5 @@ One bounded review of a synthetic description of the proposed period model was r
 The continuation requested one additional bounded review of the synthetic counting methodology; the provider again returned `provider_http_503` / `Request budget exhausted`, with no findings or file writes. Independent Codex review and tests are required.
 
 The finalization continuation sent one synthetic correction-design summary to `review_code` with `pro` and one attempt. The provider again returned `provider_http_503` / `Request budget exhausted`; no findings or file writes resulted. No real personal data or credentials were sent.
+
+The subsequent registry completion sprint made one bounded `pro` request using only a synthetic permissions summary. It again returned `provider_http_503` / `Request budget exhausted`, with no findings and no file writes. Independent Codex review remains necessary.

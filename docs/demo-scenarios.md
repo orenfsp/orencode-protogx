@@ -20,6 +20,10 @@ The registry seed adds explicit fictional participation and affiliation periods 
 
 As federation, open **Реестры**, search for «Демо Спортсмен» and open its history. An incorrect date can be corrected using **Исправить**, with an explicit reason; the old and new values are retained in the audit log. The separate transfer form records an actual new affiliation event. Open **Аналитика**, choose a year range and named filters, build the report and download XLSX. The sheet «Методика» contains the report fingerprint; correcting source data may change a later report. These demo records are fictional, and the log is not a legal verification of their facts.
 
+The demo seeder also creates registry metadata for the existing fictional coach and judge roles without assigning roles or modifying their confirmed links. The federation may create a missing profile for an existing active user with an already assigned role and current consent; a minor's current consent must reference their verified guardian. Unknown historical affiliations are not inferred from profile creation. Repeated seeding preserves already existing specialist profiles and their manual edits.
+
+On an isolated Compose database, startup followed by two manual seeder runs retained 8 users, 2 specialist profiles, 4 participation periods, 5 discipline periods and 4 organization periods. These counts check repeatability of those records; they are not a substitute for reviewing every preserved field.
+
 An isolated fresh Compose run on 2026-10-28 produced 8 users, 3 organizations, 4 athlete profiles, 6 competitions, 14 applications, 4 protocol publications, 7 ratings, 13 total rating-contribution records (10 current), 4 teams and 3 memberships. A second seed kept these counts and the 3 team decision records unchanged. Browser workflows may add independent test records.
 
 ## Automatic Compose startup

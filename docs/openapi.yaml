@@ -359,6 +359,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/RegistryPeriod'
           description: ''
+  /api/v1/athletes/{id}/history/{kind}/{period_id}/audit/:
+    get:
+      operationId: v1_athletes_history_audit_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: period_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PeriodAudit'
+          description: ''
   /api/v1/athletes/{id}/history/{kind}/{period_id}/close/:
     post:
       operationId: v1_athletes_history_close_create
@@ -1807,6 +1839,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/RatingRecalculateResponse'
           description: ''
+  /api/v1/registry/eligible-users/:
+    get:
+      operationId: v1_registry_eligible_users_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPersonList'
+          description: ''
   /api/v1/registry/options/:
     get:
       operationId: v1_registry_options_retrieve
@@ -1820,6 +1884,123 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RegistryOptions'
+          description: ''
+  /api/v1/registry/profiles/{role}/:
+    post:
+      operationId: v1_registry_profiles_create
+      parameters:
+      - in: path
+        name: role
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfileCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfileCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+  /api/v1/registry/profiles/{role}/{id}/context/:
+    get:
+      operationId: v1_registry_profiles_context_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: role
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryPersonContext'
+          description: ''
+  /api/v1/registry/profiles/{role}/{id}/staff/:
+    get:
+      operationId: v1_registry_profiles_staff_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: role
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffProfile'
+          description: ''
+    patch:
+      operationId: v1_registry_profiles_staff_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: role
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffProfile'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffProfile'
           description: ''
   /api/v1/results/:
     get:
@@ -3331,6 +3512,34 @@ components:
           type: string
           format: date
           nullable: true
+    PatchedStaffProfile:
+      type: object
+      properties:
+        organization:
+          type: integer
+          nullable: true
+        disciplines:
+          type: array
+          items:
+            type: integer
+    PeriodAudit:
+      type: object
+      properties:
+        actor:
+          type: string
+        action:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        before: {}
+        after: {}
+      required:
+      - action
+      - actor
+      - after
+      - before
+      - created_at
     PeriodCorrection:
       type: object
       properties:
@@ -3369,6 +3578,16 @@ components:
       - full_name
       - id
       - organization
+    ProfileCreate:
+      type: object
+      properties:
+        user:
+          type: integer
+        organization:
+          type: integer
+          nullable: true
+      required:
+      - user
     ProtocolColumn:
       type: object
       properties:
@@ -4231,6 +4450,34 @@ components:
       - $ref: '#/components/schemas/OrganizationPeriod'
       - $ref: '#/components/schemas/MunicipalityPeriod'
       - $ref: '#/components/schemas/TrainingStagePeriod'
+    RegistryPersonContext:
+      type: object
+      properties:
+        ranks:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        coach_links:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        assignments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - assignments
+      - categories
+      - coach_links
+      - ranks
     RequestTypeEnum:
       enum:
       - assign
@@ -4401,6 +4648,16 @@ components:
       - result_id
       - valid_until
       - validity
+    StaffProfile:
+      type: object
+      properties:
+        organization:
+          type: integer
+          nullable: true
+        disciplines:
+          type: array
+          items:
+            type: integer
     Stage:
       type: object
       properties:
