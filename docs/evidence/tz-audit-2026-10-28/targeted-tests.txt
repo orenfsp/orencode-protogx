@@ -1,0 +1,11 @@
+ Container fspmandatory-api-run-21560d903fd0 Creating
+ Container fspmandatory-api-run-21560d903fd0 Created
+Creating test database for alias 'default'...
+Found 49 test(s).
+System check identified no issues (0 silenced).
+.................................................
+----------------------------------------------------------------------
+Ran 49 tests in 67.781s
+
+OK
+Destroying test database for alias 'default'...

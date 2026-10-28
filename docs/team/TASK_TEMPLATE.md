@@ -31,7 +31,7 @@ Task ID: QA-EXAMPLE-01
   что пользователь с активной ролью judge не читает заявки чужого соревнования.
 Участник: № 2, backend соревнований.
 Ветка: task/QA-EXAMPLE-01-judge-scope.
-Base: main, hash указывает руководитель в момент выдачи (например, 600562d для исходного среза).
+Base: точная ветка и hash назначаются руководителем при выдаче; для текущей интеграции ориентир — `codex/integrate-optional-d1-d12` на `0c43b000983e15842d6cc08a525341e7deb84670`. Не используйте этот пример как автоматическую точку старта следующей задачи.
 Документы: docs/team/{README,BACKEND_GUIDE,API_CONTRACTS,AUTH_AND_PERMISSIONS,TESTING}.md;
   docs/phase2-architecture.md; AGENTS.md.
 Allowed: backend/tests/test_competitions.py.

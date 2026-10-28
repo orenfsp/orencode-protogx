@@ -1,30 +1,62 @@
-> Integration 2026-10-28: PostgreSQL 172 passed; main Chrome 120 passed / 6 optional skipped, followed by enabled optional-live 6 passed. Final observer fix: 3 targeted backend passed. Lint/typecheck/build/schema/migration/design checks passed. mandatory statuses below retain their historical evidence. Current combined mandatory + D1?D12 validation, fixes and limits: [integration-verification.md](integration-verification.md). Optional implementation statuses: [case-optional-traceability.md](case-optional-traceability.md); regulatory/production gates remain open.
+# Матрица приёмки AC-01–AC-18
 
-# Acceptance matrix — 2026-10-28
+Актуализировано 28.10.2026. Runtime-код `0c43b00`,
+ветка `codex/integrate-optional-d1-d12`.
+`implemented` — технический сценарий с указанным свидетельством;
+`partial` — незакрытое требование или приёмка; `not_implemented` —
+реализация отсутствует. Полного pass по ТЗ нет.
 
-Код `223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd`, ветка `codex/mandatory-case-completion`. `implemented` — работающий программный сценарий с исполненным свидетельством; это не юридическая сертификация или production rollout. Для финальной проверки все проектные AC имеют локальное свидетельство. Внешние gates перечислены отдельно и не переименованы в passed.
+Сами требования AC заданы [MASTER_PROMPT](MASTER_PROMPT.md).
+[Аудит PDF](tz-readiness-audit-2026-10-28.md) и
+[29 критериев оценки](defense-criteria-guide-2026-10-28.md) используют
+исходные документы организаторов; веса критериев не заменяются числом тестов.
 
-| ID | Status | Исполненное свидетельство и границы |
+| ID | Статус | Реализация, свидетельство и граница |
 | --- | --- | --- |
-| AC-01 | implemented | Live Next.js, четыре кабинета, desktop/tablet/mobile, две темы; full Chrome 118 passed. |
-| AC-02 | implemented | Django/DRF + PostgreSQL, миграции, 139 tests, API health, warning-free OpenAPI. |
-| AC-03 | implemented | Одна запись User, назначенные роли/активный кабинет; backend role/revocation и browser switching/races. |
-| AC-04 | implemented | Шесть дисциплин в catalog/seed/filters, разные шаблоны; backend и live создание события. |
-| AC-05 | implemented | Federation create/publish → athlete entry → moderation → judge assignment/result; coach scope, age/deadline/guardian отрицательные тесты. |
-| AC-06 | implemented | Snapshot включает всех approved, включая pending_result без выдуманного места/балла; backend publication test. |
-| AC-07 | implemented | Разные типизированные метрики и версионные шаблоны для дисциплин; создание новой версии API/UI. Официальная актуальность форм unverified. |
-| AC-08 | implemented | Последняя immutable publication → только собственная история; live E2E и приватная выписка. |
-| AC-09 | implemented | Разряд/категория: заявление → решение/приказ/срок → история; discipline scope; correction ledger/UI; full backend/browser pass. ЕВСК-подсказки только по verified rules, демо-правила не verified. |
-| AC-10 | implemented | Transactional inbox/outbox, SMTP/Mailpit, retries/dedup/concurrent workers/read/role+object scope; live category → cabinet → SMTP capture. Production mailbox receipt unverified. |
-| AC-11 | implemented | Четыре реестра, исторические периоды/исправления, ≥2 года, filters/API/UI/XLSX consistency; live registry/create, keyboard/axe/viewport tests pass в полном наборе. |
-| AC-12 | implemented | Versioned points, discipline/season, ×1.2, precise Russian levels, latest source, active exclusions, age/rank filters, minor redaction, breakdown; PostgreSQL и browser tests. |
-| AC-13 | implemented | Только ручной отбор федерацией, ordering/audit/provenance; live rating → team → PDF/DOCX. Документы — неподписанный демо-проект. |
-| AC-14 | implemented | Сохранённые данные → protocol/team PDF/DOCX, participation XLSX, personal excerpt PDF/DOCX, regulations DOCX. OOXML/XLSX/PDF content/layout/private-download checks pass. Официальные формы отдельно unverified. |
-| AC-15 | implemented | Actor/active role/time/before/after/reasons; транзакционный audit и append ledger; role/IDOR/revoked link/consent/private exports отрицательные тесты в 139-test наборе. Онлайн проверка личности представителя не заявляется. |
-| AC-16 | implemented | Fresh isolated Compose migrations/fictional seed, повторный старт/seed сохраняет данные; README и demo accounts; пять сервисов запущены. |
-| AC-17 | implemented | Неизменённые reference HTML/extracted CSS, SHA manifest и design-contract PASS. |
-| AC-18 | implemented | 30 live PNG: 5 экранов × 3 widths × 2 themes; registry/rating состояния, overflow/axe/keyboard, представительный ручной осмотр. Нет заявления об исчерпывающем ручном обходе всех элементов. |
+| AC-01 | implemented | Рабочий Next.js, кабинеты и responsive/theme проверки. Полный ручной осмотр новых форм отдельно в AC-18. |
+| AC-02 | implemented | Django/DRF/PostgreSQL, миграции, API health и warning-free OpenAPI. Интеграционный PostgreSQL-прогон — 172 passed до последнего audit fix. |
+| AC-03 | implemented | Несколько назначенных ролей, активный кабинет, серверные права; backend и Chrome switching/logout/race проверки. |
+| AC-04 | implemented | Все шесть дисциплин в справочнике/шаблонах/создании событий. Демо-соревнования и результаты только по двум: условие максимума Т2 ещё не закрыто. |
+| AC-05 | implemented | Создание/публикация → заявка → модерация → судья/результат проходит. Возраст/сроки/согласия/дисциплина coach link проверяются. Отдельного запрета по отсутствующей дисциплине самого спортсмена нет — ограничение С3 требует трактовки. |
+| AC-06 | implemented | Публикация включает всех approved, в том числе pending_result без выдуманного места; rejected не включаются. |
+| AC-07 | implemented | Дисциплинарные типизированные метрики, колонки и новые версии шаблонов работают. Приёмка заданной формы не закрыта, см. AC-14. |
+| AC-08 | implemented | Личная история из собственной строки последней immutable publication; полный competition browser workflow прошёл. |
+| AC-09 | partial | Заявки/основание/решение/приказ/срок/история/исправления работают. Подсветка ЕВСК на стенде не настроена: QualificationRule 0. Аудит повторил qualification tests. |
+| AC-10 | implemented | Сохранённый inbox/outbox, SMTP/Mailpit, worker, retry/read/dedup/role+object scope; категория → кабинет → SMTP проверены. Production mailbox receipt не проверялся. |
+| AC-11 | implemented | Основной исторический реестр, два года и больше, разрезы/API/UI/XLSX с fingerprint проверены. Д3 TrainingMembership не попадает в общий отчёт автоматически; это отдельный незакрытый optional-сценарий. |
+| AC-12 | implemented | Версии баллов, сезон/дисциплина, Decimal и 1.2, latest-source provenance, ограничения, фильтры и breakdown проверены. |
+| AC-13 | implemented | Ручной отбор/порядок/аудит, рейтинг → состав → PDF/DOCX; проект приказа неподписанный, форма требует проверки. |
+| AC-14 | partial | Файлы из БД, форматы/содержимое/приватные downloads проверены. Все 6 текущих шаблонов протокола unverified, заданные формы не приняты. |
+| AC-15 | implemented | Серверные роли/объекты/согласия, журнал actor/active role/before/after/reason. Observer active_role=None исправлен и повторно проверен. Реальная identity verification представителя не заявляется. |
+| AC-16 | implemented | Compose, migrations, opt-in seed, повторный запуск с сохранением данных, инструкции и фиктивные аккаунты. Hosted CI финального runtime SHA не запускался. |
+| AC-17 | implemented | Reference HTML и extracted globals.css не изменены; design-contract PASS. |
+| AC-18 | partial | Основные viewport/theme/axe/keyboard проверки и представительные осмотры есть. Ручная приёмка всех расширенных дополнительных форм/состояний не завершена. |
 
-Итог: **139 backend passed**, **118 browser passed**, typecheck/lint/production build/ruff/migration drift/OpenAPI/design contract passed. Журналы: [evidence](evidence/mandatory-2026-10-28/README.md); команды/разбор прошлых сбоев: [verification](mandatory-verification.md).
+## Дополнительные сценарии и критерии защиты
 
-Для отчётности проекта: AC-01…AC-18 — **pass в указанной локальной границе**. Для production/официальной эксплуатации: нормативная актуальность и guardian identity — unverified; реальный SMTP receipt — unverified; hosted CI итогового SHA — not_run. Эти ограничения не скрываются за локальным pass. Восемь групп кейса и отличия от более строгого master prompt — в [трассировке](case-mandatory-traceability.md).
+[Текущая трассировка Д1–Д12](case-optional-traceability.md):
+Д1/Д2/Д5/Д9/Д10/Д11 реализованы в описанных demo-границах;
+Д3/Д4/Д6/Д7/Д8/Д12 — partial. Правила Д4/Д7/Д8 вымышленные.
+Готовность С7 процесса разряда не означает готовность нормативной подсветки ЕВСК.
+П1/П2 зависят от выступления; отдельный собственный сценарий Р2 не принят.
+
+## Исполненные свидетельства
+
+До последнего исправления аудита: 172 backend passed (500.624 s),
+основной Chrome 120 passed/6 optional skipped (10.0 m).
+После исправления: 3 целевых backend passed (2.336 s), отдельный optional-live
+6 passed (35.2 s). Последующий аудит текущего кода: 49 backend passed (67.781 s).
+Полные наборы после последнего runtime-fix не повторялись; числа не суммируются.
+
+[Интеграционный отчёт](integration-verification.md),
+[evidence объединения](evidence/integration-2026-10-28/),
+[evidence аудита](evidence/tz-audit-2026-10-28/),
+[проверка С3/Т2](evidence/criteria-review-2026-10-28/),
+[команды](team/TESTING.md).
+Исторические 139 backend/118 Chrome на `223bebe` описаны в
+[mandatory-verification.md](mandatory-verification.md); они не являются
+текущей оценкой полноты ТЗ.
+
+Production SMTP, государственные интеграции и hosted CI не добавляются
+в обязательный список исходного PDF. Действующие нормативы, формы и реальная
+проверка представителя остаются явными границами эксплуатации.

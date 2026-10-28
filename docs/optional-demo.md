@@ -1,8 +1,17 @@
-> Integration update (2026-10-28): the local historical registry is now included; D6/D9 use its calendar-year-v1 report. The original pre-merge limitations below are historical. Current commands/evidence: [integration-verification.md](integration-verification.md). Optional notifications use `/api/v1/optional-notifications/`; mandatory inbox/read API remains `/api/v1/notifications/`. The existing notification worker processes both outboxes and optional award reminders.
-
 # Дополнительные сценарии: запуск и демонстрация
 
-Это отдельная реализация Д1–Д12 по заданию пользователя. В кейсе они **необязательны**. Исходная классификация, границы и доказательства: [трассировка](case-optional-traceability.md), [дословные выдержки PDF](sources/optional-case-excerpts.md). Полное завершение всех двенадцати **не заявляется**: общий исторический реестр AC-11 находится в открытом PR #5, а действующие нормативные редакции не подтверждены.
+Д1–Д12 находятся в объединённой ветке `codex/integrate-optional-d1-d12`,
+runtime `0c43b00`. В исходном кейсе они **необязательны**; полное завершение
+всех двенадцати не заявляется. Общий исторический реестр уже включён,
+Д6/Д9 читают его данные. Оставшийся пробел Д3: зачисление в группу не меняет
+общий отчёт. Д4/Д7/Д8 используют вымышленные правила, Д12 partial по форме.
+[Текущая трассировка](case-optional-traceability.md),
+[аудит](tz-readiness-audit-2026-10-28.md),
+[проверка объединения](integration-verification.md).
+
+Основной inbox — `/api/v1/notifications/`, дополнительный —
+`/api/v1/optional-notifications/`. Оба outbox и optional-напоминания
+обслуживает существующий notification worker.
 
 ## Архитектура и данные
 
@@ -22,7 +31,10 @@
 | Д2 | IntegrationClient/Identity, ResultImport, WebhookDelivery/Attempt | scoped token только на разрешённые события; импорт сначала staged; webhook ID стабилен при повторах |
 | Д1 | DOT Application/Grant/AccessToken, OIDCClientPolicy/SharingConsent/GuardianAuthorization | библиотечный code/PKCE S256, отдельное согласие, минимум claims; несовершеннолетнему требуется отдельное подтверждённое разрешение представителя |
 
-Аддитивные миграции extensions `0001`–`0015` и миграции `django-oauth-toolkit` применяются обычным `manage.py migrate`. Существующие таблицы идентичностей, согласий, результатов и протоколов не переписываются.
+Аддитивные миграции extensions `0001`–`0016` и миграции `django-oauth-toolkit`
+применяются обычным `manage.py migrate`. Миграция 0016 разводит обратную связь
+дополнительного inbox (`optional_notifications`) с основным. Существующие
+таблицы идентичностей, согласий, результатов и протоколов не переписываются.
 
 ## Быстрый локальный запуск
 
@@ -99,7 +111,16 @@ python manage.py deliver_notifications --limit 1
 python manage.py deliver_webhooks --limit 10
 ```
 
-Их запускают внешним планировщиком/worker; автоматический облачный scheduler не создавался. Deadline job формирует дедуплицированные напоминания за 30 дней до настроенного срока ходатайства (sample — 1 февраля следующего года). SMTP настраивается `EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend`, `EMAIL_HOST`, `EMAIL_PORT`, при необходимости user/password/TLS. По умолчанию console backend, без соединения с внешней почтой. Проверка реального SMTP выполнена только с локальным Mailpit и вымышленными адресами `.test`. Доставка at least once: при сбое после SMTP-приёма возможно повторное письмо; это явно не exactly once.
+В объединённом Compose `process_notifications --loop` автоматически обрабатывает
+основную и дополнительную очереди, а также вызывает optional deadline job.
+Команды выше пригодны для отдельных циклов. Webhook по-прежнему доставляется
+отдельной `deliver_webhooks`; его consumer нужно запустить. Deadline job создаёт
+дедуплицированные напоминания за 30 дней до настроенного срока ходатайства.
+По умолчанию backend использует SMTP, Compose направляет его в Mailpit.
+Настраиваются `EMAIL_HOST`, `EMAIL_PORT`, при необходимости user/password/TLS/SSL.
+Реальная SMTP-передача проверена локально с вымышленными `.test` адресами;
+получение production-ящиком не проверялось. При сбое после SMTP-приёма возможен
+повтор: доставка at least once, а не exactly once.
 
 Для production ключ подписи и Fernet key задаются вне исходников. OIDC использует HTTPS issuer; HTTP разрешён только loopback в DEBUG. Ротация: новый RSA PEM как активный, прежний PEM через `FSP_OIDC_INACTIVE_KEY_FILES` на период жизни старых токенов/JWKS-кэша, затем перезапуск сервиса; JWKS не выдаёт приватные параметры. Смена client secret и redirect/scope policy отзывает прежние токены/согласия. У несовершеннолетних базовое согласие Guardian **не** разрешает внешнее раскрытие: нужен отдельный OIDCGuardianAuthorization с scopes, версией текста и подтверждением; последующее согласие пользователя также обязательно. Юридическая достаточность документов здесь не заявляется.
 

@@ -1,4 +1,8 @@
-> Historical evidence for the optional branch before integration. Current combined PostgreSQL/Chrome evidence and resolved registry blockers: [integration-verification.md](integration-verification.md).
+> Исторический отчёт optional-ветки до объединения. Его disk/PostgreSQL и
+> ожидание PR #5 — прежние блокеры. Общий реестр уже установлен;
+> [объединение и успешные прогоны](integration-verification.md),
+> [текущие статусы Д1–Д12](case-optional-traceability.md),
+> [аудит ТЗ](tz-readiness-audit-2026-10-28.md).
 
 # Протокол проверки Д1–Д12 — 28.10.2026
 

@@ -1,35 +1,104 @@
-# Проверки и точные команды
+# Проверки и результаты
 
-Актуальная схема автоматизации и настройки изолированного CI описаны в [docs/CI.md](../CI.md). Исторические результаты ниже не заменяют результаты текущего запуска.
+Команды ниже относятся к объединённой реализации. Для существующего стенда
+добавляйте `-p fspmandatory`; для обычного Compose оставляйте без `-p`.
+Проверяйте project name: тесты создают отдельную тестовую БД, но live browser
+сценарии добавляют фиктивные записи в выбранную demo-БД.
 
-Статус ниже относится к текущему документационному спринту 2026-10-27; «проверено» означает **команда реально выполнена**, а «поддерживается» означает найденный script/config и исторические свидетельства в [матрице](../acceptance-matrix.md), но не новый прогон. Все команды запускайте из указанной директории. Тестовая БД Django создаётся и удаляется тестовым runner; существующий Compose volume не сбрасывается.
+## Что уже выполнено
 
-| Из корня, PowerShell | Назначение | Текущий результат |
-| --- | --- | --- |
-| `docker compose ps` | состояние сервисов | проверено: `db` и `api` healthy, `web` up |
-| `docker compose exec -T api python manage.py test` | backend suite на PostgreSQL | проверено: 23 теста, OK, exit 0 |
-| `docker compose exec -T api ruff check .` | Python lint | проверено: `All checks passed!`, exit 0 |
-| `docker compose exec -T api python manage.py makemigrations --check --dry-run` | drift моделей/миграций | проверено: `No changes detected`, exit 0 |
-| `docker compose exec -T api python manage.py spectacular --validate --file /tmp/fsp-doc-schema.yaml` | сгенерировать/валидировать OpenAPI внутри контейнера | проверено: exit 0; сохранённый `docs/openapi.yaml` сверяйте отдельно по paths/operations |
-| `python scripts/check_design_contract.py` | SHA-256 HTML и точный extracted CSS | проверено: `PASS`, exit 0 |
-| `python scripts/check_openapi_schema.py` | warning-free генерация OpenAPI и сравнение с `docs/openapi.yaml` | проверено в изолированном Python-окружении PR #1: `PASS`, exit 0 |
-| `docker compose exec -T api python manage.py migrate` | применить миграции | команда присутствует в startup и исторически проверена; отдельно в этом спринте не запускалась |
-| `docker compose exec -T api python manage.py seed_demo` | фиктивные аккаунты | исторически проверена; отдельно в этом спринте не запускалась |
-| `python -m pip install -r backend/requirements.txt` | локальные Python-зависимости | команда подтверждена `requirements.txt`, но в этом спринте не выполнялась; Compose уже собран |
+- До последнего исправления аудита наблюдателя: полный PostgreSQL —
+  **172 passed, 500.624 s**; основной Chrome — **120 passed / 6 optional skipped,
+  10.0 m**.
+- После исправления `active_role=None`: **3 целевых backend passed, 2.336 s**;
+  отдельный enabled optional-live — **6 passed, 35.2 s**. Перед ним был
+  неуспешный optional-прогон 4 passed / 1 failed / 1 not run; ошибка исправлена.
+- Последующий аудит текущего кода: **49 backend passed, 67.781 s**.
+- Проверка критериев: read-only наполнение дисциплин (результаты по 2 из 6);
+  С3 в транзакции с откатом (иная дисциплина спортсмена принята, HTTP 201).
+- TypeScript/ESLint/production build, Ruff, migration drift, warning-free OpenAPI,
+  design contract и синхронизация OIDC CSS прошли в интеграционной границе.
 
-В `frontend/` (в PowerShell `npm.cmd`, потому что `npm` может вызвать запрещённый `npm.ps1`):
+Это разные прогоны. Полный backend и основной Chrome после последнего runtime-fix
+не повторялись. Для обновления документации функциональные наборы не запускались.
+[Журнал объединения](../integration-verification.md),
+[evidence объединения](../evidence/integration-2026-10-28/),
+[аудит](../tz-readiness-audit-2026-10-28.md),
+[evidence аудита](../evidence/tz-audit-2026-10-28/),
+[дополнительные проверки критериев](../evidence/criteria-review-2026-10-28/).
 
-| Команда | Назначение | Текущий результат |
-| --- | --- | --- |
-| `npm.cmd ci` | зависимости из lockfile | поддерживается Dockerfile и lockfile; отдельно не запускалась |
-| `npm.cmd run typecheck` | `tsc --noEmit` | проверено: exit 0 |
-| `npm.cmd run lint` | `eslint .` | проверено: exit 0 |
-| `npm.cmd run build` | Next production build | проверено: compile, TypeScript и генерация 10 static pages прошли, exit 0 |
-| `npm.cmd run test:e2e` | Playwright Phase 1/2 | первый параллельный со сборкой прогон: 6/7, exit 1; Phase 2 упал на `page.goto('/login')` по таймауту 10 s |
-| `npm.cmd run test:e2e -- tests/phase2.spec.ts --workers=1` | повтор конкретного сбоя после сборки | проверено: 1/1, exit 0, 45.7 s; нет свидетельства функционального дефекта из первого таймаута |
-| `npm.cmd run visual:qa` | снимки Phase 1 | поддерживается `capture-visual-qa.mjs`; требует Chrome и Compose |
-| `npm.cmd run visual:phase2` | 24 снимка Phase 2 | поддерживается `capture-phase2-qa.mjs`; требует Chrome и Compose |
+## Backend
 
-`playwright.config.ts` использует `channel:"chrome"`, `FSP_WEB_URL` либо `http://127.0.0.1:3000`. Скриншоты сохраняются в `docs/design/screenshots/`; запуск capture может переписать tracked PNG, поэтому в документационном спринте не запускайте его без задачи на обновление baseline. Визуальное соответствие проверяют **осмотром** снимков при 1440/768/390 px в светлой и тёмной теме, а не только кодом выхода. `backend/pytest.ini` настроен для `pytest`, но основной проверенный путь — Django `manage.py test`. `frontend/package.json` не содержит отдельного unit-test script.
+Из корня в PowerShell:
 
-Если вы меняете только docs, минимальный gate: ссылки и пути, `git diff --check`, invariant design hash, schema/source cross-check и отсутствие правок runtime. Для backend/frontend задачи добавьте соответствующий набор выше. Не называйте незапущенную проверку успешной.
+```powershell
+docker compose exec -T api python manage.py check
+docker compose exec -T api python manage.py test --noinput
+docker compose exec -T api ruff check .
+docker compose exec -T api python manage.py makemigrations --check --dry-run
+docker compose exec -T api python manage.py spectacular --validate --fail-on-warn --file /tmp/fsp-schema.yaml
+python scripts/check_design_contract.py
+python scripts/sync_optional_styles.py --check
+```
+
+Генерация схемы внутри контейнера не доказывает совпадение с сохранённым
+`docs/openapi.yaml`. Для точной сверки скрипт должен видеть корень репозитория:
+
+```powershell
+$taskRoot = (Get-Location).Path.Replace('\','/')
+docker compose run --rm --no-deps -v "${taskRoot}:/workspace" -w /workspace/backend api python /workspace/scripts/check_openapi_schema.py
+```
+
+Контейнерные команды проверяют код образа; после runtime-правок сначала
+пересоберите образ либо используйте осознанный bind mount исходников.
+PostgreSQL нужен для constraints/locks/concurrency; SQLite не заменяет этот gate.
+
+## Frontend и Chrome
+
+Из `frontend/`:
+
+```powershell
+npm.cmd ci
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd run build
+npm.cmd run test:e2e -- --workers=1
+```
+
+Для существующего стенда перед Playwright:
+
+```powershell
+$env:FSP_WEB_URL='http://127.0.0.1:13001'
+$env:FSP_MAILPIT_URL='http://127.0.0.1:18025'
+$env:FSP_E2E_COMPOSE_PROJECT='fspmandatory'
+```
+
+Chrome должен быть установлен. Live XLSX требует доступный Python/openpyxl.
+Сборка и тесты одного frontend не запускаются одновременно. Login throttle
+не отключается; один worker снижает конфликты живых сценариев.
+
+## Дополнительные live-сценарии
+
+Нужны `seed_optional`, подготовленные локальные ключи и работающий тестовый
+OIDC-клиент на 9012. Issuer должен совпадать с настройкой API:
+
+```powershell
+$env:FSP_OPTIONAL_LIVE='1'
+$env:FSP_OIDC_ISSUER='http://127.0.0.1:18001'
+npm.cmd run test:e2e -- tests/optional-live.spec.ts --workers=1
+```
+
+Без флага шесть optional-live тестов пропускаются; пропуск не считается pass.
+[Подготовка OIDC и consumer](../optional-demo.md).
+Webhook доставляет отдельная `deliver_webhooks`; основной notification worker
+обслуживает inbox/outbox и напоминания.
+
+## Визуальные и документационные проверки
+
+`npm.cmd run visual:qa` и `npm.cmd run visual:phase2` сохраняют снимки.
+Скриншоты не заменяют осмотр; capture может переписать tracked PNG.
+[Объём ручной проверки](../design/visual-qa.md).
+
+Для docs-only изменения: локальные ссылки/пути, согласованность статусов
+и команд с кодом/Compose/OpenAPI, `git diff --check`, design contract.
+Не называйте старый прогон новым и не суммируйте пересекающиеся наборы тестов.

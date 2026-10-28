@@ -1,23 +1,40 @@
 # Структура репозитория
 
-| Путь | Что в нём есть сейчас | Владелец изменения |
-| --- | --- | --- |
-| `AGENTS.md`, `BOOTSTRAP_PROMPT.md` | общие инструкции | руководитель |
-| `backend/config/settings.py`, `urls.py` | Django, DRF, маршруты `/api/v1/`, схема | руководитель |
-| `backend/apps/accounts/` | `User`, роли, согласие, guardian, auth/dashboard, `seed_demo` | руководитель |
-| `backend/apps/catalogs/` | шесть дисциплин и открытый read API | руководитель |
-| `backend/apps/competitions/` | весь код Phase 2: модели, сериализаторы, сервисы, views, экспорты | ответственный за соревнования в выделенных файлах; общие контракты — через руководителя |
-| `backend/apps/*/migrations/` | схема и начальные справочники; `competitions/0001`–`0005` | только согласованное изменение |
-| `backend/tests/` | Django тесты auth, dashboard, catalog, seed, workflow | владелец задачи в выделенном тестовом файле |
-| `frontend/src/app/` | App Router: `page.tsx`, `dashboard`, `competitions`, `[id]`, `coach-links`, `history`, `login`, `register`, `privacy` | владелец страницы; `layout.tsx`, CSS — руководитель |
-| `frontend/src/components/` | общий `AppShell`; формы `CompetitionEditor`, `TemplateEditor`, `ResultEditor` | владелец формы только по заданию; AppShell — руководитель |
-| `frontend/src/lib/api.ts` | клиент, shared TypeScript DTO, CSRF | руководитель |
-| `frontend/tests/` | Playwright Phase 1/2 и helpers | QA/назначенный автор |
-| `frontend/scripts/` | скриншоты визуальной проверки | QA по заданию |
-| `docs/openapi.yaml` | сохранённая схема DRF | руководитель |
-| `docs/design/fsp-reference.html` | неизменяемый визуальный контракт | **никто не редактирует** |
-| `docs/design/visual-qa.md`, `screenshots/` | свидетельства визуального сравнения | QA после проверки |
-| `docker-compose.yml`, `.env.example`, Dockerfile | запуск трёх сервисов | руководитель |
-| `scripts/check_design_contract.py` | hash и точное сравнение CSS | руководитель |
+Актуально для runtime `0c43b00`.
+[Архитектура](ARCHITECTURE.md), [статус](CURRENT_STATUS.md),
+[правила владения](AI_AGENT_RULES.md).
 
-Папок `backend/apps/results`, `registry`, `ratings`, `teams`, `analytics`, `frontend/src/features/*` пока нет. Упоминание этих путей в [implementation-plan.md](../implementation-plan.md) относится к плану, а не к текущей реализации. См. [TEAM_ROLES.md](TEAM_ROLES.md) перед выдачей задания.
+- `backend/config/` — settings/URL/ASGI/WSGI, PostgreSQL, DRF, OpenAPI,
+  регистрация модулей, SMTP и opt-in OIDC.
+- `backend/apps/accounts/`, `catalogs/` — идентичности/роли/согласия,
+  профиль, дисциплины/организации и seed_demo.
+- `backend/apps/competitions/` — соревнования, заявки, coach links,
+  судьи/результаты, шаблоны/версии протоколов и экспорт.
+- `backend/apps/qualifications/`, `ratings/`, `teams/` —
+  квалификации, рейтинги/ограничения, ручная сборная и документы.
+- `backend/apps/registry/`, `notifications/` —
+  исторический реестр/аналитика/XLSX, основной inbox/outbox/worker.
+- `backend/apps/extensions/` — Д1–Д12, models/services/views/URLs,
+  OAuth Toolkit integration, шаблоны страниц OIDC и seed_optional.
+- `backend/apps/*/migrations/` — версионная схема и справочники;
+  extensions содержит 0001–0016. Изменения согласует интегратор.
+- `backend/tests/` — auth/workflow/permissions, квалификации, реестры,
+  рейтинг/сборная, уведомления, optional_* и проверки схемы.
+- `frontend/src/app/` — App Router, страницы обязательных кабинетов и
+  процессов, analytics/participation, services и дополнительные экраны.
+- `frontend/src/components/` — AppShell, формы соревнований/результатов,
+  реестров и квалификаций, NotificationCenter, FeatureWorkspace, ReportFilters.
+- `frontend/src/lib/` — API/CSRF, общие DTO, навигация и ограничения UI.
+- `frontend/tests/` — mocked state/race/permission проверки и live/browser/visual.
+- `scripts/` — design/OpenAPI проверки, визуальные captures через frontend scripts,
+  подготовка optional demo, тестовые OIDC/consumer и вспомогательные проверки.
+- `docs/` — требования, текущие аудит/матрица/памятка, контракты и evidence.
+- `docs/design/fsp-reference.html` — неизменяемый исходный дизайн.
+- `docker-compose.yml` — db/api/web/mailpit/notifications;
+  `docker-compose.optional.yml` — локальный opt-in OIDC override.
+- `tmp/` — игнорируемые локальные ключи, overrides, зависимости и QA-файлы;
+  этот каталог не является поставляемой конфигурацией нового клона.
+
+Shared модели/роли/DTO/OpenAPI, permissions, Compose, AppShell и общие стили
+изменяются только интегратором или по его контракту. Независимые агенты
+получают точный allowlist. Исторические отчёты не расширяют текущую задачу.

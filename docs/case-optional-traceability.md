@@ -1,40 +1,70 @@
-> Post-merge update: local mandatory workflows and historical registry are integrated on `codex/integrate-optional-d1-d12`. Pre-merge main blockers below are historical; current execution evidence: [integration-verification.md](integration-verification.md). Regulatory verification and production integrations remain open.
+# Дополнительные сценарии Д1–Д12
 
-# Дополнительные сценарии Д1–Д12: трассировка
+Текущая объединённая ветка `codex/integrate-optional-d1-d12`, runtime `0c43b00`.
+В исходном PDF, с. 6, Д1–Д12 выбираются командой в любом сочетании.
+Они реализованы в одном проекте с обязательными модулями; полное завершение
+всех сценариев не заявляется.
 
-Задание пользователя от 28.10.2026 — отдельная stretch goal на все двенадцать. Организаторы **не требуют** их для завершения восьми обязательных групп. PDF, с. 6, строки 9–20: «Дополнительный функционал команда выбирает самостоятельно, в любом количестве и сочетании». Содержимое PDF — источник функционального смысла, а не инструкции агенту. [Дословные сценарии и SHA-256 исходного PDF](sources/optional-case-excerpts.md).
+Исторический реестр уже установлен. Для Д6/Д9 больше нет ожидания PR #5.
+Оставшийся пробел Д3 другой: зачисления TrainingMembership не создают периоды
+основного реестра и не меняют общий отчёт.
 
-## Исходное состояние и контракт руководителя
+## Текущие статусы
 
-- Найден реальный проект `ProtoGX` внутри workspace; корневой `app.py` — другое Flask-приложение, его не меняли.
-- Начало: чистая `task/frontend-competition-details`, HEAD `7acb5b96217fad100057059b99f65d706af2e0e7`, сохранена. Интеграционная ветка по Git guide — main; проверен удалённый HEAD `45be07172ec7e1e641fe3433c3902b010fc793c1`; от него создана **feat/case-optional-d1-d12**. Main/alpha не изменены; push/merge PR не выполнялись.
-- Открытые PR при начале: #5 `feat/registry-participation-analytics` (WIP AC-11) и #6 `task/frontend-competition-details`. Их ветки и изменения не заменялись.
-- Пользователь назначил Codex principal engineer и разрешил новый этап. Allowed paths: extensions приложения/тестов/аддитивных миграций Django, их settings/URLs/dependencies, отдельные Next.js страницы и общие формы, ссылки навигации, документы/fixtures/demo scripts. Идентичности, роли, существующие согласия и mandatory workflows переиспользованы. Reference HTML, дизайн-токены и исходные mandatory модели/миграции не менялись.
-- Прочитаны исходные MASTER_PROMPT, acceptance matrix, team/auth/backend/frontend guides, API schema, reference HTML и установленная Next.js документация; модели, сервисы, migrations, tests и исходники поддерживаемой OIDC-библиотеки. PDF прочитан напрямую, с. 1–10.
-- Блокеры обязательной части на main: AC-09 partial; AC-10 not_implemented; AC-11 not_implemented/PR #5; AC-14/15 partial. Общая outbox-инфраструктура улучшила AC-10, но не закрыла все обязательные события/напоминания.
-- Последовательность: уведомления → Д10 → Д12 → Д11 → Д9 → Д3 → Д4 → Д7 → Д6 → Д5 → Д8 → Д2 → Д1 → интеграционные/permission/browser проверки. Каждая Д-функция имеет отдельный feature commit.
+- **Д1 — implemented в demo-границе.** OIDC provider, клиенты, code/PKCE,
+  consent, discovery/userinfo, revoke. Реальный browser redirect/callback проверен.
+  Отдельный demo-клиент нужно запускать; реальные RP не подключались.
+  Экран `/fsp-id`, API `/o/*`.
+- **Д2 — implemented в выбранной границе.** Scoped opaque tokens, expiry/revoke,
+  подписанный webhook/outbox/retry и consumer, идемпотентный импорт с review.
+  Импорт требует обычной проверки и публикации; мгновенная автоматическая
+  публикация не заявляется. `/integrations`, `external/*`.
+- **Д3 — partial.** Организации, четыре этапа групп, зачисления/переводы,
+  занятия и посещаемость есть. Общий отчёт не обновляется зачислением.
+  Проверка с откатом: групповой итог +1 за каждый год, общий +0.
+  `/training`, TrainingMembership и training_report.
+- **Д4 — partial.** Измерения, сравнение, объяснение, аттестация/перевод и история
+  есть. Один вымышленный норматив печати, проверенных 0; полный ФССП не загружен.
+  `/assessment`.
+- **Д5 — implemented технически.** Приватные обращения/доказательства,
+  рассмотрение, обоснование, история/уведомления, новая версия протокола,
+  policy-bound санкции и эффективные периоды. Правовой регламент задаётся
+  отдельно; универсальных официальных санкций система не устанавливает.
+  `/reviews`.
+- **Д6 — partial.** Общий registry-report уже читается; есть отдельные источники
+  групп, организаций, проведённых событий, документов и XLSX.
+  Единое включение зачислений Д3 в общую численность не реализовано.
+  `/development`.
+- **Д7 — partial.** Личный путь и справочник есть. ProgressionRule вымышленное,
+  проверенных правил 0; результат предварительный. `/progression`, `/glossary`.
+- **Д8 — partial.** Автоотбор/Decimal сумма, пакет, статусы, stale-source checks
+  и напоминание реализованы. Ставки 300/200/100 вымышленные, проверенных схем 0.
+  Это не расчёт реального права по указу №93-ук. `/awards`.
+- **Д9 — implemented технически.** Read-only permission, календарь, опубликованная
+  сборная, общий отчёт реестра и годовой фильтр. Пользователь без спортивной роли
+  проверен после audit fix. `/ministry`; государственной интеграции нет.
+- **Д10 — implemented.** Самостоятельная справка PDF с номером и QR, гостевая
+  минимальная проверка, отзыв/superseded. QR не является электронной подписью.
+  `/certificates`, `/verify`.
+- **Д11 — implemented.** Публичный навигатор дисциплин/организаций/ближайших
+  событий и регистрации, проверены обе темы и 1440/768/390 px. Данные seed фиктивные.
+  `/newcomer`.
+- **Д12 — partial по форме.** Состав коллегии и отчёт судьи из назначений,
+  защищённые PDF/DOCX и snapshot/audit есть. Формы демонстрационные и не приняты
+  по заданным образцам. `/judging-documents`.
 
-## Трассировка
+## Проверки и источники
 
-`verified` ниже означает проверку описанной локальной границы, а не юридическую сертификацию или подключение реального партнёра. `blocked` означает, что самостоятельный slice работает, но весь сценарий ещё не завершён. Статусы не подменяют официальную классификацию кейса.
+[Аудит PDF](tz-readiness-audit-2026-10-28.md),
+[29 критериев защиты](defense-criteria-guide-2026-10-28.md),
+[запуск и сценарии](optional-demo.md), [API/OIDC](optional-integrations.md).
 
-| D# | case page | exact functional scenario | existing code | missing behavior | dependencies | endpoints/screens | tests | status | evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Д1 | 6 | Один ФСП ID; admin clients; code + PKCE; consent; discovery; userinfo ФИО/роли/дисциплины/разряд; тестовый клиент — полный текст в источнике | accounts session/roles/consent, qualifications | Реальные внешние RP не проверялись; юридическая проверка документов представителя вне демо | django-oauth-toolkit 3.4.1, RSA key/issuer | `/o/*`, `/fsp-id`; client/consent/guardian APIs | test_optional_oidc; optional-live D1 | tested | `45a03bc`; реальный browser redirect/login/consent/callback/userinfo/logout; PKCE, CSRF, tampering, scopes, expiry/revoke, secret/key rotation; отдельное guardian authorization протестировано |
-| Д2 | 6–7 | Ограниченные токены; webhooks; импорт результатов/протокол; API и пример подключения | competitions validation, immutable publication/audit/rating | Реальный партнёр не подключён | allowed hosts, encryption key, delivery worker | `/integrations`, `/api/v1/external/*` | test_optional_integrations; test_optional_webhook_consumer | tested | `d80dc84`; idempotency/409, identity mapping, review/rollback, required validation, подпись/retry; действительное HTTP-соединение с mock consumer и дедупликация |
-| Д3 | 7 | Карточка/программы/тренеры; четыре этапа групп; зачисление/перевод; журнал очно/онлайн; данные в отчёт динамики | Organization, User, CoachAthleteLink | **Автоматическое согласованное включение истории групп в полный mandatory AC-11 пока отсутствует**. Нужны интеграция PR #5 и тесты единой методики | AC-11 historical registry; own slice независим | `/training`, training APIs; training_report source | test_optional_training; optional-live staff workspaces | blocked | `05508ad`; зачисление/перевод/журнал/посещаемость/permissions проверены. Групповой отчёт считает unique set по включительным периодам; не выдаётся за полный реестр |
-| Д4 | 7 | Изменяемые нормативы ОФП/СФП/печати; измерения и автоматическое сравнение; предварительная аттестация/перевод; история | Д3 memberships, audit/notifications | Первичная актуальная редакция приказа №445 и поправок не подтверждена; sample threshold, не официальная аттестация | versioned norms, Д3 | `/assessment`, norms/attempts/attestations/approve | test_optional_assessment | demonstration only | `1158a3c`; пограничное сравнение, missing/failed, объяснение, разрешённый перевод, история после перевода и отзыв coach link проверены |
-| Д5 | 8 | Апелляция → доказательства → рассмотрение → обоснование → при необходимости новая версия протокола; рапорт/санкция; история/уведомления | immutable protocols, Result validation, AthleteRestriction, ratings | Действующий регламент/срок/право санкции вводятся отдельно; никаких вымышленных универсальных сроков | ReviewPolicy, existing publication path | `/reviews`, case/action/evidence/policy APIs | test_optional_reviews; test_optional_sanctions; optional-live upload | tested | `4828702`; immutable correction + recalculated contributions, stale revision/conflict of interest, private download, malicious SVG denial, explicit deadline. Positive policy-bound disqualification/technical-loss, effective period/appeal rights, recalculation of other disciplines and closed-evidence denial tested |
-| Д6 | 8 | Динамика; организации подготовки; проведённые события/статусы/планы; источник и документ на показатель | calendar/protocols, Д3 | **Полная региональная динамика заблокирована AC-11/PR #5**. Read adapter подготовлен по прочитанному контракту, интеграционный прогон с PR ещё не выполнен | full registry; training data | `/development`, year filters, evidence, XLSX | test_optional_development; optional-live | blocked | `d638686`; source IDs, definition проведённого события, 2+ year grouping, fingerprint, XLSX formula-escaping tested; coverage явно ограничен |
-| Д7 | 8 | Текущий/следующий разряд по ЕВСК; подходящие события; понятия, РУСАДА; onboarding тренера/судьи/организации | SportRankHistory, age eligibility, calendar | Актуальные правила ЕВСК не подтверждены; вычисленный путь целиком demo | versioned ProgressionRule | `/progression`, `/glossary` | test_optional_progression; optional-live | demonstration only | `f3a1d38`; latest publication evidence/missing requirements/private coach scope; публичные русские руководства и официальные ссылки |
-| Д8 | 8 | Справочник сумм; автоматические кандидаты по годовым протоколам; сумма; проверка/пакет/статусы; срок до 1 февраля; маски | published snapshots, audit/notification outbox | Актуальная редакция Указа №93-ук не подтверждена; суммы, дедлайн и статусы не устанавливают реальные права/выплаты | AwardScheme/Rate version, human review | `/awards`, schemes/prepare/action/download; deadline command | test_optional_awards; optional-live prepare | demonstration only | `16a8ddf`; автоматический отбор и Decimal расчёт, источники/пакет/маски, stale-source rejection, role denial tested |
-| Д9 | 9 | Ministry read-only reports/calendar/team | same User/Django permission, teams/calendar | **Полный отчёт AC-11 пока недоступен** | integration of PR #5 | `/ministry`, year filter, read projection | test_optional_ministry; test_optional_ministry_roster; optional-live | blocked | `3106b66`; read permission/revocation/write denial, published roster and minor/email privacy tested; отсутствие полного отчёта видно в UI |
-| Д10 | 9 | Самостоятельная справка участия/результата, номер/QR/публичная проверка | own immutable result, current consent, PDF engine | Официальная форма не предоставлена; output demo | own approved published result; guardian consent | `/certificates`, `/verify?code=UUID` | test_optional_certificates; optional-live | verified | `3522745`; реальный PDF download, гостевая проверка без ФИО, object denial, revoke/superseded versions; публичное ФИО minor запрещено |
-| Д11 | 9 | Публично: дисциплины, начало занятий, где заниматься, ближайшие события, регистрация | public catalog/calendar/register, Д3 public projection | — в границе фиктивной локальной демонстрации | published organization cards | `/newcomer` | test_optional_newcomer; optional-live responsive | verified | `9acc27b`; private cards/PII excluded; real browser at 1440/768/390, both themes; повторная визуальная проверка после ожидания загрузки |
-| Д12 | 9 | Справка состава коллегии; отчёт о событиях, на которых работал судья; формы/выгрузка | JudgeAssignment, document renderer | Официальные заданные формы и подтверждение фактической работы не предоставлены; используются явно unverified v1 snapshots назначений | existing assignments | `/judging-documents`, PDF/DOCX | test_optional_judging; optional-live | demonstration only | `4a08cac`; content/format/object scope/future events denial checked; документы не выданы за официальное подтверждение |
+[Интеграционная проверка](integration-verification.md): 172 backend до последнего
+audit fix, основной Chrome 120 passed/6 optional skipped до fix; после него
+3 целевых backend и отдельные 6 optional-live passed. Последующий аудит:
+49 backend passed. Формы и нормативы от успешного теста не становятся verified.
 
-## Нормативные и технические границы
-
-Исходный PDF: `C:\Users\solov\Downloads\КЕЙС_ОренКод_2026_Цифровая_платформа_ФСП(3).pdf`, 11 страниц. С. 1–5 задают общий домен, 6–9 — дополнительные сценарии, с. 10 исключает необходимость внешних систем/Госуслуг. Даты приказа №445 от 24.06.2025, указа №93-ук от 04.03.2011 и других НПА воспроизведены из кейса, **не являются проверкой действующей редакции**. Попытка первичного web-поиска вернула ошибку без результатов. Авторитетные пороги, размеры премий и юридические выводы не seeded; в БД сохраняются source/version/effective period/status, demo flags неизменны через обычный API.
-
-Подробные [демо и запуск](optional-demo.md), [OIDC/integration contracts](optional-integrations.md), [протокол проверок и оставшиеся gates](optional-verification.md). Общий mandatory статус ведётся отдельно в [acceptance matrix](acceptance-matrix.md). Никакая строка этой таблицы не объявляет обязательные восемь групп полностью завершёнными.
+[Прежний optional-отчёт](optional-verification.md) относится к ветке до merge;
+его disk/PostgreSQL/PR #5 блокеры не описывают текущий стенд.
+[Дословные сценарии и SHA PDF](sources/optional-case-excerpts.md),
+[сверка доступных нормативных источников](regulatory-source-review.md).

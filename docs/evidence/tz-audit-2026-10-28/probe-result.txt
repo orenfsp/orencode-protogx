@@ -1,0 +1,28 @@
+ Container fspmandatory-api-run-e9eb3cb42d43 Creating
+ Container fspmandatory-api-run-e9eb3cb42d43 Created
+79 objects imported automatically (use -v 2 for details).
+
+{
+  "disciplines": 6,
+  "qualification_rules_total": 0,
+  "qualification_rules_verified_active": 0,
+  "protocol_templates_total": 6,
+  "protocol_templates_verified": 0,
+  "assessment_norms_total": 1,
+  "assessment_norms_verified": 0,
+  "progression_rules_total": 1,
+  "progression_rules_verified": 0,
+  "award_schemes_total": 2,
+  "award_schemes_verified": 0,
+  "d3_enrollment_probe": {
+    "registry_delta": [
+      0,
+      0
+    ],
+    "training_delta": [
+      1,
+      1
+    ],
+    "rolled_back": true
+  }
+}

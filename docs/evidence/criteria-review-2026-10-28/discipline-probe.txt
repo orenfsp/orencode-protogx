@@ -1,0 +1,5 @@
+ Container fspmandatory-api-run-85baeeec392f Creating
+ Container fspmandatory-api-run-85baeeec392f Created
+79 objects imported automatically (use -v 2 for details).
+
+{"profile_discipline": "algorithmic", "competition_discipline": "product", "http_status": 201, "rolled_back": true}

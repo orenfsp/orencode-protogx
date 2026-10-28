@@ -39,9 +39,20 @@ read-only review адаптера D9/registry; замечаний о форме 
 - Docker production build: exit 0, Next.js 16.4.3, 33 маршрута.
 - `check_design_contract.py`: PASS; `sync_optional_styles.py --check`: PASS.
 
-Браузерные и окончательные целевые результаты дополняются после завершения
-исполняемых прогонов. Исходные журналы находятся в локальном игнорируемом
-`tmp/integration-evidence/`.
+- Основной Chrome: **120 passed, 6 optional skipped, 0 failed, 10.0 m**.
+- Отдельный enabled optional-live: **6 passed, 0 skipped, 0 failed, 35.2 s**,
+  включая OIDC callback/userinfo/revoke. Это отдельные прогоны.
+- Целевые окончательные inbox/D6/D9: **4 passed, 7.241 s**.
+- Первый optional-live: 4 passed / 1 failed / 1 not run. Выявлен None в
+  active_role аудита наблюдателя. После исправления middleware и регрессии
+  active_role=None: **3 backend passed, 2.336 s**, затем все 6 optional-live
+  прошли. Полный 172-test backend и основной Chrome были до последнего
+  исправления; оно проверено целевыми и live-тестами.
+
+Журналы: [evidence](evidence/integration-2026-10-28/). Успешная интеграция
+не означает полного закрытия кейса: последующий
+[аудит ТЗ](tz-readiness-audit-2026-10-28.md) выявил функциональные и нормативные
+пробелы.
 
 ## Воспроизведение
 

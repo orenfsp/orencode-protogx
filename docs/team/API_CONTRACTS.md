@@ -1,8 +1,26 @@
 # Действующие API-контракты
 
-Дополнения ветки `feat/case-optional-d1-d12` описаны в [optional integration/OIDC contracts](../optional-integrations.md), [demo workflows](../optional-demo.md) и актуальном OpenAPI. Новые session endpoints используют прежний CSRF/role contract; `/external/*` принимает отдельный scoped integration bearer, `/o/*` — библиотечный OIDC. Их credentials не заменяют session на mandatory endpoints.
+Текущий runtime `0c43b00`, ветка `codex/integrate-optional-d1-d12`.
+Дополнения уже объединены; описание — в [integration/OIDC contracts](../optional-integrations.md),
+[demo workflows](../optional-demo.md) и [OpenAPI](../openapi.yaml).
+Session endpoints используют прежний CSRF/role contract; `/external/*` принимает
+отдельный scoped integration bearer, `/o/*` — библиотечный OIDC.
+Эти credentials не заменяют обычную браузерную сессию.
 
-Источник путей и полей — [сохранённая OpenAPI-схема](../openapi.yaml), `backend/config/urls.py`, `apps/*/{urls,views,serializers,services}.py` на `600562d`. Swagger: `/api/docs/`, schema: `/api/schema/`. Префикс ниже — `/api/v1/`. Схема `drf-spectacular` описывает успешные ответы и часть запросов; **роли и бизнес-ошибки уточнены по коду**, они не полностью перечислены в YAML. DTO на клиенте принадлежат руководителю: `frontend/src/lib/api.ts`.
+## Уведомления после интеграции
+
+- `GET notifications/` — основной inbox активной назначенной роли;
+  `POST notifications/{id}/read/` — отметка прочтения с проверкой владельца.
+- `GET optional-notifications/` — дополнительный приватный inbox получателя.
+  Он не подменяет основной DTO: отдельный OptionalNotificationSerializer.
+- `/notifications` как frontend-страница показывает дополнительный inbox;
+  основной NotificationCenter находится в кабинете.
+
+Маршруты API выше относительно `/api/v1/`. Списки получателей и минимальность
+ответов проверяет сервер; отдельного доступа по переданному в запросе user id нет.
+Точные поля и security schemes см. в OpenAPI.
+
+Источник путей и полей — [сохранённая OpenAPI-схема](../openapi.yaml) и код текущего интегрированного runtime: `backend/config/urls.py`, `backend/apps/*/{urls,views,serializers,services}.py`. Swagger: `/api/docs/`, schema: `/api/schema/`. Префикс ниже — `/api/v1/`. Схема `drf-spectacular` описывает успешные ответы и часть запросов; **роли и бизнес-ошибки уточнены по коду**, они не полностью перечислены в YAML. DTO на клиенте принадлежат руководителю: `frontend/src/lib/api.ts`.
 
 Все POST/PATCH требуют CSRF token; защищённые операции дополнительно требуют session cookie. Публичные register/login создают сессию после CSRF-проверки. `GET` публичен только там, где написано «публично». Ошибки: DRF выдаёт 400 для serializer/domain validation (обычно словарь поля или `detail`), 403 при отказе роли/объекта, 404 для отсутствующего id; анонимный запрос к защищённому endpoint отклоняется. `api<T>()` преобразует неуспешный JSON в `Error`. Не полагайтесь на наличие единой error DTO.
 
@@ -81,11 +99,16 @@
 
 `docs/openapi.yaml`, backend сериализаторы/routes, `frontend/src/lib/api.ts`, аутентификация и модели — общие интерфейсы. Независимый агент **не меняет** их по собственной инициативе. Он передаёт руководителю: проблему, текущий endpoint/DTO, предложенный diff полей/статусов, потребителей, миграцию/обратную совместимость, требования доступа и тесты. Руководитель утверждает контракт и назначает владельца реализации; после изменений регенерирует/сверяет OpenAPI и frontend DTO. До утверждения не публикуйте новый endpoint в документации как существующий.
 
-## Реестр и исправления истории (частичная реализация)
+## Реестр и исправления истории
 
 Только активная назначенная роль федерации может читать `/api/v1/registry/options/`, реестры и историю, менять основные поля существующих людей, организацию или создавать, закрывать и исправлять периоды. `POST athletes/{id}/history/{kind}/{period_id}/correct/` принимает `expected`, полный `corrected` и непустой `reason`; устаревшая версия возвращает 409, недопустимые даты или пересечения — 400. Изменение записывается в аудит транзакционно; удаление периода API не предоставляет. PATCH профиля не создаёт роли и не меняет согласия или опекунов. Назначение ролей и регистрация продолжают использовать существующий механизм аккаунтов.
 
-`GET analytics/participation/` и `GET analytics/participation/export/` возвращают заголовок `X-Report-Fingerprint`; тот же отпечаток записан на листе «Методика» XLSX. Семантика и ограничения описаны в [методике](../participation-methodology.md). Реестр и интерфейс ещё не закрывают все требования AC-11; ориентируйтесь на матрицу приёмки и полную схему OpenAPI.
+`GET analytics/participation/` и `GET analytics/participation/export/` возвращают
+`X-Report-Fingerprint`; тот же отпечаток записан на листе «Методика» XLSX.
+Основной реестр и экспорт реализованы и проверены; [методика](../participation-methodology.md).
+Д6/Д9 читают этот отчёт. Зачисления Д3 TrainingMembership не создают периоды
+основного реестра: включение их в общий отчёт ещё не реализовано.
+Текущие границы — в [матрице](../acceptance-matrix.md).
 
 `GET registry/eligible-users/?role=athlete|coach|judge` возвращает страничный список существующих активных пользователей с уже назначенной ролью и без профиля данного типа; пригодность по согласию и опеке повторно проверяется при `POST registry/profiles/{role}/`. Создание не назначает роль и не создаёт согласие. Для тренера и судьи `registry/profiles/{role}/{id}/staff/` хранит только организацию и дисциплины; квалификации и связи остаются в соответствующих существующих модулях. `registry/profiles/{role}/{id}/context/` доступен федерации и показывает имеющиеся разряды, категории, связи и назначения. Журнал периода доступен федерации по `athletes/{id}/history/{kind}/{period_id}/audit/`.
 
