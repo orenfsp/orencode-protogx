@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test";
 
+test("candidate pagination keeps search across all candidates", async ({ page }) => {
+  await page.route("**/api/v1/auth/me/", (route) => route.fulfill({ json: { id: 1, email: "federation@example.test", full_name: "Федерация", roles: ["federation"], active_role: "federation" } }));
+  await page.route("**/api/v1/teams/options/", (route) => route.fulfill({ json: { seasons: [{ id: 1, year: 2026, name: "2026" }], disciplines: [{ id: 1, code: "algorithmic", name: "Алгоритм" }], age_groups: [{ id: 1, name: "Взрослые" }] } }));
+  await page.route("**/api/v1/teams/?**", (route) => route.fulfill({ json: [{ id: 1, name: "Команда", region: "Регион", season_year: 2026, discipline_name: "Алгоритм", status: "draft", member_count: 0, members: [] }] }));
+  await page.route("**/api/v1/teams/1/candidates/", (route) => route.fulfill({ json: Array.from({ length: 12 }, (_, index) => ({ id: index + 1, full_name: `Кандидат ${index + 1}`, email: `candidate${index + 1}@example.test`, sport_rank: null, eligible: true, selected: false, eligibility: {}, rating: null })) }));
+  await page.goto("/teams");
+  await page.getByRole("button", { name: "Команда" }).click();
+  await expect(page.getByRole("row", { name: /Кандидат 10/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /Кандидат 11/ })).toHaveCount(0);
+  await page.getByRole("navigation", { name: "Страницы кандидатов" }).getByRole("button", { name: "Вперёд" }).click();
+  await expect(page.getByRole("row", { name: /Кандидат 11/ })).toBeVisible();
+  await page.getByLabel("Поиск спортсмена").fill("Кандидат 1");
+  await expect(page.getByText("Страница 1 из 1")).toHaveCount(0);
+  await expect(page.getByRole("row", { name: /Кандидат 1/ })).toHaveCount(4);
+});
+
 test("regional teams page supports manual selection and document actions", async ({ page }) => {
   let release: (() => void) | undefined;
   const gate = new Promise<void>((resolve) => { release = resolve; });

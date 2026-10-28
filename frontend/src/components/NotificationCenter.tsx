@@ -39,7 +39,7 @@ export function NotificationCenter() {
     <p>События текущей роли · последние 100 уведомлений.</p>
     <button className="btn" onClick={() => { if (controller.current) void load(controller.current.signal); }}>Обновить уведомления</button>
     {error && <p role="alert">{error}</p>}
-    {!items ? <p role="status">Загрузка уведомлений…</p> : items.length === 0 ? <p className="note">Уведомлений пока нет.</p> : <ul className="workflow-stack">{(expanded ? items : items.slice(0, 5)).map((item) => <li className="workflow-record" key={item.id}>
+    {!items ? <p role="status">Загрузка уведомлений…</p> : items.length === 0 ? <p className="note">Уведомлений пока нет.</p> : <ul className="workflow-stack notifications-list">{(expanded ? items : items.slice(0, 5)).map((item) => <li className="workflow-record notification-item" key={item.id}>
       <p><strong>{item.title}</strong> · <time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString("ru-RU")}</time></p>
       <p>{item.body}</p><p><span className={`bd ${item.status === "failed" ? "er" : ""}`}>{delivery[item.status]}</span></p>
       <p><Link className="workflow-link" href={item.kind.includes("rank") || item.kind.includes("category") ? "/qualifications" : item.kind.includes("report") || item.kind.includes("premium") ? "/dashboard" : "/competitions"}>Открыть раздел события</Link></p>

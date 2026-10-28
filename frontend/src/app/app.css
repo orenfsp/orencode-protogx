@@ -104,5 +104,35 @@
 .registry-workspace .form-grid,.participation-workspace .form-grid{min-width:0}
 .registry-workspace label,.participation-workspace label{min-width:0}
 .registry-workspace input.inp,.registry-workspace select.inp,.participation-workspace input.inp,.participation-workspace select.inp{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;background:transparent;color:var(--ink);border:0;border-bottom:2px solid var(--ink);border-radius:0;font:500 15px var(--fb)}
+.registry-workspace select.inp option{background:var(--paper);color:var(--ink)}
 .registry-workspace .workflow-link{background:transparent;border:0;color:var(--ink);cursor:pointer;font:inherit;text-align:left}
 @media(max-width:900px){.registry-workspace .blk>*:not(h2),.participation-workspace .blk>*:not(h2){grid-column:1}}
+
+/* Keep dashboard actions compact and give the team name room to be edited. */
+.team-create .inp{flex:1 1 340px;min-width:min(100%,280px);max-width:520px;background:transparent;color:var(--ink);border:0;border-bottom:2px solid var(--ink);border-radius:0;font:500 15px var(--fb);padding:9px 2px}
+.team-create .inp:focus{background:var(--acs);border-bottom-color:var(--ac)}
+.notifications-list{margin:16px 0;padding:0;list-style:none}
+.notification-item{justify-items:start}
+.notification-item .btn{justify-self:start;width:auto}
+.competition-types{padding-left:24px}
+.competition-types li{display:list-item;padding:6px 0}
+.competition-types li>span{display:inline-block;min-width:min(100%,260px)}
+.competition-types .btn{margin:6px 0 6px 12px;vertical-align:middle}
+@media(max-width:650px){.team-create .inp{flex-basis:100%;min-width:0}.competition-types li>span{min-width:0}.competition-types .btn{margin-left:0}}
+
+.team-selection .cmp>*{min-width:0}
+.team-selection .at li{grid-template-columns:70px minmax(0,1fr) auto}
+.team-selection .at li>:last-child{display:flex;flex-wrap:wrap;gap:6px;max-width:180px}
+.team-selection .at .btn{padding:8px 12px}
+.team-selection input.inp{display:block;width:100%;max-width:100%;background:transparent;color:var(--ink);border:0;border-bottom:2px solid var(--ink);border-radius:0;font:500 15px var(--fb)}
+.team-candidates-table{min-width:720px;table-layout:fixed}
+.team-candidates-table th:first-child,.team-candidates-table td:first-child{width:42%;text-align:left;font:inherit;color:var(--ink)}
+.team-candidates-table th:nth-child(2){width:16%}
+.team-candidates-table th:nth-child(3){width:22%}
+.team-candidates-table th:last-child{width:20%}
+.team-candidates-table td{overflow-wrap:anywhere}
+.team-candidates-table .bd{max-width:100%;margin:4px 0}
+.team-candidates-table .btn{width:100%;padding:8px 10px}
+.team-candidate-pages{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px}
+.team-candidate-pages span{font:600 13px var(--fm);color:var(--mut)}
+@media(max-width:650px){.team-selection .at li{grid-template-columns:56px minmax(0,1fr)}.team-selection .at li>:last-child{grid-column:2;max-width:none}}

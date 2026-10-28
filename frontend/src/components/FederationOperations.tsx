@@ -38,7 +38,7 @@ export function FederationOperations() {
     <h3>Сроки отчётов</h3><ul>{deadlines.map((item) => <li key={item.id}>{item.title} · {item.due_on}</li>)}</ul>
     <p>Ходатайства на премии Губернатора: до 1 февраля. Напоминания появляются за 60 дней; сроки отчётов — за 30 дней.</p>
     <form className="workflow-form" onSubmit={(event) => void add(event, "deadline")}><label className="lb">Название отчёта<input className="inp" required value={title} onChange={(event) => setTitle(event.target.value)} /></label><label className="lb">Срок отчёта<input className="inp" type="date" required value={due} onChange={(event) => setDue(event.target.value)} /></label><button className="btn" disabled={busy}>Добавить срок отчёта</button></form>
-    <h3>Типы соревнований</h3><ul>{types.map((item) => <li key={item.id}>{item.name} · {item.is_active ? "Активен" : "Архив"} <button className="btn" disabled={busy} onClick={() => void toggle(item)}>{item.is_active ? "В архив" : "Восстановить"}</button></li>)}</ul>
+    <h3>Типы соревнований</h3><ul className="competition-types">{types.map((item) => <li key={item.id}><span>{item.name} · {item.is_active ? "Активен" : "Архив"}</span><button className="btn" disabled={busy} onClick={() => void toggle(item)}>{item.is_active ? "В архив" : "Восстановить"}</button></li>)}</ul>
     <form className="workflow-form" onSubmit={(event) => void add(event, "type")}><label className="lb">Новый тип соревнования<input className="inp" maxLength={100} required value={name} onChange={(event) => setName(event.target.value)} /></label><button className="btn" disabled={busy}>Добавить тип</button></form>
   </div></section>;
 }
