@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from apps.qualifications.models import SportRank
+
 
 class Notification(models.Model):
     recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
@@ -142,3 +144,21 @@ class Attestation(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="approved_attestations")
     transfer = models.OneToOneField(TrainingMembership, null=True, on_delete=models.PROTECT, related_name="attestation_transfer")
+
+
+class ProgressionRule(models.Model):
+    discipline = models.ForeignKey("catalogs.Discipline", on_delete=models.PROTECT)
+    target_rank = models.CharField(max_length=16, choices=SportRank.choices)
+    version = models.PositiveIntegerField()
+    effective_from = models.DateField()
+    effective_until = models.DateField(null=True, blank=True)
+    levels = models.JSONField()
+    maximum_place = models.PositiveSmallIntegerField()
+    required_results = models.PositiveSmallIntegerField(default=1)
+    source_url = models.URLField(blank=True)
+    source_version = models.CharField(max_length=200, default="fictional-demo")
+    source_verified = models.BooleanField(default=False)
+    verified_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["discipline", "target_rank", "version"], name="extension_progression_version")]

@@ -17,6 +17,7 @@ from .judging import JudgingDocumentsView, JudgingDownloadView
 from .ministry import MinistryView
 from .newcomer import NewcomerView
 from .notifications import NotificationsView
+from .progression import ProgressionRuleCreateView, ProgressionView
 from .training import (
     AttendanceView,
     EnrollmentView,
@@ -30,6 +31,8 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view()),
     path("newcomer/", NewcomerView.as_view()),
     path("ministry/", MinistryView.as_view()),
+    path("progression/", ProgressionView.as_view()),
+    path("progression/rules/", ProgressionRuleCreateView.as_view()),
     path("assessment/", AssessmentView.as_view()),
     path("assessment/norms/", NormCreateView.as_view()),
     path("assessment/attempts/", AttemptCreateView.as_view()),

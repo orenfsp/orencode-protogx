@@ -1,0 +1,2 @@
+import { FeatureWorkspace } from "@/components/FeatureWorkspace";
+export default function ProgressionPage(){return <FeatureWorkspace title="Личный путь спортсмена" endpoint="progression/" columns={[{key:"name",label:"Спортсмен"},{key:"discipline",label:"Дисциплина"},{key:"current_rank",label:"Текущий разряд"},{key:"next_rank",label:"Следующий разряд"},{key:"missing",label:"Недостающие результаты"},{key:"upcoming",label:"Подходящие события"},{key:"details",label:"Основание"}]}/>;}
