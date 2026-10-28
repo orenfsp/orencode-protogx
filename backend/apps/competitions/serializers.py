@@ -52,8 +52,8 @@ class CompetitionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Competition
-        fields = ("id", "title", "discipline", "discipline_name", "age_groups", "age_group_details", "level", "competition_type", "format", "starts_at", "ends_at", "registration_deadline", "age_reference_date", "allow_ties", "location", "regulations", "calendar_entry", "template", "state", "stages", "created_by", "created_at", "updated_at")
-        read_only_fields = ("state", "created_at", "updated_at")
+        fields = ("id", "title", "discipline", "discipline_name", "age_groups", "age_group_details", "level", "competition_type", "format", "starts_at", "ends_at", "registration_deadline", "registration_open", "age_reference_date", "allow_ties", "location", "regulations", "calendar_entry", "template", "state", "stages", "created_by", "created_at", "updated_at")
+        read_only_fields = ("state", "registration_open", "created_at", "updated_at")
 
     def validate(self, attrs):
         instance = self.instance

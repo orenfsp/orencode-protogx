@@ -752,6 +752,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/CoachLink'
           description: ''
+  /api/v1/coach-links/{id}/status/:
+    post:
+      operationId: v1_coach_links_status_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkTransition'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LinkTransition'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LinkTransition'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachLink'
+          description: ''
   /api/v1/coaches/:
     get:
       operationId: v1_coaches_list
@@ -845,9 +877,94 @@ paths:
               schema:
                 $ref: '#/components/schemas/Person'
           description: ''
+  /api/v1/competition-types/:
+    get:
+      operationId: v1_competition_types_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionType'
+          description: ''
+    post:
+      operationId: v1_competition_types_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CompetitionType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CompetitionType'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionType'
+          description: ''
+  /api/v1/competition-types/{id}/:
+    patch:
+      operationId: v1_competition_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetitionType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetitionType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCompetitionType'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionType'
+          description: ''
   /api/v1/competitions/:
     get:
       operationId: v1_competitions_list
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+      - in: query
+        name: discipline
+        schema:
+          type: string
+      - in: query
+        name: eligible_age
+        schema:
+          type: boolean
       tags:
       - v1
       security:
@@ -1071,6 +1188,101 @@ paths:
               schema:
                 $ref: '#/components/schemas/Competition'
           description: ''
+  /api/v1/competitions/{id}/registration/:
+    post:
+      operationId: v1_competitions_registration_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+          description: ''
+  /api/v1/competitions/{id}/regulations/:
+    get:
+      operationId: v1_competitions_regulations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/consents/:
+    get:
+      operationId: v1_consents_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    post:
+      operationId: v1_consents_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConsentInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConsentInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/disciplines/:
     get:
       operationId: v1_disciplines_list
@@ -1118,6 +1330,43 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AthleteHistory'
+          description: ''
+  /api/v1/history/{id}/protocols/{version}/:
+    get:
+      operationId: v1_history_protocols_retrieve
+      parameters:
+      - in: query
+        name: file_format
+        schema:
+          type: string
+          enum:
+          - docx
+          - pdf
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                type: string
+                format: binary
           description: ''
   /api/v1/judge-assignments/:
     get:
@@ -1363,6 +1612,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/Person'
           description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: v1_notifications_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/{id}/read/:
+    post:
+      operationId: v1_notifications_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
   /api/v1/organizations/:
     get:
       operationId: v1_organizations_list
@@ -1508,6 +1793,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/Organization'
           description: ''
+  /api/v1/profile/:
+    get:
+      operationId: v1_profile_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    patch:
+      operationId: v1_profile_partial_update
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAntidoping'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAntidoping'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAntidoping'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Antidoping'
+          description: ''
   /api/v1/qualification-deadlines/:
     get:
       operationId: v1_qualification_deadlines_retrieve
@@ -1532,6 +1856,69 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+          description: ''
+  /api/v1/qualification-history/{kind}/{id}/corrections/:
+    get:
+      operationId: v1_qualification_history_corrections_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Correction'
+          description: ''
+    post:
+      operationId: v1_qualification_history_corrections_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionInput'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CorrectionInput'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CorrectionInput'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Correction'
           description: ''
   /api/v1/qualification-options/:
     get:
@@ -2014,6 +2401,67 @@ paths:
               schema:
                 $ref: '#/components/schemas/StaffProfile'
           description: ''
+  /api/v1/report-deadlines/:
+    get:
+      operationId: v1_report_deadlines_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportDeadline'
+          description: ''
+    post:
+      operationId: v1_report_deadlines_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportDeadline'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReportDeadline'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReportDeadline'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDeadline'
+          description: ''
+  /api/v1/reports/athlete-participation/:
+    get:
+      operationId: v1_reports_athlete_participation_retrieve
+      parameters:
+      - in: query
+        name: athlete
+        schema:
+          type: integer
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/results/:
     get:
       operationId: v1_results_list
@@ -2412,6 +2860,14 @@ paths:
           description: ''
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - renew
+      - withdraw
+      type: string
+      description: |-
+        * `renew` - renew
+        * `withdraw` - withdraw
     ActiveRole:
       type: object
       properties:
@@ -2469,6 +2925,20 @@ components:
       - started
       - unique_athletes
       - year
+    Antidoping:
+      type: object
+      properties:
+        antidoping_completed_on:
+          type: string
+          format: date
+          nullable: true
+        antidoping_certificate_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
     Application:
       type: object
       properties:
@@ -2559,6 +3029,7 @@ components:
           type: integer
         athlete_name:
           type: string
+          readOnly: true
         season:
           type: integer
         discipline:
@@ -2881,11 +3352,15 @@ components:
       - pending
       - confirmed
       - rejected
+      - suspended
+      - ended
       type: string
       description: |-
         * `pending` - Ожидает
         * `confirmed` - Подтверждено
         * `rejected` - Отклонено
+        * `suspended` - Приостановлена
+        * `ended` - Завершена
     Competition:
       type: object
       properties:
@@ -2926,6 +3401,9 @@ components:
         registration_deadline:
           type: string
           format: date-time
+        registration_open:
+          type: boolean
+          readOnly: true
         age_reference_date:
           type: string
           format: date
@@ -2975,12 +3453,78 @@ components:
       - level
       - location
       - registration_deadline
+      - registration_open
       - regulations
       - starts_at
       - state
       - template
       - title
       - updated_at
+    CompetitionType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+      required:
+      - id
+      - name
+    ConsentInput:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        consent:
+          type: boolean
+          default: false
+        guardian_consent:
+          type: boolean
+          default: false
+      required:
+      - action
+    Correction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+        before: {}
+        after: {}
+      required:
+      - after
+      - before
+      - id
+      - reason
+    CorrectionInput:
+      type: object
+      properties:
+        order_number:
+          type: string
+          maxLength: 100
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        reason:
+          type: string
+          maxLength: 1000
+      required:
+      - assigned_on
+      - order_number
+      - reason
+      - valid_until
     Csrf:
       type: object
       properties:
@@ -3286,6 +3830,27 @@ components:
       description: |-
         * `suspension` - Приостановление
         * `disqualification` - Дисквалификация
+    LinkTransition:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/LinkTransitionStatusEnum'
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - reason
+      - status
+    LinkTransitionStatusEnum:
+      enum:
+      - confirmed
+      - suspended
+      - ended
+      type: string
+      description: |-
+        * `confirmed` - confirmed
+        * `suspended` - suspended
+        * `ended` - ended
     Login:
       type: object
       properties:
@@ -3356,6 +3921,68 @@ components:
       - id
       - municipality
       - starts_on
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+        body:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        read_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/NotificationStatusEnum'
+          readOnly: true
+        attempts:
+          type: integer
+          readOnly: true
+        sent_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        error_code:
+          type: string
+          readOnly: true
+      required:
+      - attempts
+      - body
+      - created_at
+      - error_code
+      - id
+      - kind
+      - read_at
+      - sent_at
+      - status
+      - title
+    NotificationStatusEnum:
+      enum:
+      - pending
+      - sent
+      - failed
+      - cancelled
+      type: string
+      description: |-
+        * `pending` - pending
+        * `sent` - sent
+        * `failed` - failed
+        * `cancelled` - cancelled
     Option:
       type: object
       properties:
@@ -3479,6 +4106,20 @@ components:
       required:
       - id
       - starts_on
+    PatchedAntidoping:
+      type: object
+      properties:
+        antidoping_completed_on:
+          type: string
+          format: date
+          nullable: true
+        antidoping_certificate_url:
+          oneOf:
+          - type: string
+            format: uri
+            maxLength: 200
+          - type: string
+            maxLength: 0
     PatchedCompetition:
       type: object
       properties:
@@ -3519,6 +4160,9 @@ components:
         registration_deadline:
           type: string
           format: date-time
+        registration_open:
+          type: boolean
+          readOnly: true
         age_reference_date:
           type: string
           format: date
@@ -3554,6 +4198,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedCompetitionType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
     PatchedOrganization:
       type: object
       properties:
@@ -4155,6 +4810,7 @@ components:
         source_snapshot:
           type: object
           additionalProperties: {}
+          readOnly: true
       required:
       - age_group
       - awarded_points
@@ -4512,6 +5168,13 @@ components:
       - email
       - full_name
       - password
+    RegistrationInput:
+      type: object
+      properties:
+        registration_open:
+          type: boolean
+      required:
+      - registration_open
     RegistryOptions:
       type: object
       properties:
@@ -4574,6 +5237,22 @@ components:
       - categories
       - coach_links
       - ranks
+    ReportDeadline:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        due_on:
+          type: string
+          format: date
+      required:
+      - due_on
+      - id
+      - title
     RequestTypeEnum:
       enum:
       - assign

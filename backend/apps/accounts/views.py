@@ -84,11 +84,23 @@ class DashboardView(APIView):
 
         guardian_status = None
         if role == UserRole.Role.FEDERATION:
+            from apps.competitions.models import Application, Competition
+            from apps.qualifications.models import (
+                JudgeCategoryApplication,
+                RankApplication,
+                SportRankHistory,
+            )
             metrics = [
                 {"label": "Спортсменов", "value": str(UserRole.objects.filter(role=UserRole.Role.ATHLETE).count())},
                 {"label": "Тренеров", "value": str(UserRole.objects.filter(role=UserRole.Role.COACH).count())},
                 {"label": "Судей", "value": str(UserRole.objects.filter(role=UserRole.Role.JUDGE).count())},
                 {"label": "Ожидают проверки", "value": str(Guardian.objects.filter(confirmation_status="pending_verification").count())},
+                {"label": "Соревнований", "value": str(Competition.objects.count())},
+                {"label": "Участников", "value": str(Application.objects.filter(status="approved").values("athlete_id").distinct().count())},
+                {"label": "Присвоенных разрядов", "value": str(SportRankHistory.objects.count())},
+                {"label": "Заявок на модерации", "value": str(Application.objects.filter(status="pending").count())},
+                {"label": "Заявок на разряд", "value": str(RankApplication.objects.filter(status="pending").count())},
+                {"label": "Заявок на категорию", "value": str(JudgeCategoryApplication.objects.filter(status="pending").count())},
             ]
         else:
             consent = has_current_consent(request.user)

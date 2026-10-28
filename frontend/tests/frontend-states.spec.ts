@@ -101,10 +101,11 @@ test("history hides stale results after a role change and reports request failur
   await page.goto("/history");
   await expect(page.getByText("Загрузка истории…")).toBeVisible();
   await page.getByRole("button", { name: "Тренер", exact: true }).click();
-  await expect(page.getByText("Откройте роль спортсмена.")).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard$/);
   switched = true;
   release();
   await page.getByRole("button", { name: "Спортсмен", exact: true }).click();
+  await page.goto("/history");
   await expect(page.getByRole("alert").filter({ hasText: "История недоступна" })).toBeVisible();
   await expect(page.getByText("Старый результат")).toHaveCount(0);
   await expect(page.getByText("Опубликованных результатов пока нет.")).toHaveCount(0);

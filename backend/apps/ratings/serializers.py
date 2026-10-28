@@ -56,11 +56,16 @@ class RatingContributionSerializer(serializers.Serializer):
     placement = serializers.IntegerField()
     awarded_points = serializers.DecimalField(max_digits=8, decimal_places=2)
     age_group = serializers.CharField()
-    source_snapshot = serializers.DictField(source="result_snapshot")
+    source_snapshot = serializers.SerializerMethodField()
+
+    def get_source_snapshot(self, obj) -> dict:
+        # The public rating breakdown needs scoring evidence, never private names
+        # or arbitrary additional fields copied into an immutable protocol row.
+        return {key: obj.result_snapshot.get(key) for key in ("status", "place", "score", "age_group")}
 
 
 class AthleteRatingSerializer(serializers.ModelSerializer):
-    athlete_name = serializers.CharField(source="athlete.full_name")
+    athlete_name = serializers.SerializerMethodField()
     season = serializers.IntegerField(source="season.year")
     discipline_code = serializers.CharField(source="discipline.code")
     discipline_name = serializers.CharField(source="discipline.name")
@@ -74,6 +79,23 @@ class AthleteRatingSerializer(serializers.ModelSerializer):
     @extend_schema_field(RatingContributionSerializer(many=True))
     def get_breakdown(self, obj):
         return RatingContributionSerializer(obj.athlete.rating_contributions.filter(season=obj.season, discipline=obj.discipline, is_current=True).select_related("competition", "publication"), many=True).data
+
+    def get_athlete_name(self, obj) -> str:
+        from django.utils import timezone
+        from apps.competitions.services import age_on
+        from apps.competitions.models import CoachAthleteLink
+        born = obj.athlete.date_of_birth
+        if born and age_on(born, timezone.localdate()) >= 18:
+            return obj.athlete.full_name
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            role = request.session.get("active_role")
+            if request.user.role_assignments.filter(role=role).exists():
+                if role == "federation" or (role == "athlete" and request.user.pk == obj.athlete_id):
+                    return obj.athlete.full_name
+                if role == "coach" and CoachAthleteLink.objects.filter(coach=request.user, athlete=obj.athlete, discipline=obj.discipline, status="confirmed").exists():
+                    return obj.athlete.full_name
+        return f"Спортсмен №{obj.athlete_id}"
 
 
 class AthleteRestrictionSerializer(serializers.ModelSerializer):

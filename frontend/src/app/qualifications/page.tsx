@@ -1,6 +1,7 @@
 "use client";
 
 import { Toast } from "@/components/Toast";
+import { QualificationCorrectionPanel } from "@/components/QualificationCorrectionPanel";
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
@@ -158,6 +159,7 @@ function QualificationsContent({ me }: { me: ReturnType<typeof useCurrentUser> }
         <section className="blk"><h2><b>04</b><span>Контроль сроков</span></h2><DeadlineTable items={deadlines} /></section>
         <section className="blk"><h2><b>05</b><span>Реестр разрядов</span></h2><RankHistoryTable rows={rankHistory} showAthlete /></section>
         <section className="blk"><h2><b>06</b><span>Реестр категорий судей</span></h2><CatHistoryTable rows={catHistory} showJudge /></section>
+        <QualificationCorrectionPanel ranks={rankHistory} categories={catHistory} onSaved={reload} />
         <section className="blk"><h2><b>07</b><span>Все заявки</span></h2><div className="workflow-stack"><RankAppTable rows={rankApps} showAthlete /><CatAppTable rows={catApps} showJudge /></div></section>
       </>}
       {(role === "athlete" || role === "coach") && <>

@@ -28,18 +28,39 @@ LEVEL_ALIASES = {
     "russian championship": "Russian Championship",
     "russian_championship": "Russian Championship",
     "российский чемпионат": "Russian Championship",
+    "чемпионат россии": "Russian Championship",
     "russian junior championship": "Russian Junior Championship",
     "russian_junior_championship": "Russian Junior Championship",
     "российский юниорский чемпионат": "Russian Junior Championship",
+    "первенство россии": "Russian Junior Championship",
     "interregional": "Interregional / district",
     "interregional / district": "Interregional / district",
     "interregional_district": "Interregional / district",
     "district": "Interregional / district",
     "межрегиональный": "Interregional / district",
+    "межрегиональное": "Interregional / district",
+    "межрегиональные": "Interregional / district",
     "окружной": "Interregional / district",
     "regional": "Regional",
     "региональный": "Regional",
+    "региональное": "Regional",
+    "чемпионат области": "Regional",
+    "первенство области": "Regional",
 }
+
+
+def competition_rating_level(competition):
+    level = competition.level.strip().casefold()
+    kind = competition.competition_type.strip().casefold()
+    if level in ("всероссийское", "всероссийский", "all_russian", "national"):
+        if kind in ("чемпионат", "championship"):
+            return "Russian Championship"
+        if kind in ("первенство", "junior_championship", "primary_championship"):
+            return "Russian Junior Championship"
+        # No invented points for a federal cup or an unknown type. Federation can
+        # configure an explicit matching level/type bucket in a new rule version.
+        return normalized_level(f"{competition.level}:{competition.competition_type}")
+    return normalized_level(competition.level)
 
 
 def require_federation(request):
@@ -120,7 +141,7 @@ def calculate_ratings(*, season, discipline, actor=None):
             place = row.get("place")
             if row.get("status") != "classified" or not isinstance(place, int) or place < 1:
                 continue
-            point_rule = points.get((normalized_level(competition.level), place))
+            point_rule = points.get((competition_rating_level(competition), place))
             if not point_rule:
                 continue
             athlete_id = row.get("athlete_id")

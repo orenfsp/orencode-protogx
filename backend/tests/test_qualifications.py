@@ -117,6 +117,32 @@ class QualificationTestCase(TestCase):
 
 
 class RankWorkflowTests(QualificationTestCase):
+    def test_rank_in_another_discipline_does_not_block_assignment(self):
+        self.grant_rank(self.athlete, rank="adult_1")
+        result = self.result(self.athlete, competition=self.competition(discipline=self.robotics))
+        self.as_role(self.athlete, "athlete")
+        self.assertEqual(self.submit_rank(result, rank="adult_3").status_code, 201)
+        rows = self.client.get("/api/v1/rank-results/").data["items"]
+        robotics = next(row for row in rows if row["result"] == result.pk)
+        self.assertIsNone(robotics["current_rank"])
+
+    def test_audited_correction_preserves_original_and_scope(self):
+        record = self.grant_rank(self.athlete)
+        path = f"/api/v1/qualification-history/rank/{record.pk}/corrections/"
+        data = {"order_number": "Исправленный-демо", "assigned_on": record.assigned_on.isoformat(), "valid_until": (self.today + timedelta(days=100)).isoformat(), "reason": "Исправление опечатки"}
+        self.as_role(self.athlete, "athlete")
+        self.assertEqual(self.client.post(path, data).status_code, 403)
+        self.as_role(self.federation, "federation")
+        response = self.client.post(path, data)
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(response.data["before"]["order_number"], "Приказ-демо")
+        record.refresh_from_db()
+        self.assertEqual(record.order_number, "Исправленный-демо")
+        self.as_role(self.athlete, "athlete")
+        self.assertEqual(len(self.client.get(path).data), 1)
+        self.as_role(self.other, "athlete")
+        self.assertEqual(self.client.get(path).status_code, 403)
+
     def test_admin_records_are_read_only(self):
         request = RequestFactory().get("/admin/")
         request.user = self.federation
@@ -359,7 +385,13 @@ class RankWorkflowTests(QualificationTestCase):
 
 
 class RankHintTests(QualificationTestCase):
-    def rule(self, level="региональное", place=3, rank="adult_3", verified=False, discipline=None, active=True):
+    def test_unverified_rule_does_not_generate_advisory(self):
+        self.rule(verified=False)
+        self.result(self.athlete, place=1)
+        self.as_role(self.federation, "federation")
+        self.assertIsNone(self.client.get("/api/v1/rank-results/").data["items"][0]["hint"])
+
+    def rule(self, level="региональное", place=3, rank="adult_3", verified=True, discipline=None, active=True):
         return QualificationRule.objects.create(
             discipline=discipline or self.algorithmic, rank=rank, competition_level=level, max_place=place,
             source_verified=verified, is_active=active,
@@ -372,7 +404,7 @@ class RankHintTests(QualificationTestCase):
         self.as_role(self.federation, "federation")
         rows = {row["result"]: row for row in self.client.get("/api/v1/rank-results/").data["items"]}
         self.assertEqual(rows[match.pk]["hint"]["rank"], "adult_3")
-        self.assertFalse(rows[match.pk]["hint"]["source_verified"])
+        self.assertTrue(rows[match.pk]["hint"]["source_verified"])
         self.assertIn("не является присвоением", rows[match.pk]["hint"]["disclaimer"])
         self.assertIsNone(rows[miss.pk]["hint"])
         hinted = self.client.get("/api/v1/rank-results/?hinted=1").data["items"]

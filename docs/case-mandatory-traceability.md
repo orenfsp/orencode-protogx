@@ -1,0 +1,47 @@
+# Обязательные требования кейса — рабочая трассировка
+
+Дата: 2026-10-28. Ветка: `codex/mandatory-case-completion`. Baseline: `ee60893d2278001aaa6b704943230c0bd2db6eeb`. Источник: предоставленный пользователем 11-страничный PDF, прочитан полностью через pypdf. Это инвентаризация перед изменениями, а не заявление о приёмке. Чужие untracked `docs/audit/`, архив, completion report и `.worktrees/` сохранены.
+
+`implemented` означает наличие реализации; `tested` — выполненную проверку конкретной ревизии; `verified externally` требует отдельного свидетельства. Исторические результаты baseline не заменяют новый прогон.
+
+| case section/page | mandatory behavior | related project AC | existing code/routes | missing items | tests/evidence | status | blocker |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| таблица 1, с.5; оформление с.9 | Адаптивные экраны, четыре кабинета, доступные формы и состояния | 01,03,17,18 | frontend/src/app; AppShell; navigation.ts | Полная повторная визуальная и клавиатурная приёмка | frontend/tests; docs/design/visual-qa.md — исторические | partial | Новый прогон |
+| таблица 2, с.5; с.1–2 | DRF/PostgreSQL, шесть дисциплин, управляемые справочники, календарные планы | 02,04,16 | apps/catalogs; competitions; migrations; Compose | Тип соревнования пока свободная строка, нет UI справочника | tests/test_catalog.py; test_competitions.py | partial | Нет |
+| таблица 3, с.5; с.1–3 | Одна учётная запись, несколько назначенных ролей, активная роль, четыре кабинета | 03,15 | accounts; auth/active-role/; auth/dashboard/ | Расширить показатели федерации и сроки отчётов | test_auth.py; test_dashboard.py | partial | Нет |
+| с.2–3 | Четыре реестра, поиск/фильтры: дисциплина, организация, разряд, возраст, муниципалитет | 11 | registry; catalogs; registry/; organizations/ | Повторная сквозная проверка | test_registry_api.py; registry-live.spec.ts | implemented | Новый прогон |
+| с.3 | Профиль, организация или без неё, дисциплины, год начала, тренеры, разряд, представитель | 09,11,15 | accounts; registry; qualifications | Личный профиль и РУСАДА дата/URL/официальная ссылка | Реальный код проверен | partial | Нет |
+| с.3 | Связь тренер–спортсмен по дисциплине, подтверждение, активна/приостановлена/завершена, история | 05,09,15 | coach-links/; CoachAthleteLink; AuditEvent | Приостановление/завершение; поиск спортсмена тренером | test_competitions.py | partial | Нет |
+| с.3–5 | Согласие при регистрации; сведения и согласие представителя; хранение, доступ | 03,09,15 | PersonalDataConsent; Guardian; registration | UI отзыва/возобновления и история; проверка личности опекуна не установлена | test_auth.py; test_qualifications.py | partial | Реальная проверка опекуна не установлена |
+| таблица 4, с.5; с.2–4 | Создать/опубликовать соревнование; формат/этапы; сроки; планы ЕКП/регион; положения; заявки; модерация; судьи/должности | 05 | competitions; applications; judge-assignments | Явное закрытие регистрации; скачиваемое положение | test_competitions.py; phase2.spec.ts | partial | Нет |
+| с.2–3 | Результаты всех одобренных; шесть шаблонов; публикации/исправления; история | 06,07,08 | services.publish_protocol; ProtocolPublication; history/ | Доступ спортсмена к собственной версии протокола и отчёту | test_competitions.py | partial | Официальные формы не сверены |
+| таблица 5, с.6; с.2–4 | Заявки на разряды от спортсмена без тренера/подтверждённого тренера; опубликованный результат; решение/приказ/срок; категории судей | 09 | qualifications; rank/category applications/history | Исторические исправления и E2E; только проверенные подсказки ЕВСК | test_qualifications.py; qualifications-role.spec.ts | partial | Нормативные первоисточники не сверены |
+| с.2,5 | Сроки регистрации, отчётов, разрядов, категорий, 1 февраля; по правам роли | 09,10 | qualifications/deadlines/ | Планировщик, сроки отчётов, напоминание о 1 февраля | Исходник DeadlinesView | partial | Нет |
+| с.5 | Сохранённые уведомления: открытие регистрации, статус заявки, протокол, разряд/категория, сроки; кабинет + внешний канал | 10 | Нет модуля | Очередь, доставка, чтение, dedup/retry, тестовый SMTP | Baseline: отсутствует | not_implemented | Production SMTP credentials не предоставлены |
+| таблица 6, с.6; с.4 | Исторический реестр; динамика ≥2 лет; организации/дисциплины/возраст/муниципалитет; XLSX | 11 | registry/analytics.py; exporters.py; analytics/participation/ | Повторная проверка UI/API/workbook | test_registry_periods.py; docs/participation-methodology.md | implemented | Новый прогон |
+| таблица 7, с.6; с.4 | Сезонный рейтинг по дисциплине; изменяемые 100/80/60,80/60/40,60/45/30,40/30/20; ×1.2 за два призовых места; исключение отстранённых; возраст/разряд; детализация | 12 | ratings/services.py; rules; snapshots | Повторная проверка текущих отстранений и воспроизводимости | test_ratings.py | implemented | Новый прогон |
+| с.4 | Ручной отбор сборной, список и проект приказа; аудит | 13 | teams; exporters | Повторная сквозная проверка | test_teams.py; teams-live.spec.ts | implemented | Официальный формат не сверён |
+| таблица 8, с.6; с.4 | Реальные протоколы, сборная/приказ, отчёт выступлений спортсмена, численность; DOCX/PDF или XLSX | 14 | competitions/exporters; teams/exporters; registry/exporters | Отчёт выступлений спортсмена; приватный download | test_competitions.py; test_teams.py | partial | Формы не сверены |
+| с.5 §9 | Кто/когда/что изменил; создание/правки/статусы/результаты; права/согласия; фиктивные данные | 15 | AuditEvent; domain services; role/object checks | Активная роль в аудите; проверить все мутации/файлы | backend/tests | partial | Нет |
+| с.9–10 | Исходники, README запуск/демо, модель/API, перечень функций | 02,16 | README; docs/openapi.yaml; CI | Согласовать устаревший CURRENT_STATUS, новые команды и итоговые доказательства | .github/workflows/ci.yml | partial | Hosted CI финального SHA ещё не запускался |
+
+## Отдельная проверка AC-01–AC-18
+
+Не существует взаимно однозначного соответствия между восемью группами и 18 AC. Индивидуальные исходные статусы и доказательства сохранены в `docs/acceptance-matrix.md`: 01 implemented; 02 implemented; 03 implemented; 04 implemented; 05 implemented; 06 implemented; 07 implemented (demo); 08 implemented; 09 partial; 10 not_implemented; 11 partial; 12 implemented; 13 implemented (demo documents); 14 partial; 15 partial; 16 implemented; 17 implemented; 18 требует повторной визуальной проверки. Эти значения не считаются новым результатом.
+
+## Расхождения источников
+
+- PDF с.5 допускает email, Telegram **или** MAX. AC-10 отдельно требует email. Выбран SMTP, поскольку это принятое проектное ограничение.
+- PDF с.9 не фиксирует палитру/шрифты. AC-17/18 дополнительно обязывают сохранять reference HTML и его CSS/hash.
+- PDF с.4 допускает формат по типу документа, а не каждый документ во всех трёх форматах.
+- Напоминание «до 1 февраля» обязательно (с.2), автоматический расчёт премий D8 факультативен (с.8).
+- D1–D12 и собственные optional сценарии исключены из этой задачи. Проверка ЕВСК/форм, production SMTP и hosted CI не объявляются успешными без свидетельств.
+
+## Утверждённый интегратором порядок и границы
+
+Задание пользователя разрешает интегратору изменения backend/apps, tests, frontend/src, frontend/tests, config/Compose, scripts и документации; reference HTML неизменяем. Единая модель пользователя/ролей и существующие DTO сохраняются; новые DTO добавляются совместно с OpenAPI. Пять tracks: core/permissions/schema; competitions/documents; sports domain; federation UI; cabinets/QA. Интегратор ведёт их последовательно, общие контракты не передаются на независимую запись. DeepSeek доступен: контекст существующего services.py успешно проверен; модель/endpoint не предполагаются.
+
+1. AC-10: транзакционная очередь и уведомления по ролям, SMTP/Mailpit, периодические сроки, негативные тесты и кабинет.
+2. AC-09/14: согласия, недостающие документы и связанные права.
+3. Проверить остальные пробелы по строкам выше; сохранить честные partial при отсутствии полного свидетельства.
+4. PostgreSQL regression/migrations/schema; frontend checks/build/E2E; дизайн и свежий Compose; финальная документация.

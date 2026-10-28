@@ -4,12 +4,12 @@ import { signIn } from "./helpers";
 test("multi-role account loads role-specific data after switching", async ({ page }) => {
   await signIn(page, "demo.federation@example.test");
   await expect(page.getByRole("heading", { name: "Федерация" })).toBeVisible();
-  await expect(page.getByText("Спортсменов")).toBeVisible();
+  await expect(page.locator(".dashboard-metrics").getByText("Спортсменов", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Спортсмен", exact: true }).click();
   await expect(page.getByRole("button", { name: "Спортсмен", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("heading", { name: "Спортсмен" })).toBeVisible();
   await expect(page.getByText("Согласие", { exact: true })).toBeVisible();
-  await expect(page.getByText("Спортсменов")).toHaveCount(0);
+  await expect(page.locator(".dashboard-metrics").getByText("Спортсменов", { exact: true })).toHaveCount(0);
   const dashboard = await page.evaluate(async () => (await fetch("/api/v1/auth/dashboard/")).json());
   expect(dashboard.role).toBe("athlete");
 });
@@ -30,7 +30,7 @@ test("mobile theme control persists and bottom navigation works", async ({ page 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.getByRole("navigation", { name: "Основная навигация" })).toBeVisible();
-  const theme = page.getByRole("button", { name: "Включить тёмную тему" });
+  const theme = page.getByRole("button", { name: "Тёмная тема: включить" });
   await theme.click();
   await expect(page.locator("#th")).toBeChecked();
   await expect.poll(() => page.locator("body").evaluate((body) => getComputedStyle(body).backgroundColor)).toBe("rgb(28, 27, 69)");
@@ -38,7 +38,7 @@ test("mobile theme control persists and bottom navigation works", async ({ page 
   await expect(page.locator("#th")).toBeChecked();
   await page.getByRole("navigation", { name: "Основная навигация" }).getByRole("link", { name: "Календарь" }).click();
   await expect(page).toHaveURL(/\/competitions$/);
-  await page.getByRole("button", { name: "Включить светлую тему" }).click();
+  await page.getByRole("button", { name: "Светлая тема: включить" }).click();
   await expect.poll(() => page.locator("body").evaluate((body) => getComputedStyle(body).backgroundColor)).toBe("rgb(255, 255, 255)");
 });
 

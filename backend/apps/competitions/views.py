@@ -42,6 +42,7 @@ from .serializers import (
     UserChoiceSerializer,
 )
 from .services import (
+    age_on,
     audit,
     check_application_eligibility,
     protocol_snapshot,
@@ -60,6 +61,7 @@ class AgeGroupsView(APIView):
         return Response(AgeGroupSerializer(AgeGroup.objects.all().order_by("min_age"), many=True).data)
 
     @extend_schema(request=AgeGroupSerializer, responses={201: AgeGroupSerializer})
+    @transaction.atomic
     def post(self, request):
         require_role(request, "federation")
         serializer = AgeGroupSerializer(data=request.data)
@@ -79,6 +81,7 @@ class CalendarEntriesView(APIView):
         return Response(CalendarEntrySerializer(CalendarEntry.objects.all().order_by("-year", "entry_number"), many=True).data)
 
     @extend_schema(request=CalendarEntrySerializer, responses={201: CalendarEntrySerializer})
+    @transaction.atomic
     def post(self, request):
         require_role(request, "federation")
         serializer = CalendarEntrySerializer(data=request.data)
@@ -118,13 +121,28 @@ class TemplatesView(APIView):
 class CompetitionsView(APIView):
     permission_classes = [AllowAny]
 
-    @extend_schema(responses=CompetitionSerializer(many=True))
+    @extend_schema(parameters=[OpenApiParameter("discipline", str), OpenApiParameter("age_group", int), OpenApiParameter("eligible_age", bool)], responses=CompetitionSerializer(many=True))
     def get(self, request):
         queryset = Competition.objects.select_related("discipline", "template").prefetch_related("age_groups", "stages")
         if not request.user.is_authenticated or request.session.get("active_role") != "federation" or not request.user.role_assignments.filter(role="federation").exists():
             queryset = queryset.filter(state__in=["published", "closed"])
         if request.query_params.get("discipline"):
             queryset = queryset.filter(discipline__code=request.query_params["discipline"])
+        if request.query_params.get("age_group"):
+            try:
+                group = int(request.query_params["age_group"])
+            except ValueError as error:
+                raise ValidationError("Некорректная возрастная группа") from error
+            queryset = queryset.filter(age_groups=group)
+        if request.query_params.get("eligible_age") == "true":
+            require_role(request, "athlete")
+            if request.user.date_of_birth is None:
+                raise ValidationError("Укажите дату рождения для подбора по возрасту")
+            queryset = [competition for competition in queryset.order_by("starts_at") if any(
+                group.min_age <= age_on(request.user.date_of_birth, competition.age_reference_date or competition.starts_at.date()) <= group.max_age
+                for group in competition.age_groups.all()
+            )]
+            return Response(CompetitionSerializer(queryset, many=True).data)
         return Response(CompetitionSerializer(queryset.order_by("starts_at"), many=True).data)
 
     @extend_schema(request=CompetitionSerializer, responses={201: CompetitionSerializer})
@@ -134,6 +152,8 @@ class CompetitionsView(APIView):
         serializer = CompetitionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         competition = serializer.save(created_by=request.user)
+        from .models import CompetitionType
+        CompetitionType.objects.get_or_create(name=competition.competition_type)
         audit(request.user, "competition.created", competition, competition=competition, after=CompetitionSerializer(competition).data)
         return Response(CompetitionSerializer(competition).data, status=201)
 
@@ -271,6 +291,7 @@ class JudgeAssignmentsView(APIView):
         return Response(JudgeAssignmentSerializer(queryset.order_by("-assigned_at"), many=True).data)
 
     @extend_schema(request=JudgeAssignmentSerializer, responses={201: JudgeAssignmentSerializer})
+    @transaction.atomic
     def post(self, request):
         require_role(request, "federation")
         serializer = JudgeAssignmentSerializer(data=request.data)
@@ -418,6 +439,7 @@ class CoachLinksView(APIView):
         return Response(CoachLinkSerializer(queryset, many=True, context={"request": request}).data)
 
     @extend_schema(request=CoachLinkRequestSerializer, responses={202: None})
+    @transaction.atomic
     def post(self, request):
         require_role(request, "coach")
         serializer = CoachLinkRequestSerializer(data=request.data)

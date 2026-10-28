@@ -11,12 +11,15 @@ import { AgeGroup, api, CalendarEntry, Competition, Discipline, ProtocolTemplate
 
 export default function Competitions() {
   const me = useCurrentUser();
+  const activeRole = me?.active_role;
   const [items, setItems] = useState<Competition[]>([]);
   const [disciplines, setDisciplines] = useState<Discipline[]>([]);
   const [groups, setGroups] = useState<AgeGroup[]>([]);
   const [templates, setTemplates] = useState<ProtocolTemplate[]>([]);
   const [calendar, setCalendar] = useState<CalendarEntry[]>([]);
   const [filter, setFilter] = useState("");
+  const [ageFilter, setAgeFilter] = useState("");
+  const [eligibleAge, setEligibleAge] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadedFor, setLoadedFor] = useState("");
@@ -31,13 +34,13 @@ export default function Competitions() {
     setError("");
     try {
       const [nextItems, nextDisciplines, nextGroups, nextTemplates, nextCalendar] = await Promise.all([
-        api<Competition[]>("competitions/"), api<Discipline[]>("disciplines/"), api<AgeGroup[]>("age-groups/"), api<ProtocolTemplate[]>("templates/"), api<CalendarEntry[]>("calendar-entries/"),
+        api<Competition[]>(activeRole === "athlete" && eligibleAge ? "competitions/?eligible_age=true" : "competitions/"), api<Discipline[]>("disciplines/"), api<AgeGroup[]>("age-groups/"), api<ProtocolTemplate[]>("templates/"), api<CalendarEntry[]>("calendar-entries/"),
       ]);
       if (request !== requestId.current) return;
       setItems(nextItems); setDisciplines(nextDisciplines); setGroups(nextGroups); setTemplates(nextTemplates); setCalendar(nextCalendar); setLoadedFor(identity);
     } catch (cause) { if (request === requestId.current) setError(cause instanceof Error ? cause.message : "Не удалось загрузить календарь"); }
     finally { if (request === requestId.current) setLoading(false); }
-  }, [identity]);
+  }, [identity, activeRole, eligibleAge]);
   useEffect(() => { const counter = requestId; const frame = requestAnimationFrame(() => { void reload(); }); return () => { cancelAnimationFrame(frame); counter.current++; }; }, [reload]);
   async function addGroup(event: FormEvent) {
     event.preventDefault(); setError("");
@@ -49,11 +52,13 @@ export default function Competitions() {
     try { await api("calendar-entries/", { method: "POST", body: JSON.stringify({ ...newCalendar, year: Number(newCalendar.year) }) }); setNewCalendar({ source: "regional", entry_number: "", title: "", year: String(new Date().getFullYear()), reference_url: "" }); await reload(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Не удалось добавить запись календаря"); }
   }
-  const visible = items.filter((item) => !filter || item.discipline_name.toLowerCase().includes(filter.toLowerCase()) || item.title.toLowerCase().includes(filter.toLowerCase()));
+  const visible = items.filter((item) => (!ageFilter || item.age_groups.includes(Number(ageFilter))) && (!filter || item.discipline_name.toLowerCase().includes(filter.toLowerCase()) || item.title.toLowerCase().includes(filter.toLowerCase())));
   return <>
     <header className="dashboard-head"><span className="kick">Соревнования ФСП</span><h1>Календарь</h1><p className="lead">Соревнования, заявки и протоколы из текущей базы данных.</p></header>
     <section className="blk"><h2><b>03</b><span>Календарь</span></h2><div>
       <label className="lb">Поиск по названию и дисциплине<input className="inp workflow-search" value={filter} onChange={(event) => setFilter(event.target.value)} /></label>
+      <label className="lb">Фильтр по возрастной группе<select className="inp workflow-search" value={ageFilter} onChange={(event) => setAgeFilter(event.target.value)}><option value="">Все группы</option>{groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label>
+      {me?.active_role === "athlete" && <label className="ck"><input type="checkbox" checked={eligibleAge} onChange={(event) => setEligibleAge(event.target.checked)} />Показывать подходящие по моему возрасту</label>}
       {error && <Toast>{error}</Toast>}
       {loading || (!error && loadedFor !== identity) ? <div className="note" role="status">Загрузка календаря…</div> : loadedFor !== identity ? null : visible.length ? <div className="tw"><table><thead><tr><th>№</th><th>Соревнование</th><th>Дисциплина</th><th>Дата</th><th>Статус</th></tr></thead><tbody>{visible.map((item, index) => <tr key={item.id}><td>{index + 1}</td><td><Link className="workflow-link" href={`/competitions/${item.id}`}>{item.title}</Link></td><td>{item.discipline_name}</td><td className="m">{new Date(item.starts_at).toLocaleDateString("ru-RU")}</td><td><span className={`bd ${item.state === "draft" ? "wn" : ""}`}>{item.state === "draft" ? "Черновик" : item.state === "closed" ? "Завершено" : "Опубликовано"}</span></td></tr>)}</tbody></table></div> : <div className="note">{filter.trim() ? "По вашему запросу соревнования не найдены." : "Соревнований пока нет."}</div>}
     </div></section>

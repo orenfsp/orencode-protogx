@@ -22,11 +22,16 @@ def require_role(request, *roles):
     return role
 
 
+@transaction.atomic
 def audit(actor, action, target, *, competition=None, before=None, after=None):
+    from apps.accounts.audit_context import active_role
     AuditEvent.objects.create(
         actor=actor, action=action, target_type=target._meta.model_name, target_id=target.pk,
+        active_role=active_role.get(),
         competition=competition, before=before or {}, after=after or {},
     )
+    from apps.notifications.services import domain_event
+    domain_event(action, target)
 
 
 def age_on(born: date, when: date) -> int:
@@ -36,6 +41,8 @@ def age_on(born: date, when: date) -> int:
 def check_application_eligibility(competition, athlete, age_group, submitted_by):
     if competition.state != "published":
         raise ValidationError("Competition is not published")
+    if not competition.registration_open:
+        raise ValidationError("Приём заявок закрыт федерацией")
     if timezone.now() >= competition.registration_deadline:
         raise ValidationError("Registration deadline has passed")
     if not athlete.role_assignments.filter(role="athlete").exists():

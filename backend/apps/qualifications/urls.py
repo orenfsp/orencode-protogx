@@ -1,8 +1,10 @@
 from django.urls import path
 
 from . import views
+from .corrections import QualificationCorrectionsView
 
 urlpatterns = [
+    path("qualification-history/<str:kind>/<int:pk>/corrections/", QualificationCorrectionsView.as_view()),
     path("qualification-options/", views.OptionsView.as_view()),
     path("qualification-rules/", views.QualificationRulesView.as_view()),
     path("qualification-deadlines/", views.DeadlinesView.as_view()),

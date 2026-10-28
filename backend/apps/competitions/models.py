@@ -68,6 +68,7 @@ class Competition(models.Model):
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
     registration_deadline = models.DateTimeField()
+    registration_open = models.BooleanField(default=True)
     age_reference_date = models.DateField(null=True, blank=True)
     allow_ties = models.BooleanField(default=False)
     location = models.CharField(max_length=250)
@@ -78,6 +79,11 @@ class Competition(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class CompetitionType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
 
 
 class CompetitionStage(models.Model):
@@ -97,7 +103,7 @@ class CoachAthleteLink(models.Model):
     coach = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="coached_links")
     athlete = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="coach_links")
     discipline = models.ForeignKey("catalogs.Discipline", on_delete=models.PROTECT)
-    status = models.CharField(max_length=16, choices=[("pending", "Ожидает"), ("confirmed", "Подтверждено"), ("rejected", "Отклонено")], default="pending")
+    status = models.CharField(max_length=16, choices=[("pending", "Ожидает"), ("confirmed", "Подтверждено"), ("rejected", "Отклонено"), ("suspended", "Приостановлена"), ("ended", "Завершена")], default="pending")
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
@@ -168,6 +174,7 @@ class ProtocolPublication(models.Model):
 
 class AuditEvent(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    active_role = models.CharField(max_length=16, blank=True, default="")
     competition = models.ForeignKey(Competition, null=True, blank=True, on_delete=models.PROTECT)
     action = models.CharField(max_length=100)
     target_type = models.CharField(max_length=80)

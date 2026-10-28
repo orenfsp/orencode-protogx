@@ -152,3 +152,17 @@ class JudgeCategoryHistory(models.Model):
         constraints = [
             models.CheckConstraint(condition=Q(valid_until__gt=F("assigned_on")), name="category_valid_until_after_assigned"),
         ]
+
+
+class QualificationCorrection(models.Model):
+    """Append-only revisions; history rows are the current projection of this ledger."""
+    rank_record = models.ForeignKey(SportRankHistory, null=True, on_delete=models.PROTECT, related_name="corrections")
+    category_record = models.ForeignKey(JudgeCategoryHistory, null=True, on_delete=models.PROTECT, related_name="corrections")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reason = models.TextField()
+    before = models.JSONField()
+    after = models.JSONField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=(Q(rank_record__isnull=False, category_record__isnull=True) | Q(rank_record__isnull=True, category_record__isnull=False)), name="qualification_correction_one_target")]

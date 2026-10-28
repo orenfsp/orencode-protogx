@@ -90,6 +90,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
+      FSP_MAILPIT_URL: http://127.0.0.1:8025
+      FSP_E2E_COMPOSE_PROJECT: protogx_ci
       COMPOSE_PROJECT_NAME: protogx_ci
       DJANGO_DEBUG: "1"
       DEMO_SEED_ENABLED: "1"

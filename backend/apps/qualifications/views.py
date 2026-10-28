@@ -113,7 +113,7 @@ class RankResultsView(APIView):
         athlete_ids = {r.application.athlete_id for r in results}
         history = {}
         for record in SportRankHistory.objects.filter(athlete_id__in=athlete_ids):
-            history.setdefault(record.athlete_id, []).append(record)
+            history.setdefault((record.athlete_id, record.discipline_id), []).append(record)
         pending = {}
         for app in RankApplication.objects.filter(result__in=results, status=ReviewStatus.PENDING):
             pending.setdefault(app.result_id, []).append(app.requested_rank)
@@ -132,7 +132,7 @@ class RankResultsView(APIView):
             rule = hint_for(published_result, rules)
             if request.query_params.get("hinted") in ("1", "true") and rule is None:
                 continue
-            current = most_significant(history.get(app.athlete_id, []), rank_level)
+            current = most_significant(history.get((app.athlete_id, app.competition.discipline_id), []), rank_level)
             rows.append({
                 "result": result.pk, "athlete": app.athlete_id, "athlete_name": app.athlete.full_name,
                 "competition": app.competition_id, "competition_title": app.competition.title, "competition_level": app.competition.level,
@@ -264,7 +264,7 @@ class DeadlinesView(APIView):
         def collect(records, level, kind, person_field, label_of):
             grouped = {}
             for record in records:
-                grouped.setdefault(getattr(record, person_field + "_id"), []).append(record)
+                grouped.setdefault((getattr(record, person_field + "_id"), getattr(record, "discipline_id", None)), []).append(record)
             for rows in grouped.values():
                 current = most_significant(rows, level)
                 left = days_left(current.valid_until, today)

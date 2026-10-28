@@ -1,6 +1,6 @@
 # Окружение и переменные
 
-`docker-compose.yml` определяет `db` (`postgres:16-alpine`, named volume `postgres_data`), `api` (Python 3.13 + Django) и `web` (Node 24 + Next production build). `api` ждёт healthy БД, выполняет миграции и при `DJANGO_DEBUG=1` запускает идемпотентный `seed_demo`; `web` ждёт healthy API. Никаких Mailpit, SMTP, Redis или фонового worker в Compose нет.
+`docker-compose.yml` определяет `db` (`postgres:16-alpine`, named volume `postgres_data`), `api` (Python 3.13 + Django), `web` (Node 24 + Next production build), `mailpit` и фоновый worker `notifications`. `api` ждёт healthy БД, выполняет миграции и при явном разрешении demo seed запускает идемпотентный `seed_demo`; `web` и worker ждут healthy API. SMTP настройки и ограничения доставки описаны в [notifications.md](../notifications.md). Redis не требуется.
 
 | Переменная | Где используется | Что задать локально |
 | --- | --- | --- |

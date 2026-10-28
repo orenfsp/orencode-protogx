@@ -99,7 +99,10 @@ class RegisterSerializer(serializers.Serializer):
             age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
             if age < 18 and guardian_consent:
                 guardian = Guardian.objects.create(minor=user, full_name=guardian_name, relationship=guardian_relationship)
-        PersonalDataConsent.objects.create(user=user, text_version=consent_version, guardian=guardian)
+        consent = PersonalDataConsent.objects.create(user=user, text_version=consent_version, guardian=guardian)
+        from apps.competitions.services import audit
+        audit(user, "account.registered", user, after={"role": "athlete"})
+        audit(user, "consent.registered", consent, after={"version": consent_version})
         return user
 
 

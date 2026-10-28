@@ -20,7 +20,7 @@ for (const role of ["athlete", "coach", "judge"]) for (const staleStatus of [200
     release();
     await expect(page.getByText("Приватный спортсмен")).toHaveCount(0);
     await expect(page.getByText("obsolete request failure")).toHaveCount(0);
-    await expect(page.getByText("Для просмотра реестров выберите роль федерации.")).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 }
 

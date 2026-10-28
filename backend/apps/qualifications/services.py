@@ -67,8 +67,11 @@ def most_significant(records, level):
     return max(pool, key=lambda r: (level(r.rank if hasattr(r, "rank") else r.category), r.valid_until, r.pk))
 
 
-def current_rank_record(athlete_id):
-    return most_significant(SportRankHistory.objects.filter(athlete_id=athlete_id), rank_level)
+def current_rank_record(athlete_id, discipline_id=None):
+    records = SportRankHistory.objects.filter(athlete_id=athlete_id)
+    if discipline_id is not None:
+        records = records.filter(discipline_id=discipline_id)
+    return most_significant(records, rank_level)
 
 
 def current_category_record(judge_id):
@@ -99,7 +102,7 @@ def hint_for(result, rules):
 
 
 def active_rules():
-    return list(QualificationRule.objects.filter(is_active=True).order_by("pk"))
+    return list(QualificationRule.objects.filter(is_active=True, source_verified=True).order_by("pk"))
 
 
 # ---------- разряды ----------
@@ -143,9 +146,9 @@ def validate_rank_submission(user, role, result_id, requested_rank, request_type
     if RankApplication.objects.filter(result=result, requested_rank=requested_rank, status=ReviewStatus.PENDING).exists():
         raise ValidationError("Такая заявка уже находится на рассмотрении")
 
-    history = SportRankHistory.objects.filter(athlete=athlete)
+    history = SportRankHistory.objects.filter(athlete=athlete, discipline_id=competition.discipline_id)
     if request_type == RequestType.ASSIGN:
-        current = current_rank_record(athlete.pk)
+        current = current_rank_record(athlete.pk, competition.discipline_id)
         if current and current.valid_until >= timezone.localdate() and rank_level(requested_rank) <= rank_level(current.rank):
             raise ValidationError({"requested_rank": "Запрашиваемый разряд должен быть выше действующего"})
     elif not history.filter(rank=requested_rank).exists():

@@ -12,6 +12,7 @@ async function mockRole(page: Page, initial: Role | null) {
     if (path.endsWith("auth/me/") || path.endsWith("auth/active-role/")) data = { id: 1, full_name: "Демо пользователь", roles: ["federation", "athlete", "coach", "judge"], active_role: role };
     if (path.endsWith("auth/csrf/")) data = { csrfToken: "test" };
     if (path.endsWith("auth/dashboard/")) data = { role, metrics: [], guardian_status: null };
+    if (path.endsWith("consents/")) data = { text_version: "v1-demo-2026-10-27", history: [] };
     await route.fulfill({ status: !initial && path.endsWith("auth/me/") ? 401 : 200, json: data });
   });
 }

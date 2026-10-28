@@ -2,7 +2,7 @@
 
 Для новых разработчиков и независимых AI-ассистентов: [документация команды](docs/team/README.md).
 
-Phase 2 competition workflow on the Phase 1 platform. The mandatory design source is `docs/design/fsp-reference.html`; it is unchanged. Scope, API contracts and acceptance evidence are recorded in `docs/phase2-architecture.md`, `docs/openapi.yaml` and `docs/acceptance-matrix.md`.
+Платформа на Django/DRF, PostgreSQL и Next.js. Текущее задание — обязательные требования кейса, часть 1. Неизменяемый визуальный контракт: `docs/design/fsp-reference.html`. [Трассировка кейса](docs/case-mandatory-traceability.md), [матрица AC](docs/acceptance-matrix.md), [OpenAPI](docs/openapi.yaml) отделяют реализацию от фактически выполненных проверок.
 
 ## Run with Docker Compose
 
@@ -12,11 +12,11 @@ Copy `.env.example` to `.env` and replace the local passwords and Django secret.
 
 Compose startup performs migrations before seeding. Copy `.env.example` to `.env` to opt in locally. The command requires `DJANGO_DEBUG=1`, `DEMO_SEED_ENABLED=1`, `DEMO_ENVIRONMENT=local` and a local database host. Production and staging must disable these settings. The command creates fictional users, competitions, published protocols, calculated ratings and regional teams; see [docs/demo-scenarios.md](docs/demo-scenarios.md).
 
-Team lists and candidates use 50-item API pages; the team screen loads the pages and provides a candidate search. Team exports include an optional current organization affiliation. This minimal affiliation is not the future AC-11 registry or its historical reporting.
+Списки сборных и кандидатов используют API-пагинацию; экран загружает страницы и поддерживает поиск. Исторический реестр и отчёт о численности реализованы отдельно в `apps/registry`: организации, дисциплины, муниципалитеты, годы и реальные XLSX. Методика: [participation-methodology.md](docs/participation-methodology.md).
 
 ## Local development and checks
 
-Backend: install `backend/requirements.txt`; set `DATABASE_ENGINE=sqlite` only for local tests, then run `python backend/manage.py migrate` and `python backend/manage.py test` (or `pytest backend/tests`). For the deployed path, use PostgreSQL.
+Основная проверка backend: `docker compose exec -T api python manage.py test --noinput`. Для локального Python установите `backend/requirements.txt` и настройте PostgreSQL. SQLite пригоден лишь для ограниченной локальной разработки: он не проверяет PostgreSQL exclusion constraints и блокировки.
 
 Frontend: `cd frontend`, `npm ci`, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run dev`. The frontend rewrites `/api/*` to `API_INTERNAL_URL` (default `http://127.0.0.1:8000` for local development; the Docker image compiles with `http://api:8000`).
 
@@ -38,3 +38,22 @@ Templates are configurable and versioned per discipline. Seeded templates are ex
 ## CI и проверки
 
 Команды локальных проверок, изолированный PostgreSQL и GitHub Actions описаны в [docs/CI.md](docs/CI.md). Статус AC-11 см. в [матрице приёмки](docs/acceptance-matrix.md).
+
+## Где проверить обязательные функции
+
+1. Адаптивный frontend: `/dashboard`, `/competitions`, `/qualifications`, `/registry`, `/analytics/participation`, `/ratings`, `/teams`; светлая/тёмная тема, настольная и мобильная навигация. Новые screenshot/axe проверки: `mandatory-visual.spec.ts`.
+2. Backend и контент: `/api/docs/`, шесть дисциплин, возрастные группы и календарные записи. Типы соревнований редактируются в кабинете федерации; новые названия сохраняются в справочник при создании события.
+3. Четыре кабинета: одна учётная запись и назначенные роли; переключение в sidebar или мобильном списке. `/profile` — личный профиль и отметка РУСАДА, `/coach-links` — подтверждение/приостановление/возобновление/завершение связей. Кабинет содержит историю согласий и отзыв/возобновление. Проверка личности представителя не установлена.
+4. Соревнования: создание и публикация, положение DOCX, явное открытие/закрытие регистрации, календарный план ЕКП/регион, фильтр по возрасту, заявки, модерация, судейские должности, результаты, версии протокола и история. `/history` даёт спортсмену личную выписку из версии протокола без строк других участников.
+5. Разряды, категории и сроки: `/qualifications` — заявки, решения с приказом/датами, история и аудируемые исправления реквизитов. Подсказки формируются только по правилам, отмеченным проверенными; демо-правила такими не являются. Уведомления сохраняются в кабинете и отправляются через SMTP worker; [настройка и ограничения](docs/notifications.md). Сроки отчётов задаёт федерация; напоминание до 1 февраля не включает автоматический расчёт премий.
+6. Численность: `/registry`, `/analytics/participation` — исторические периоды, минимум два года, разрезы и XLSX; `registry-live.spec.ts` сопоставляет API, UI и файл.
+7. Рейтинг и сборная: `/ratings` — сезон/дисциплина, баллы/коэффициенты, исходные публикации; `/teams` — ручной отбор, порядок, состав и проект приказа. Действующее отстранение исключает спортсмена из видимого рейтинга.
+8. Документы: протокол PDF/DOCX у федерации; личная выписка PDF и отчёт выступлений XLSX у спортсмена; отчёт подтверждённых подопечных XLSX у тренера; состав и проект приказа PDF/DOCX; динамика численности XLSX у федерации. Файлы берутся из сохранённых данных и защищены на сервере. Формы демонстрационные до сверки первоисточников.
+
+Д1–Д12 и собственные дополнительные сценарии не входят в это задание. Ранее существующий публичный навигатор не является новой реализацией optional-функции в этой ветке. Обязательное и дополнительное разграничены в [трассировке](docs/case-mandatory-traceability.md); фиктивные аккаунты и безопасный demo-пароль — в [demo-scenarios.md](docs/demo-scenarios.md).
+
+## Уведомления в демонстрации
+
+После `docker compose up -d --build` Mailpit открывается на `http://localhost:8025`, worker работает автоматически. `docker compose exec -T api python manage.py process_notifications` запускает один дополнительный безопасный цикл. Реальная доставка production-провайдером требует credentials и отдельного подтверждения; Mailpit доказывает локальную SMTP-доставку.
+
+Новый E2E: из `frontend` запустите `npm.cmd run test:e2e -- tests/mandatory-live.spec.ts --workers=1`, предварительно задав `FSP_MAILPIT_URL=http://127.0.0.1:8025` для стандартного Compose. На изолированном стенде также задайте `FSP_WEB_URL`, `FSP_MAILPIT_URL` и доверенный CSRF origin с соответствующими портами.

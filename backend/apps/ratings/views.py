@@ -81,6 +81,11 @@ class RatingsView(APIView):
         queryset = AthleteRating.objects.select_related("athlete", "season", "discipline").prefetch_related(
             Prefetch("athlete__rating_contributions", queryset=RatingContribution.objects.filter(is_current=True).select_related("competition", "publication"), to_attr="_rating_contributions"),
         )
+        from django.utils import timezone
+
+        from .models import AthleteRestriction
+        today = timezone.localdate()
+        queryset = queryset.exclude(athlete_id__in=AthleteRestriction.objects.filter(status="active", starts_at__lte=today, ends_at__gte=today).values("athlete_id"))
         if season_year:
             queryset = queryset.filter(season__year=season_year)
         if discipline_value:
@@ -101,7 +106,7 @@ class RatingsView(APIView):
             from apps.qualifications.models import SportRankHistory
             allowed = []
             for item in queryset.values("athlete_id", "discipline_id").distinct():
-                history = SportRankHistory.objects.filter(athlete_id=item["athlete_id"], discipline_id=item["discipline_id"]).order_by("-valid_until", "-assigned_on", "-pk").first()
+                history = SportRankHistory.objects.filter(athlete_id=item["athlete_id"], discipline_id=item["discipline_id"], assigned_on__lte=today, valid_until__gte=today).order_by("-valid_until", "-assigned_on", "-pk").first()
                 if history and _rank_value(history.rank) is not None and _rank_value(history.rank) >= min_rank:
                     allowed.append((item["athlete_id"], item["discipline_id"]))
             if allowed:
@@ -116,7 +121,7 @@ class RatingsView(APIView):
         page_size = min(max(int(request.query_params.get("page_size", 25) or 25), 1), 100)
         total = queryset.count()
         items = queryset[(page - 1) * page_size:page * page_size]
-        data = AthleteRatingSerializer(items, many=True).data
+        data = AthleteRatingSerializer(items, many=True, context={"request": request}).data
         for index, row in enumerate(data, start=(page - 1) * page_size + 1):
             row["placement"] = index
         return Response({"items": data, "page": page, "page_size": page_size, "total": total, "pages": (total + page_size - 1) // page_size})

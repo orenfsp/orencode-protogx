@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     JudgeCategoryApplication,
     JudgeCategoryHistory,
+    QualificationCorrection,
     QualificationRule,
     RankApplication,
     SportRankHistory,
@@ -22,5 +23,5 @@ class ReadOnlyRecordsAdmin(admin.ModelAdmin):
         return False
 
 
-for model in (RankApplication, SportRankHistory, JudgeCategoryApplication, JudgeCategoryHistory):
+for model in (RankApplication, SportRankHistory, JudgeCategoryApplication, JudgeCategoryHistory, QualificationCorrection):
     admin.site.register(model, ReadOnlyRecordsAdmin)

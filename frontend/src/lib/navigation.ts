@@ -7,6 +7,7 @@ const pageRoles: Record<string, readonly Role[]> = {
   "/registry": ["federation"],
   "/analytics": ["federation"],
   "/history": ["athlete"],
+  "/profile": ["athlete"],
   "/coach-links": ["athlete", "coach"],
   "/my-competitions": ["athlete", "coach", "judge"],
 };

@@ -1,6 +1,10 @@
 "use client";
 
 import { Toast } from "@/components/Toast";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { ConsentPanel } from "@/components/ConsentPanel";
+import { FederationOperations } from "@/components/FederationOperations";
+import { UpcomingEvents } from "@/components/UpcomingEvents";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -41,6 +45,11 @@ export default function Dashboard() {
             {dashboard?.guardian_status && <Toast>Согласие представителя: {dashboard.guardian_status === "pending_verification" ? "ожидает проверки" : dashboard.guardian_status}</Toast>}
           </div></section>
           <section className="blk"><h2><b>02</b><span>Действия</span></h2><div><div className="note">{roleContent[role].next}</div><div className="cta"><Link className="btn i" href="/competitions">Открыть календарь</Link><Link className="btn" href="/ratings">Открыть рейтинги</Link>{role !== "federation" && <Link className="btn" href="/my-competitions">Мои соревнования</Link>}<Link className="btn" href="/qualifications">Разряды и категории</Link>{role === "athlete" && <><Link className="btn" href="/history">История результатов</Link><Link className="btn" href="/coach-links">Связи тренера</Link></>}{role === "coach" && <Link className="btn" href="/coach-links">Связи со спортсменами</Link>}<Link className="btn" href="/#disciplines">Смотреть дисциплины</Link></div></div></section>
+          <UpcomingEvents key={`upcoming:${me.id}:${role}`} role={role} />
+          <NotificationCenter key={`${me.id}:${role}`} />
+          {role === "athlete" && <p><Link className="btn" href="/profile">Мой профиль и РУСАДА</Link></p>}
+          <ConsentPanel key={`consent:${me.id}:${role}`} />
+          {role === "federation" && <FederationOperations key={`federation:${me.id}`} />}
         </>}
   </>;
 }

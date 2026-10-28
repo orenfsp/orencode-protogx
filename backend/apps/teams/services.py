@@ -54,7 +54,7 @@ def _record(actor, team, action, membership=None, before=None, after=None):
     after = dict(after or {})
     after.setdefault("active_role", UserRole.Role.FEDERATION)
     TeamDecisionHistory.objects.create(team=team, membership=membership, actor=actor, action=action, before=before or {}, after=after)
-    AuditEvent.objects.create(actor=actor, action=f"regional_team.{action}", target_type=team._meta.model_name, target_id=team.pk, before=before or {}, after=after)
+    AuditEvent.objects.create(actor=actor, active_role=UserRole.Role.FEDERATION, action=f"regional_team.{action}", target_type=team._meta.model_name, target_id=team.pk, before=before or {}, after=after)
 
 
 def _invalidate_finalization(actor, team):

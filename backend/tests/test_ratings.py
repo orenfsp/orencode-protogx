@@ -30,6 +30,56 @@ from apps.ratings.services import (
 
 
 class RatingDomainTests(TestCase):
+    def test_public_minor_rating_redacts_identity_and_raw_protocol_fields(self):
+        self.athlete.date_of_birth = date(2015, 1, 1)
+        self.athlete.save()
+        season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
+        competition = self.competition("Regional")
+        self.publish(competition, [self.row(self.athlete, 1)])
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        client = APIClient()
+        path = "/api/v1/ratings/?season=2026&discipline=algorithmic"
+        item = client.get(path).data["items"][0]
+        self.assertEqual(item["athlete_name"], f"Спортсмен №{self.athlete.pk}")
+        self.assertNotIn("athlete", item["breakdown"][0]["source_snapshot"])
+        client.force_login(self.federation)
+        session = client.session
+        session["active_role"] = "federation"
+        session.save()
+        self.assertEqual(client.get(path).data["items"][0]["athlete_name"], self.athlete.full_name)
+
+    def test_russian_case_levels_and_federal_competition_types_map_precisely(self):
+        season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
+        championship = self.competition("Всероссийское", days=1)
+        championship.competition_type = "Чемпионат"
+        championship.save()
+        youth = self.competition("Всероссийское", days=2)
+        youth.competition_type = "Первенство"
+        youth.save()
+        cup = self.competition("Всероссийское", days=3)
+        cup.competition_type = "Кубок"
+        cup.save()
+        for competition in (championship, youth, cup):
+            self.publish(competition, [self.row(self.athlete, 1)])
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        rating = self.athlete.ratings.get(season=season, discipline=self.discipline)
+        self.assertEqual(rating.base_score, Decimal("180.00"))
+        self.assertEqual(rating.prize_count, 2)
+        self.assertEqual(rating.rating_score, Decimal("216.00"))
+
+    def test_current_suspension_excluded_without_rewriting_past_contributions(self):
+        season = RatingSeason.objects.create(year=2026, name="Сезон 2026")
+        competition = self.competition("Regional")
+        self.publish(competition, [self.row(self.athlete, 1)])
+        calculate_ratings(season=season, discipline=self.discipline, actor=self.federation)
+        restriction = AthleteRestriction.objects.create(athlete=self.athlete, kind="suspension", starts_at=timezone.localdate(), ends_at=timezone.localdate() + timedelta(days=5), created_by=self.federation)
+        client = APIClient()
+        self.assertEqual(client.get("/api/v1/ratings/?season=2026&discipline=algorithmic").data["total"], 0)
+        self.assertEqual(RatingContribution.objects.filter(athlete=self.athlete, is_current=True).count(), 1)
+        restriction.status = "revoked"
+        restriction.save()
+        self.assertEqual(client.get("/api/v1/ratings/?season=2026&discipline=algorithmic").data["total"], 1)
+
     def setUp(self):
         self.federation = self.user("fed", "federation")
         self.athlete = self.user("athlete", "athlete")

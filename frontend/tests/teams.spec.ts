@@ -88,7 +88,7 @@ test("team data is hidden while an active-role switch is pending", async ({ page
   await page.getByRole("button", { name: "Спортсмен", exact: true }).click();
   await expect(page.getByText("Частная команда")).toHaveCount(0);
   releaseSwitch?.();
-  await expect(page.getByText("Для просмотра команд выберите роль федерации.")).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard$/);
 });
 
 test("expired session hides previously loaded teams after a denied request", async ({ page }) => {
@@ -119,7 +119,7 @@ test("late candidate response cannot reveal data after switching role", async ({
   await page.getByRole("button", { name: "Частная команда" }).click();
   await requested;
   await page.getByRole("button", { name: "Тренер", exact: true }).click();
-  await expect(page.getByText("Для просмотра команд выберите роль федерации.")).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard$/);
   release?.();
   await expect(page.getByText("Частный спортсмен")).toHaveCount(0);
   await expect(page.getByText("Частная команда")).toHaveCount(0);
