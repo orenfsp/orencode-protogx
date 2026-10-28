@@ -21,6 +21,14 @@ from .certificates import (
     CertificateVerifyView,
 )
 from .development import DevelopmentView, IndicatorEvidenceView
+from .integrations import (
+    ExternalEventsView,
+    ExternalImportView,
+    ImportDecisionView,
+    IntegrationIdentityView,
+    IntegrationsView,
+    RevokeIntegrationView,
+)
 from .judging import JudgingDocumentsView, JudgingDownloadView
 from .ministry import MinistryView
 from .newcomer import NewcomerView
@@ -43,6 +51,12 @@ from .training import (
 )
 
 urlpatterns = [
+    path("integrations/", IntegrationsView.as_view()),
+    path("integrations/<int:pk>/revoke/", RevokeIntegrationView.as_view()),
+    path("integrations/identities/", IntegrationIdentityView.as_view()),
+    path("integrations/imports/<int:pk>/decision/", ImportDecisionView.as_view()),
+    path("external/events/", ExternalEventsView.as_view()),
+    path("external/results/", ExternalImportView.as_view()),
     path("awards/", AwardsView.as_view()),
     path("awards/schemes/", AwardSchemeCreateView.as_view()),
     path("awards/prepare/", AwardPrepareView.as_view()),

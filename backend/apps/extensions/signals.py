@@ -7,6 +7,13 @@ from apps.competitions.models import AuditEvent
 from .notifications import notify
 
 
+@receiver(post_save, sender=AuditEvent, dispatch_uid="fsp_webhook_outbox")
+def webhook_event(sender, instance, created, **kwargs):
+    if created:
+        from .integrations import enqueue_webhooks
+        enqueue_webhooks(instance)
+
+
 @receiver(post_save, sender=AuditEvent, dispatch_uid="fsp_extension_outbox")
 def domain_event(sender, instance, created, **kwargs):
     if not created:

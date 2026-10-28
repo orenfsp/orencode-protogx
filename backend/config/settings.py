@@ -104,3 +104,6 @@ EMAIL_TIMEOUT = 10
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "fsp@example.test")
 PROTOCOL_PDF_FONT = os.environ.get("PROTOCOL_PDF_FONT", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 FSP_PUBLIC_URL = os.environ.get("FSP_PUBLIC_URL", "http://127.0.0.1:3000").rstrip("/")
+INTEGRATION_ENCRYPTION_KEY = os.environ.get("INTEGRATION_ENCRYPTION_KEY", "")
+FSP_WEBHOOK_HOSTS = [h for h in os.environ.get("FSP_WEBHOOK_HOSTS", "").split(",") if h]
+FSP_WEBHOOK_ALLOW_LOOPBACK = os.environ.get("FSP_WEBHOOK_ALLOW_LOOPBACK", "0") == "1"

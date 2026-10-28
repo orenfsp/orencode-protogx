@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
 import { api } from "@/lib/api";
 
-export type Field = { name: string; label: string; type?: "text" | "number" | "date" | "url" | "checkbox" | "textarea"; options?: string; choices?: { value: string | number; label: string }[]; optional?: boolean };
+export type Field = { name: string; label: string; type?: "text" | "number" | "date" | "url" | "checkbox" | "textarea"; options?: string; choices?: { value: string | number; label: string }[]; optional?: boolean; array?: boolean };
 export type Action = { label: string; path: string; fields: Field[]; roles?: string[] };
 export type WorkspaceProps = { title: string; endpoint: string; columns: { key: string; label: string }[]; actions?: Action[]; publicAccess?: boolean };
 type Data = { items: Record<string, unknown>[]; notice?: string; options?: Record<string, { value: string | number; label: string }[]> };
@@ -35,11 +35,12 @@ function WorkspaceBody({ title, endpoint, columns, actions = [], publicAccess = 
     for (const field of action.fields) {
       const raw = values.get(field.name);
       if (field.type === "checkbox") body[field.name] = raw === "on";
+      else if (field.array && raw) body[field.name] = [String(raw)];
       else if (raw !== "" && raw !== null) body[field.name] = field.type === "number" ? Number(raw) : raw;
     }
     const path = action.path.replace(/\{(\w+)\}/g, (_, name) => encodeURIComponent(String(body[name])));
     setBusy(true); setError(""); setMessage("");
-    try { await api(path, { method: "POST", body: JSON.stringify(body) }); setMessage("Изменения сохранены"); setRevision(r => r + 1); form.reset(); }
+    try { const result = await api<{token?: string; webhook_secret?: string; client_secret?: string}>(path, { method: "POST", body: JSON.stringify(body) }); setMessage(result?.token ? `Сохраните токен сейчас: ${result.token}${result.webhook_secret ? `; секрет вебхука: ${result.webhook_secret}` : ""}. Повторно они не показываются.` : result?.client_secret ? `Сохраните секрет клиента сейчас: ${result.client_secret}` : "Изменения сохранены"); setRevision(r => r + 1); form.reset(); }
     catch (e) { setError(e instanceof Error ? e.message : "Не удалось сохранить"); }
     finally { setBusy(false); }
   }

@@ -249,3 +249,61 @@ class AwardPetition(models.Model):
     revision = models.PositiveIntegerField(default=1)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class IntegrationClient(models.Model):
+    name = models.CharField(max_length=200)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    token_digest = models.CharField(max_length=64, unique=True)
+    scopes = models.JSONField(default=list)
+    competitions = models.ManyToManyField("competitions.Competition")
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True)
+    webhook_url = models.URLField(blank=True)
+    signing_secret_encrypted = models.TextField(blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class IntegrationIdentity(models.Model):
+    client = models.ForeignKey(IntegrationClient, on_delete=models.PROTECT)
+    external_id = models.CharField(max_length=200)
+    athlete = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["client", "external_id"], name="extension_external_identity_once")]
+
+
+class WebhookDelivery(models.Model):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True)
+    client = models.ForeignKey(IntegrationClient, on_delete=models.PROTECT)
+    event = models.ForeignKey("competitions.AuditEvent", on_delete=models.PROTECT)
+    payload = models.JSONField()
+    status = models.CharField(max_length=16, default="pending")
+    attempts = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["client", "event"], name="extension_webhook_event_once")]
+
+
+class WebhookAttempt(models.Model):
+    delivery = models.ForeignKey(WebhookDelivery, on_delete=models.PROTECT, related_name="history")
+    attempted_at = models.DateTimeField(default=timezone.now)
+    status_code = models.PositiveSmallIntegerField(null=True)
+    outcome = models.CharField(max_length=40)
+
+
+class ResultImport(models.Model):
+    client = models.ForeignKey(IntegrationClient, on_delete=models.PROTECT)
+    competition = models.ForeignKey("competitions.Competition", on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=100)
+    digest = models.CharField(max_length=64)
+    status = models.CharField(max_length=16, default="staged")
+    rows = models.JSONField()
+    before = models.JSONField(default=list)
+    accepted_digest = models.CharField(max_length=64, blank=True)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["client", "idempotency_key"], name="extension_import_idempotency")]
