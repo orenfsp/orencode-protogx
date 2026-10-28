@@ -2755,6 +2755,27 @@ components:
       required:
       - request_type
       - requested_category
+    CategoryContext:
+      type: object
+      properties:
+        category:
+          type: string
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        validity:
+          $ref: '#/components/schemas/ValidityEnum'
+        current:
+          type: boolean
+      required:
+      - assigned_on
+      - category
+      - current
+      - valid_until
+      - validity
     CategoryEnum:
       $ref: '#/components/schemas/JudgeCategoryEnum'
     ClosePeriod:
@@ -2803,6 +2824,32 @@ components:
       - discipline
       - id
       - status
+    CoachLinkContext:
+      type: object
+      properties:
+        coach:
+          type: string
+        athlete:
+          type: string
+        discipline:
+          type: string
+        status:
+          $ref: '#/components/schemas/CoachLinkContextStatusEnum'
+      required:
+      - athlete
+      - coach
+      - discipline
+      - status
+    CoachLinkContextStatusEnum:
+      enum:
+      - pending
+      - confirmed
+      - rejected
+      type: string
+      description: |-
+        * `pending` - pending
+        * `confirmed` - confirmed
+        * `rejected` - rejected
     CoachLinkDecision:
       type: object
       properties:
@@ -3109,6 +3156,23 @@ components:
       - judge
       - judge_name
       - role_label
+    JudgeAssignmentContext:
+      type: object
+      properties:
+        competition:
+          type: string
+        discipline:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        role:
+          type: string
+      required:
+      - competition
+      - discipline
+      - role
+      - starts_at
     JudgeCategoryApplication:
       type: object
       properties:
@@ -3932,6 +3996,30 @@ components:
       - request_type
       - requested_rank
       - result
+    RankContext:
+      type: object
+      properties:
+        rank:
+          type: string
+        discipline:
+          type: string
+        assigned_on:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        validity:
+          $ref: '#/components/schemas/ValidityEnum'
+        current:
+          type: boolean
+      required:
+      - assigned_on
+      - current
+      - discipline
+      - rank
+      - valid_until
+      - validity
     RankEnum:
       $ref: '#/components/schemas/SportRankEnum'
     RankHint:
@@ -4468,23 +4556,19 @@ components:
         ranks:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/RankContext'
         categories:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/CategoryContext'
         coach_links:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/CoachLinkContext'
         assignments:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/JudgeAssignmentContext'
       required:
       - assignments
       - categories
@@ -4918,6 +5002,16 @@ components:
       required:
       - full_name
       - id
+    ValidityEnum:
+      enum:
+      - active
+      - expiring
+      - expired
+      type: string
+      description: |-
+        * `active` - active
+        * `expiring` - expiring
+        * `expired` - expired
   securitySchemes:
     cookieAuth:
       type: apiKey

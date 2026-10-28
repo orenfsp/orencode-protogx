@@ -29,6 +29,12 @@ from apps.competitions.models import (
 )
 from apps.competitions.services import age_on, audit
 from apps.qualifications.models import JudgeCategoryHistory, SportRankHistory
+from apps.qualifications.services import (
+    category_level,
+    most_significant,
+    rank_level,
+    validity_state,
+)
 from apps.teams.services import require_federation
 
 from .analytics import consistent_report_read, participation_report, report_fingerprint
@@ -212,10 +218,13 @@ class RegistryPersonContext(FederationMixin, APIView):
         user = get_object_or_404(User, pk=pk, role_assignments__role=role)
         ranks = SportRankHistory.objects.filter(athlete=user).select_related("discipline") if role == "athlete" else []
         categories = JudgeCategoryHistory.objects.filter(judge=user) if role == "judge" else []
+        current_rank = most_significant(ranks, rank_level)
+        current_category = most_significant(categories, category_level)
+        today = timezone.localdate()
         links = CoachAthleteLink.objects.filter(athlete=user) if role == "athlete" else CoachAthleteLink.objects.filter(coach=user) if role == "coach" else CoachAthleteLink.objects.none()
         links = links.select_related("coach", "athlete", "discipline").order_by("pk")
         assignments = JudgeAssignment.objects.filter(judge=user).select_related("competition__discipline").order_by("-competition__starts_at", "-pk") if role == "judge" else []
-        return Response({"ranks": [{"rank": item.get_rank_display(), "discipline": item.discipline.name, "assigned_on": item.assigned_on, "valid_until": item.valid_until} for item in ranks], "categories": [{"category": item.get_category_display(), "assigned_on": item.assigned_on, "valid_until": item.valid_until} for item in categories], "coach_links": [{"coach": item.coach.full_name, "athlete": item.athlete.full_name, "discipline": item.discipline.name, "status": item.status} for item in links], "assignments": [{"competition": item.competition.title, "discipline": item.competition.discipline.name, "starts_at": item.competition.starts_at, "role": item.role_label} for item in assignments]})
+        return Response({"ranks": [{"rank": item.get_rank_display(), "discipline": item.discipline.name, "assigned_on": item.assigned_on, "valid_until": item.valid_until, "validity": validity_state(item.valid_until, today), "current": bool(current_rank and item.pk == current_rank.pk)} for item in ranks], "categories": [{"category": item.get_category_display(), "assigned_on": item.assigned_on, "valid_until": item.valid_until, "validity": validity_state(item.valid_until, today), "current": bool(current_category and item.pk == current_category.pk)} for item in categories], "coach_links": [{"coach": item.coach.full_name, "athlete": item.athlete.full_name, "discipline": item.discipline.name, "status": item.status} for item in links], "assignments": [{"competition": item.competition.title, "discipline": item.competition.discipline.name, "starts_at": item.competition.starts_at, "role": item.role_label} for item in assignments]})
 
 
 class PersonDetail(FederationMixin, generics.RetrieveUpdateAPIView):

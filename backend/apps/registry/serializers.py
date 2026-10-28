@@ -52,11 +52,42 @@ class StaffProfileSerializer(serializers.ModelSerializer):
         fields = ("organization", "disciplines")
 
 
+class RankContextSerializer(serializers.Serializer):
+    rank = serializers.CharField()
+    discipline = serializers.CharField()
+    assigned_on = serializers.DateField()
+    valid_until = serializers.DateField()
+    validity = serializers.ChoiceField(choices=("active", "expiring", "expired"))
+    current = serializers.BooleanField()
+
+
+class CategoryContextSerializer(serializers.Serializer):
+    category = serializers.CharField()
+    assigned_on = serializers.DateField()
+    valid_until = serializers.DateField()
+    validity = serializers.ChoiceField(choices=("active", "expiring", "expired"))
+    current = serializers.BooleanField()
+
+
+class CoachLinkContextSerializer(serializers.Serializer):
+    coach = serializers.CharField()
+    athlete = serializers.CharField()
+    discipline = serializers.CharField()
+    status = serializers.ChoiceField(choices=("pending", "confirmed", "rejected"))
+
+
+class JudgeAssignmentContextSerializer(serializers.Serializer):
+    competition = serializers.CharField()
+    discipline = serializers.CharField()
+    starts_at = serializers.DateTimeField()
+    role = serializers.CharField()
+
+
 class RegistryPersonContextSerializer(serializers.Serializer):
-    ranks = serializers.ListField(child=serializers.DictField())
-    categories = serializers.ListField(child=serializers.DictField())
-    coach_links = serializers.ListField(child=serializers.DictField())
-    assignments = serializers.ListField(child=serializers.DictField())
+    ranks = RankContextSerializer(many=True)
+    categories = CategoryContextSerializer(many=True)
+    coach_links = CoachLinkContextSerializer(many=True)
+    assignments = JudgeAssignmentContextSerializer(many=True)
 
 
 class PersonFilterSerializer(serializers.Serializer):

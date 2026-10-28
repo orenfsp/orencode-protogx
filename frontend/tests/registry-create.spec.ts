@@ -50,3 +50,21 @@ test("organization filters send named selections to the API", async ({ page }) =
     return [query.get("active"), query.get("municipality"), query.get("organization_type")];
   }).toEqual(["false", "Оренбург", "Клуб"]);
 });
+
+test("judge detail distinguishes current and expired qualification records", async ({ page }) => {
+  const user = { id: 1, full_name: "Федерация", email: "fiction@example.test", roles: ["federation"], active_role: "federation" };
+  await page.route("**/api/v1/auth/me/", (route) => route.fulfill({ json: user }));
+  await page.route("**/api/v1/registry/options/", (route) => route.fulfill({ json: { organizations: [], disciplines: [], age_groups: [], municipalities: [] } }));
+  await page.route("**/api/v1/registry/eligible-users/**", (route) => route.fulfill({ json: { results: [], next: null } }));
+  await page.route("**/api/v1/athletes/?**", (route) => route.fulfill({ json: { count: 0, next: null, previous: null, results: [] } }));
+  await page.route("**/api/v1/judges/?**", (route) => route.fulfill({ json: { count: 1, next: null, previous: null, results: [{ id: 8, full_name: "Демо судья", date_of_birth: "2000-01-01", organization: null, is_active: true }] } }));
+  await page.route("**/api/v1/registry/profiles/judge/8/context/", (route) => route.fulfill({ json: { ranks: [], categories: [{ category: "Первая категория", assigned_on: "2020-01-01", valid_until: "2025-01-01", validity: "expired", current: true }], coach_links: [], assignments: [] } }));
+  await page.route("**/api/v1/registry/profiles/judge/8/staff/", (route) => route.fulfill({ json: { organization: null, disciplines: [] } }));
+  await page.goto("/registry");
+  await page.getByRole("button", { name: "Судьи", exact: true }).click();
+  await page.getByRole("button", { name: "Демо судья", exact: true }).click();
+  const category = page.getByRole("listitem").filter({ hasText: "Первая категория" });
+  await expect(category).toContainText("Текущая запись");
+  await expect(category).toContainText("Срок истёк");
+  await expect(category).toContainText("2025-01-01");
+});

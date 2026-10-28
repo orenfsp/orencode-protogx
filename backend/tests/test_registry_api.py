@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
 from io import BytesIO
 
 from django.test import TestCase
+from django.utils import timezone
 from openpyxl import load_workbook
 from rest_framework.test import APIClient
 
@@ -240,3 +241,26 @@ class RegistryApiTests(TestCase):
         session.save()
         self.assertEqual(self.client.get(f"/api/v1/registry/profiles/judge/{judge.pk}/context/").status_code, 403)
         self.assertEqual(self.client.patch(staff, {"organization": self.second.pk}, format="json").status_code, 403)
+
+    def test_judge_context_marks_current_category_and_expiry(self):
+        from apps.qualifications.models import (
+            JudgeCategoryApplication,
+            JudgeCategoryHistory,
+        )
+
+        judge = User.objects.create_user(email="judge-category@example.test", full_name="Judge")
+        UserRole.objects.create(user=judge, role="judge")
+        today = timezone.localdate()
+        for category, assigned, valid_until in (
+            ("third", today - timedelta(days=800), today - timedelta(days=1)),
+            ("second", today - timedelta(days=100), today + timedelta(days=400)),
+        ):
+            application = JudgeCategoryApplication.objects.create(judge=judge, request_type="assign", requested_category=category, status="approved")
+            JudgeCategoryHistory.objects.create(judge=judge, category=category, application=application, order_number="Fictional", assigned_on=assigned, valid_until=valid_until, recorded_by=self.federation)
+        response = self.client.get(f"/api/v1/registry/profiles/judge/{judge.pk}/context/")
+        self.assertEqual(response.status_code, 200)
+        current = [item for item in response.data["categories"] if item["current"]]
+        self.assertEqual(len(current), 1)
+        self.assertEqual(current[0]["validity"], "active")
+        self.assertEqual(current[0]["valid_until"], today + timedelta(days=400))
+        self.assertTrue(any(item["validity"] == "expired" and not item["current"] for item in response.data["categories"]))

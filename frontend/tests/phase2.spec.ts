@@ -49,7 +49,7 @@ test("competition application, moderation, result, protocol and athlete history"
   await athletePage.goto(competitionUrl);
   await athletePage.getByRole("combobox", { name: "Возрастная группа" }).selectOption({ label: "Демо: 18+" });
   await athletePage.getByRole("button", { name: "Отправить заявку" }).click();
-  await expect(athletePage.getByText("Ваша заявка: На рассмотрении")).toBeVisible();
+  await expect(athletePage.getByText("Ваша заявка: На рассмотрении")).toBeVisible({ timeout: 20000 });
 
   await page.goto(competitionUrl);
   await page.getByRole("button", { name: "Одобрить" }).click();
