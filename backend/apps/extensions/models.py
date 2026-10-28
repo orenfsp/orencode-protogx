@@ -100,3 +100,45 @@ class Attendance(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["session", "membership"], name="extension_attendance_once")]
+
+
+class AssessmentNorm(models.Model):
+    key = models.SlugField(max_length=80)
+    name = models.CharField(max_length=200)
+    version = models.PositiveIntegerField()
+    discipline = models.ForeignKey("catalogs.Discipline", on_delete=models.PROTECT)
+    stage = models.CharField(max_length=16, choices=TrainingStage.choices)
+    sex = models.CharField(max_length=8, choices=[("all", "Без различия"), ("female", "Женский"), ("male", "Мужской")], default="all")
+    unit = models.CharField(max_length=80)
+    comparator = models.CharField(max_length=3, choices=[("min", "Не менее"), ("max", "Не более")])
+    threshold = models.DecimalField(max_digits=12, decimal_places=3)
+    effective_from = models.DateField()
+    effective_until = models.DateField(null=True, blank=True)
+    source_url = models.URLField(blank=True)
+    source_version = models.CharField(max_length=200, default="fictional-demo")
+    verified_on = models.DateField(null=True, blank=True)
+    source_verified = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["key", "version", "discipline", "stage", "sex"], name="extension_norm_version")]
+
+
+class AssessmentAttempt(models.Model):
+    athlete = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    norm = models.ForeignKey(AssessmentNorm, on_delete=models.PROTECT)
+    measured_on = models.DateField()
+    value = models.DecimalField(max_digits=12, decimal_places=3)
+    evidence = models.URLField(blank=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="recorded_attempts")
+    outcome = models.JSONField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class Attestation(models.Model):
+    membership = models.ForeignKey(TrainingMembership, on_delete=models.PROTECT)
+    assessed_on = models.DateField()
+    sex = models.CharField(max_length=8, default="all")
+    snapshot = models.JSONField()
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="approved_attestations")
+    transfer = models.OneToOneField(TrainingMembership, null=True, on_delete=models.PROTECT, related_name="attestation_transfer")

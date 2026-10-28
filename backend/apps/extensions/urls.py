@@ -1,5 +1,12 @@
 from django.urls import path
 
+from .assessment import (
+    AssessmentView,
+    AttemptCreateView,
+    AttestationApproveView,
+    AttestationCreateView,
+    NormCreateView,
+)
 from .certificates import (
     CertificateDownloadView,
     CertificateRevokeView,
@@ -23,6 +30,11 @@ urlpatterns = [
     path("notifications/", NotificationsView.as_view()),
     path("newcomer/", NewcomerView.as_view()),
     path("ministry/", MinistryView.as_view()),
+    path("assessment/", AssessmentView.as_view()),
+    path("assessment/norms/", NormCreateView.as_view()),
+    path("assessment/attempts/", AttemptCreateView.as_view()),
+    path("assessment/attestations/", AttestationCreateView.as_view()),
+    path("assessment/attestations/<int:pk>/approve/", AttestationApproveView.as_view()),
     path("training/", TrainingView.as_view()),
     path("training/organizations/", OrganizationCreateView.as_view()),
     path("training/groups/", GroupCreateView.as_view()),
