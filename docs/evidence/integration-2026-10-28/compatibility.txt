@@ -1,0 +1,11 @@
+ Container fspmandatory-api-run-b7e9bc2c6708 Creating
+ Container fspmandatory-api-run-b7e9bc2c6708 Created
+Creating test database for alias 'default'...
+Found 4 test(s).
+System check identified no issues (0 silenced).
+....
+----------------------------------------------------------------------
+Ran 4 tests in 7.241s
+
+OK
+Destroying test database for alias 'default'...

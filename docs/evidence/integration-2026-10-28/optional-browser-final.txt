@@ -1,0 +1,17 @@
+
+> fsp-frontend@0.1.0 test:e2e
+> playwright test tests/optional-live.spec.ts --workers=1 --output=../tmp/optional-test-results
+
+
+Running 6 tests using 1 worker
+
+(node:23908) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests\optional-live.spec.ts:8:7 › optional case live workflows › D11 public navigation and responsive design (5.9s)
+  ✓  2 tests\optional-live.spec.ts:25:7 › optional case live workflows › D10 athlete certificate, D5 private evidence and D7 progression (14.4s)
+  ✓  3 tests\optional-live.spec.ts:68:7 › optional case live workflows › D3 D4 D6 D8 D2 federation workspaces use live data (2.9s)
+  ✓  4 tests\optional-live.spec.ts:88:7 › optional case live workflows › D12 judge generates his own panel document (2.0s)
+  ✓  5 tests\optional-live.spec.ts:101:7 › optional case live workflows › D9 ministry reads without mutation rights (2.3s)
+  ✓  6 tests\optional-live.spec.ts:110:7 › optional case live workflows › D1 real browser redirect login consent callback userinfo logout (3.8s)
+
+  6 passed (35.2s)

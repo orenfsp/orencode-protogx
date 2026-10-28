@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from apps.accounts.profile import ConsentsView, ProfileView
+from apps.extensions.oidc import oidc_patterns
 
 
 class HealthSerializer(serializers.Serializer):
@@ -22,6 +23,7 @@ class HealthView(GenericAPIView):
 
 
 urlpatterns = [
+    path("o/", include(oidc_patterns, namespace="oauth2_provider")),
     path("admin/", admin.site.urls),
     path("api/v1/health/", HealthView.as_view()),
     path("api/v1/auth/", include("apps.accounts.urls")),
@@ -34,6 +36,7 @@ urlpatterns = [
     path("api/v1/", include("apps.teams.urls")),
     path("api/v1/", include("apps.registry.urls")),
     path("api/v1/", include("apps.notifications.urls")),
+    path("api/v1/", include("apps.extensions.urls")),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
 ]

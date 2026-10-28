@@ -4,6 +4,12 @@
 
 Платформа на Django/DRF, PostgreSQL и Next.js. Текущее задание — обязательные требования кейса, часть 1. Неизменяемый визуальный контракт: `docs/design/fsp-reference.html`. [Трассировка кейса](docs/case-mandatory-traceability.md), [матрица AC](docs/acceptance-matrix.md), [OpenAPI](docs/openapi.yaml) отделяют реализацию от фактически выполненных проверок.
 
+## Optional case extension D1–D12
+
+The separate `feat/case-optional-d1-d12` branch adds real Django/DRF workflows, migrations, Russian Next.js screens, protected PDF/DOCX/XLSX documents, tests and fictional demo data. Start at `/services`; follow [optional demo setup](docs/optional-demo.md), [feature traceability and blockers](docs/case-optional-traceability.md), [integration/OIDC contracts](docs/optional-integrations.md) and [executed verification](docs/optional-verification.md).
+
+All twelve remain **optional in the official case**. Full completion is not claimed: D3/D6/D9 still need integration with the historical registry in PR #5. D4/D7/D8 calculations and unverified forms are explicitly demonstrations. Core routes operate without signing keys, SMTP, external platforms or webhook credentials. The last PostgreSQL rerun was blocked by local disk/I/O failure; the verification document distinguishes the successful earlier PostgreSQL baseline from final SQLite/browser checks.
+
 ## Run with Docker Compose
 
 Copy `.env.example` to `.env` and replace the local passwords and Django secret. Run `docker compose up --build`. The frontend is at `http://localhost:3000`, API at `http://localhost:8000/api/v1/health/`, OpenAPI at `/api/schema/`, docs at `/api/docs/`. The API applies migrations and runs the opt-in demo seeder before becoming healthy. Next.js waits for that healthcheck. The database persists in a named Compose volume.

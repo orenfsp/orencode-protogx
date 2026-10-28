@@ -1,0 +1,12 @@
+# Local opt-in OIDC demo. Run scripts/prepare_optional_demo.py first.
+# No production secrets are included. Main Compose works without this file.
+services:
+  api:
+    env_file:
+      - ./tmp/optional-demo.env
+    environment:
+      FSP_OIDC_PRIVATE_KEY_FILE: /run/fsp-id-demo.pem
+      FSP_OIDC_ISSUER: http://127.0.0.1:8000
+      FSP_PUBLIC_URL: http://127.0.0.1:3000
+    volumes:
+      - ./tmp/fsp-id-demo.pem:/run/fsp-id-demo.pem:ro

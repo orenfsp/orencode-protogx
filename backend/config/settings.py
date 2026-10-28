@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "local-development-only-change-me")
@@ -25,6 +26,8 @@ INSTALLED_APPS = [
     "apps.teams",
     "apps.registry",
     "apps.notifications",
+    "apps.extensions",
+    "oauth2_provider",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -35,6 +38,7 @@ MIDDLEWARE = [
     "apps.accounts.audit_context.AuditContextMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.extensions.middleware.PrivateExtensionResponses",
 ]
 ROOT_URLCONF = "config.urls"
 TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [], "APP_DIRS": True, "OPTIONS": {"context_processors": ["django.template.context_processors.debug", "django.template.context_processors.request", "django.contrib.auth.context_processors.auth", "django.contrib.messages.context_processors.messages"]}}]
@@ -42,7 +46,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 if os.environ.get("DATABASE_ENGINE") == "sqlite":
-    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "local.sqlite3"}}
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.environ.get("SQLITE_PATH", str(BASE_DIR / "local.sqlite3"))}}
 else:
     DATABASES = {"default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -72,6 +76,10 @@ SPECTACULAR_SETTINGS = {
         "JudgeCategoryEnum": "apps.qualifications.models.JudgeCategory",
         "QualificationReviewStatusEnum": "apps.qualifications.models.ReviewStatus",
         "DecisionStatusEnum": [("approved", "approved"), ("rejected", "rejected")],
+        "FormatEnum": [("online", "Онлайн"), ("in_person", "Очное"), ("hybrid", "Гибридное")],
+        "TrainingSessionFormatEnum": [("in_person", "Очно"), ("online", "Онлайн")],
+        "OIDCSharingScopeEnum": [(name,name) for name in ["openid","profile","fsp_roles","fsp_disciplines","fsp_rank"]],
+        "IntegrationScopeEnum": [(name,name) for name in ["events:read","results:import","webhooks:receive"]],
     },
     # Keep existing component names available for consumers of the earlier schema.
     "APPEND_COMPONENTS": {"schemas": {
@@ -104,3 +112,49 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "0") == "1"
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
 EMAIL_TIMEOUT = 10
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "ФСП <no-reply@example.test>")
+PROTOCOL_PDF_FONT = os.environ.get("PROTOCOL_PDF_FONT", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+FSP_PUBLIC_URL = os.environ.get("FSP_PUBLIC_URL", "http://127.0.0.1:3000").rstrip("/")
+TEMPLATES[0]["OPTIONS"]["context_processors"].append("apps.extensions.context_processors.public_settings")
+INTEGRATION_ENCRYPTION_KEY = os.environ.get("INTEGRATION_ENCRYPTION_KEY", "")
+FSP_WEBHOOK_HOSTS = [h for h in os.environ.get("FSP_WEBHOOK_HOSTS", "").split(",") if h]
+FSP_WEBHOOK_ALLOW_LOOPBACK = os.environ.get("FSP_WEBHOOK_ALLOW_LOOPBACK", "0") == "1"
+
+OIDC_KEY_FILE = os.environ.get("FSP_OIDC_PRIVATE_KEY_FILE", "")
+OIDC_PRIVATE_KEY = Path(OIDC_KEY_FILE).read_text(encoding="utf-8") if OIDC_KEY_FILE and Path(OIDC_KEY_FILE).is_file() else ""
+FSP_OIDC_ENABLED = os.environ.get("FSP_OIDC_ENABLED", "0") == "1" and bool(OIDC_PRIVATE_KEY)
+FSP_OIDC_ISSUER = os.environ.get("FSP_OIDC_ISSUER", "http://127.0.0.1:8000").rstrip("/")
+OIDC_ISSUER_PARTS = urlsplit(FSP_OIDC_ISSUER)
+FSP_OIDC_ENABLED = FSP_OIDC_ENABLED and (
+    OIDC_ISSUER_PARTS.scheme == "https" or (
+        DEBUG and OIDC_ISSUER_PARTS.scheme == "http" and OIDC_ISSUER_PARTS.hostname in ("127.0.0.1", "localhost")
+    )
+)
+LOGIN_URL = "/o/login/"
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+OAUTH2_PROVIDER = {
+    "OIDC_ENABLED": FSP_OIDC_ENABLED,
+    "OIDC_RSA_PRIVATE_KEY": OIDC_PRIVATE_KEY,
+    "OIDC_RSA_PRIVATE_KEYS_INACTIVE": [Path(p).read_text(encoding="utf-8") for p in os.environ.get("FSP_OIDC_INACTIVE_KEY_FILES", "").split(os.pathsep) if p],
+    "OIDC_ISS_ENDPOINT": FSP_OIDC_ISSUER,
+    "OIDC_USERINFO_ENDPOINT": FSP_OIDC_ISSUER + "/o/userinfo/",
+    "OAUTH2_VALIDATOR_CLASS": "apps.extensions.oidc.FSPValidator",
+    "OAUTH2_BACKEND_CLASS": "apps.extensions.oidc.FSPCore",
+    "SCOPES": {"openid": "Псевдонимный идентификатор", "profile": "ФИО", "fsp_roles": "Назначенные роли", "fsp_disciplines": "Спортивные дисциплины", "fsp_rank": "Действующие разряды"},
+    "DEFAULT_SCOPES": ["openid"],
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 300,
+    "ID_TOKEN_EXPIRE_SECONDS": 300,
+    "AUTHORIZATION_CODE_EXPIRE_SECONDS": 60,
+    "PKCE_REQUIRED": True,
+    "COMPLIANT_BCP_RFC9700_PKCE_METHOD": True,
+    "COMPLIANT_BCP_RFC9700_PKCE_REQUIRED": True,
+    "COMPLIANT_BCP_RFC9700_TOKEN_STORAGE": True,
+    "COMPLIANT_BCP_RFC9700_AUTHZ_RESPONSE_ISS": True,
+    "COMPLIANT_BCP_RFC9700_IMPLICIT_GRANT": True,
+    "COMPLIANT_BCP_RFC9700_PASSWORD_GRANT": True,
+    "OIDC_RESPONSE_TYPES_SUPPORTED": ["code"],
+    "OIDC_RP_INITIATED_LOGOUT_ENABLED": True,
+    "OIDC_RP_INITIATED_LOGOUT_STRICT_REDIRECT_URIS": True,
+    "OIDC_RP_INITIATED_LOGOUT_ACCEPT_EXPIRED_TOKENS": False,
+    "OIDC_JWKS_MAX_AGE_SECONDS": 60,
+    "ALLOW_URI_WILDCARDS": False,
+}

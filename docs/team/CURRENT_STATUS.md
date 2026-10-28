@@ -1,3 +1,7 @@
+# Integration assignment ? 2026-10-28
+
+User requested local integration with ProtoGX `feat/case-optional-d1-d12` (input `b3a2884`). Branch: `codex/integrate-optional-d1-d12`. Local working changes preserved in `131c057`. [Task contract](tasks/INTEGRATE_OPTIONAL_D1_D12.md); [current evidence](../integration-verification.md). The mandatory-only status below is historical.
+
 # Текущий статус — mandatory part 1, 2026-10-28
 
 Назначение пользователя: `codex-fsp-01-mandatory.md` + официальный PDF, с подтверждением «заканчивай до конца». Ветка `codex/mandatory-case-completion`; baseline `ee60893d2278001aaa6b704943230c0bd2db6eeb`; финальный код **`223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd`**. Документационный спринт ниже исторический; это явное новое разрешение обязательной разработки. D1–D12 вне задачи.
@@ -13,6 +17,8 @@
 Внешние gates не объявляются passed: production SMTP credentials/receipt; действующие консолидированные нормативы и официальные формы; реальная identity/signature verification представителя; hosted CI финального SHA. Web доступ восстановился, несколько исходных документов скачаны/выборочно осмотрены, найдены расхождения подписи ссылки ЕВСК с содержимым: [source review](../regulatory-source-review.md). Демо-шаблоны не verified; реальные письмо/законность не подменяются Mailpit/checkbox. Предыдущее ограниченное implement_task MCP вернуло 503; повторное review_code вернуло предложения через настроенную модель, интегратор сам проверил/реализовал изменения.
 
 ## Исторический snapshot — 2026-10-27 (не текущая оценка)
+
+> Исторический срез ниже сохранён для контекста. По отдельному заданию пользователя от 28.10.2026 начат этап дополнительных Д1–Д12 в `feat/case-optional-d1-d12` от main `45be071`. Актуальные границы: [трассировка](../case-optional-traceability.md), [приёмка обязательной части](../acceptance-matrix.md), [проверки](../optional-verification.md). Указание «Phase 3 не начата» ниже относится к прежнему документационному спринту и не описывает эту feature-ветку.
 
 Код сверён с базовым `HEAD=600562d` и [матрицей AC-01…AC-18](../acceptance-matrix.md). В текущем спринте отдельно исполнены проверки, перечисленные в [TESTING.md](TESTING.md); остальные свидетельства относятся к [Phase 1](../phase1-baseline.md) и [Phase 2](../phase2-architecture.md). **Phase 3: NOT STARTED / НЕ НАЧАТА.** Этот документационный спринт не добавляет функциональности.
 

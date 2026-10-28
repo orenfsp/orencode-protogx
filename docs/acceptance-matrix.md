@@ -1,3 +1,5 @@
+> Integration 2026-10-28: PostgreSQL 172 passed; main Chrome 120 passed / 6 optional skipped, followed by enabled optional-live 6 passed. Final observer fix: 3 targeted backend passed. Lint/typecheck/build/schema/migration/design checks passed. mandatory statuses below retain their historical evidence. Current combined mandatory + D1?D12 validation, fixes and limits: [integration-verification.md](integration-verification.md). Optional implementation statuses: [case-optional-traceability.md](case-optional-traceability.md); regulatory/production gates remain open.
+
 # Acceptance matrix — 2026-10-28
 
 Код `223bebe28ac7fc1f5e4244f42d0e642b68fd3bdd`, ветка `codex/mandatory-case-completion`. `implemented` — работающий программный сценарий с исполненным свидетельством; это не юридическая сертификация или production rollout. Для финальной проверки все проектные AC имеют локальное свидетельство. Внешние gates перечислены отдельно и не переименованы в passed.

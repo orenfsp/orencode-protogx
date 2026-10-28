@@ -1,0 +1,11 @@
+ Container fspmandatory-api-run-840e12bbadf2 Creating
+ Container fspmandatory-api-run-840e12bbadf2 Created
+Creating test database for alias 'default'...
+Found 3 test(s).
+System check identified no issues (0 silenced).
+...
+----------------------------------------------------------------------
+Ran 3 tests in 2.336s
+
+OK
+Destroying test database for alias 'default'...

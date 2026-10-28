@@ -17,6 +17,12 @@ The in-app browser inspection attempt timed out. A subsequent Computer Use inven
 
 The user subsequently limited this run to critical checks for a test demonstration. The 108-test PostgreSQL suite passed, as did production build, typecheck, ESLint, Ruff, migration checks, design contract and container OpenAPI validation. The live registry/history/analytics/XLSX scenario passed on a fresh isolated Compose database, including workbook parsing and totals 2/3. A complete final browser-suite run was not completed: earlier attempts exposed local origin/Python setup issues and reused-fixture state, and the final full run was stopped at the user's request. This is demonstration readiness evidence, not final AC-11 acceptance or hosted CI evidence for the new commit.
 
+## Optional services — 2026-10-28
+
+`optional-live.spec.ts` captures the loaded newcomer page at 1440/768/390 in both themes, plus the real OIDC consent and fictional userinfo callback. Evidence copies are `screenshots/optional-newcomer-*`, `optional-oidc-consent.png`, and `optional-oidc-userinfo.png`. The 390px dark navigator and desktop consent were visually inspected: the existing sidebar/rail, orange actions, stamps, typography and mobile navigation are retained. Tables scroll horizontally on mobile. This is sampled visual QA, not pixel-level acceptance of every optional form/state.
+
+OIDC Django templates use an exact packaged copy of the existing frontend globals.css + app.css, checked by `python scripts/sync_optional_styles.py --check`; no independent theme remains. The original reference and frontend CSS files were not edited. Django's theme toggle does not persist between navigations.
+
 Reference: `fsp-reference.html` (SHA-256 `2362C4D1AEC5D54FA075215D6FDF986416D23D8402FBF33342D29671C5D043A2`). It is immutable.
 
 Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numbered indigo sidebar and role selector to `AppShell`, the document rail to `.main::before`, and the fixed mobile bottom navigation to `.mobtab`. Rubik, Inter, and JetBrains Mono are loaded with the same font weights. The light/dark token values and 900px/520px breakpoints come from the reference CSS.
@@ -127,3 +133,8 @@ Typecheck/lint/build and design-contract check passed. Existing mocked published
 Полный Chrome: 118 passed / 0 failed / 0 skipped. Снимки `mandatory/`: 30 PNG (dashboard/profile/history/qualifications/coach-links × 1440/768/390 × light/dark). Coach search и открытая история проверены keyboard Tab/Enter, axe serious/critical и page overflow; новые тесты включены в полный набор. Native select вне workflow-form создавал 390 px overflow; перемещён в существующую форму, reference/CSS не менялись. Осмотрены coach desktop light/mobile dark и ранее перечисленные состояния других экранов. Фиксированные sidebar/bottom nav на full-page capture находятся в позиции последнего viewport. Полного ручного обхода каждого элемента не заявляем.
 
 Design-contract PASS; reference/extracted CSS SHA сохранены вместе с PNG в `docs/evidence/mandatory-2026-10-28/screenshots.json`. Точные команды, предыдущие failed runs и внешние границы: [mandatory-verification.md](../mandatory-verification.md). Предыдущие результаты выше относятся к указанным старым ревизиям.
+
+
+## Integration 2026-10-28
+
+Current evidence: [integration verification](../integration-verification.md). Main Chrome suite: 120 passed / 6 optional skipped; separate enabled optional-live suite: 6 passed. Inspected current OIDC desktop consent and newcomer mobile dark, plus coach mobile dark. Sidebar/rail/fonts/tokens remain; wide optional tables scroll internally. Existing reference HTML/globals.css are unchanged; design and exact OIDC CSS sync checks pass. New representative captures are in ../evidence/integration-2026-10-28/. Full manual comparison of every optional form is not claimed.

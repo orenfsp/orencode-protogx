@@ -1,3 +1,5 @@
+> Current user assignment: integrate the local project with `feat/case-optional-d1-d12`. [Contract](tasks/INTEGRATE_OPTIONAL_D1_D12.md), [verification](../integration-verification.md). Previous mandatory-only restrictions below describe earlier work.
+
 # Работа команды над FSP OrenKod 2026
 
 Этот раздел — входная точка для пяти разработчиков и их независимых AI-ассистентов. Состояние зафиксировано по коду на `600562d` (2026-10-27). Перед новой задачей сверяйте документы с текущей веткой: код и исполняемые тесты определяют реализованное поведение, [Master Prompt](../MASTER_PROMPT.md) — цель, [матрица приёмки](../acceptance-matrix.md) — достигнутые критерии.

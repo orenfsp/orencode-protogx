@@ -2,6 +2,8 @@ import time
 
 from django.core.management.base import BaseCommand
 
+from apps.extensions.awards import award_reminders
+from apps.extensions.notifications import deliver_notifications
 from apps.notifications.services import dispatch, schedule_deadlines
 
 
@@ -14,6 +16,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         while True:
             schedule_deadlines()
+            award_reminders()
+            deliver_notifications()
             self.stdout.write(f"Обработано уведомлений: {dispatch()}")
             if not options["loop"]:
                 return

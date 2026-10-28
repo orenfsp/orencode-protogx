@@ -8,7 +8,7 @@ class AuditContextMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        token = active_role.set(request.session.get("active_role", ""))
+        token = active_role.set(request.session.get("active_role") or "")
         try:
             return self.get_response(request)
         finally:

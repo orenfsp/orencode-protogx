@@ -108,6 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Link className="logo" href="/"><i>ФСП</i><span>Оренбургская<br />область</span></Link>
         <nav aria-label="Разделы">
           {visibleNavigation.map((item) => <Link key={item.href} className={isActive(item.href) ? "on" : ""} href={item.href}><b>{item.number}</b>{item.label}</Link>)}
+          <Link className={path === "/services" ? "on" : ""} href="/services"><b>09</b>{"\u0421\u0435\u0440\u0432\u0438\u0441\u044b"}</Link>
         </nav>
         <div className="rb">
           {me ? <>

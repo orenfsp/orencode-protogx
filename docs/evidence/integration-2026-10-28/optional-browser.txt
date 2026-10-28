@@ -1,0 +1,46 @@
+
+> fsp-frontend@0.1.0 test:e2e
+> playwright test tests/optional-live.spec.ts --workers=1 --output=../tmp/optional-test-results
+
+
+Running 6 tests using 1 worker
+
+(node:10892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests\optional-live.spec.ts:8:7 › optional case live workflows › D11 public navigation and responsive design (5.8s)
+  ✓  2 tests\optional-live.spec.ts:25:7 › optional case live workflows › D10 athlete certificate, D5 private evidence and D7 progression (7.2s)
+  ✓  3 tests\optional-live.spec.ts:68:7 › optional case live workflows › D3 D4 D6 D8 D2 federation workspaces use live data (3.7s)
+  ✓  4 tests\optional-live.spec.ts:88:7 › optional case live workflows › D12 judge generates his own panel document (2.1s)
+  ✘  5 tests\optional-live.spec.ts:101:7 › optional case live workflows › D9 ministry reads without mutation rights (6.6s)
+  -  6 tests\optional-live.spec.ts:110:7 › optional case live workflows › D1 real browser redirect login consent callback userinfo logout
+
+
+  1) tests\optional-live.spec.ts:101:7 › optional case live workflows › D9 ministry reads without mutation rights
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText(/Доступ только для чтения/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByText(/Доступ только для чтения/) with timeout 5000ms
+      - waiting for getByText(/Доступ только для чтения/)
+
+
+      102 |     await signIn(page, "demo.ministry@example.test");
+      103 |     await page.goto("/ministry");
+    > 104 |     await expect(page.getByText(/Доступ только для чтения/)).toBeVisible();
+          |                                                              ^
+      105 |     await expect(page.locator("main [role=alert]")).toHaveCount(0);
+      106 |     await expect(page.locator("main form")).toHaveCount(1); // Read-only year filter.
+      107 |     expect((await page.request.post("/api/v1/ministry/", { data: {} })).status()).toBeGreaterThanOrEqual(400);
+        at C:\Users\User\Documents\ChatGPT\fsp-platform\frontend\tests\optional-live.spec.ts:104:62
+
+    Error Context: ..\tmp\optional-test-results\optional-live-optional-cas-ba83a-ads-without-mutation-rights\error-context.md
+
+  1 failed
+    tests\optional-live.spec.ts:101:7 › optional case live workflows › D9 ministry reads without mutation rights
+  1 did not run
+  4 passed (28.2s)
