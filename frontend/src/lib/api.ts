@@ -27,6 +27,32 @@ export class ApiError extends Error {
   constructor(message: string, public readonly status: number) { super(message); }
 }
 
+const errorTranslations: Record<string, string> = {
+  "Rejection reason is required": "Укажите причину отказа.",
+  "This field is required.": "Заполните обязательное поле.",
+  "This field may not be blank.": "Поле не должно быть пустым.",
+  "This field may not be null.": "Укажите значение.",
+  "Enter a valid email address.": "Введите корректный адрес электронной почты.",
+  "Authentication credentials were not provided.": "Войдите в аккаунт.",
+  "You do not have permission to perform this action.": "Недостаточно прав для этого действия.",
+  "Not found.": "Запись не найдена.",
+};
+const errorFieldNames: Record<string, string> = { email: "Электронная почта", password: "Пароль", full_name: "ФИО", date_of_birth: "Дата рождения", reason: "Причина", decision_reason: "Причина отказа", age_group: "Возрастная группа", athlete: "Спортсмен", competition: "Соревнование" };
+
+/** DRF errors may be a string, a list, or nested field dictionaries. */
+export function formatApiError(value: unknown): string {
+  function messages(item: unknown): string[] {
+    if (typeof item === "string") return [errorTranslations[item] ?? item];
+    if (Array.isArray(item)) return item.flatMap(messages);
+    if (item && typeof item === "object") return Object.entries(item).flatMap(([field, detail]) => {
+      const lines = messages(detail);
+      return lines.map((line) => errorFieldNames[field] ? `${errorFieldNames[field]}: ${line}` : line);
+    });
+    return [];
+  }
+  return [...new Set(messages(value))].join(" ") || "Не удалось выполнить запрос. Попробуйте ещё раз.";
+}
+
 async function csrfToken(signal?: AbortSignal | null): Promise<string> {
   const response = await fetch("/api/v1/auth/csrf/", { credentials: "include", signal });
   if (!response.ok) throw new Error("Не удалось подготовить запрос");
@@ -44,7 +70,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new ApiError(typeof error.detail === "string" ? error.detail : JSON.stringify(error), response.status);
+    throw new ApiError(formatApiError(error), response.status);
   }
   return response.status === 204 ? (undefined as T) : response.json();
 }

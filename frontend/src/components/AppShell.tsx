@@ -1,9 +1,12 @@
 "use client";
 
+import { Toast, ToastProvider } from "@/components/Toast";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { api, Me, Role } from "@/lib/api";
+import { canAccessPage, navigation } from "@/lib/navigation";
 
 const roleName: Record<Role, string> = { federation: "Федерация", athlete: "Спортсмен", coach: "Тренер", judge: "Судья" };
 const CurrentUserContext = createContext<Me | null>(null);
@@ -53,7 +56,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       activeRoleRequest.current = controller;
       try {
         const user = await api<Me>("auth/active-role/", { method: "POST", body: JSON.stringify({ role }), signal: controller.signal });
-        if (revision === identityRevision.current) setMe(user);
+        if (revision === identityRevision.current) {
+          setMe(user);
+          if (!canAccessPage(path, user)) router.replace("/dashboard");
+        }
       } catch (error) {
         if (revision === identityRevision.current) setRoleError(error instanceof Error ? error.message : "Ошибка выбора роли");
       } finally {
@@ -85,7 +91,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  return <>
+  const currentUser = identityPending ? null : me;
+  const visibleNavigation = navigation.filter((item) => canAccessPage(item.href, currentUser));
+  const isActive = (href: string) => href === "/" ? path === "/" : !href.includes("#") && (path === href || path.startsWith(`${href}/`));
+
+  return <ToastProvider>
     <input type="checkbox" id="th" aria-label="Тёмная тема" checked={dark} onChange={toggleTheme} />
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
       <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M10 20v-6h4v6" /></symbol>
@@ -97,19 +107,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="idx">
         <Link className="logo" href="/"><i>ФСП</i><span>Оренбургская<br />область</span></Link>
         <nav aria-label="Разделы">
-          <Link className={path === "/" ? "on" : ""} href="/"><b>01</b>Главная</Link>
-          <Link href="/#disciplines"><b>02</b>Дисциплины</Link>
-          <Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><b>03</b>Календарь</Link>
-          <Link href="/dashboard"><b>04</b>Кабинет</Link>
-          <Link className={path.startsWith("/ratings") ? "on" : ""} href="/ratings"><b>05</b>Рейтинги</Link>
-          <Link className={path.startsWith("/teams") ? "on" : ""} href="/teams"><b>06</b>Команды</Link>
-          <Link className={path.startsWith("/registry") ? "on" : ""} href="/registry"><b>07</b>Реестры</Link>
-          <Link className={path.startsWith("/analytics") ? "on" : ""} href="/analytics/participation"><b>08</b>Аналитика</Link>
+          {visibleNavigation.map((item) => <Link key={item.href} className={isActive(item.href) ? "on" : ""} href={item.href}><b>{item.number}</b>{item.label}</Link>)}
         </nav>
         <div className="rb">
           {me ? <>
             <div className="menu" aria-label="Роль">{!me.active_role && <div className="a">Выбор роли</div>}{me.roles.map((role) => <button type="button" key={role} className={me.active_role === role ? "a" : ""} onClick={() => switchRole(role)} aria-pressed={me.active_role === role}>{roleName[role]}{me.active_role === role && <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" style={{ marginLeft: "auto" }}><path d="M4 12.5l5 5L20 6.5" /></svg>}</button>)}</div>
-            {roleError && <p role="alert">{roleError}</p>}
             <div className="rbtn"><span>{me.full_name}<small>Роль: {me.active_role ? roleName[me.active_role] : "не выбрана"}</small></span></div>
             <button type="button" className="tgl" onClick={signOut}>Выйти</button>
           </> : <div className="rbtn"><span>Гость<small><Link href="/login">Войти</Link> · <Link href="/register">Регистрация</Link></small></span></div>}
@@ -117,8 +119,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <small>Платформа ФСП Оренбургской области</small>
         </div>
       </aside>
-      <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{!me.active_role && <option value="" disabled>Выбор роли</option>}{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}{me.active_role === role ? " ✓" : ""}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <p className="mobile-role-error" role="alert">{roleError}</p>}<CurrentUserContext.Provider value={identityPending ? null : me}>{children}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
+      <main className="main" id="top"><div className="mobile-tools">{me && me.roles.length > 1 && <label className="mobile-role">Роль <select aria-label="Активная роль" value={me.active_role ?? ""} onChange={(event) => switchRole(event.target.value as Role)}>{!me.active_role && <option value="" disabled>Выбор роли</option>}{me.roles.map((role) => <option value={role} key={role}>{roleName[role]}{me.active_role === role ? " ✓" : ""}</option>)}</select></label>}<button type="button" className="mobile-theme" onClick={toggleTheme} aria-label={dark ? "Включить светлую тему" : "Включить тёмную тему"} aria-pressed={dark}>{dark ? "Светлая тема" : "Тёмная тема"}</button></div>{roleError && <Toast>{roleError}</Toast>}<CurrentUserContext.Provider value={currentUser}>{canAccessPage(path, currentUser) ? children : <section className="blk"><h2><span>Навигация</span></h2><div><Link className="btn" href={currentUser ? "/dashboard" : "/login"}>{currentUser ? "Открыть кабинет" : "Войти"}</Link></div></section>}</CurrentUserContext.Provider><footer>ФСП Оренбургская область · Данные демонстрации вымышлены</footer></main>
     </div>
-    <nav className="mobtab" aria-label="Основная навигация"><Link className={path === "/" ? "on" : ""} href="/"><svg className="ic"><use href="#i-home" /></svg>Главная</Link><Link href="/#disciplines"><svg className="ic"><use href="#i-users" /></svg>Дисциплины</Link><Link className={path.startsWith("/competitions") ? "on" : ""} href="/competitions"><svg className="ic"><use href="#i-cal" /></svg>Календарь</Link><Link className={path.startsWith("/teams") ? "on" : ""} href="/teams"><svg className="ic"><use href="#i-dots" /></svg>Команды</Link><Link className={path === "/dashboard" || path === "/history" || path === "/coach-links" ? "on" : ""} href="/dashboard"><svg className="ic"><use href="#i-dots" /></svg>Кабинет</Link></nav>
-  </>;
+    <nav className="mobtab" aria-label="Основная навигация">{visibleNavigation.filter((item) => item.mobile).map((item) => <Link key={item.href} className={isActive(item.href) ? "on" : ""} href={item.href}><svg className="ic"><use href={`#i-${item.icon}`} /></svg>{item.label}</Link>)}</nav>
+  </ToastProvider>;
 }

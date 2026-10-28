@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -82,7 +84,7 @@ export default function CompetitionDetail() {
   const coachOptions = links.filter((link) => link.status === "confirmed" && link.discipline === competition?.discipline);
   return <>
     <header className="dashboard-head"><span className="kick"><Link href="/competitions" className="workflow-link">← Календарь</Link></span><h1>{competition?.title ?? "Соревнование"}</h1>{competition && <p className="lead">{competition.discipline_name} · {new Date(competition.starts_at).toLocaleDateString("ru-RU")} · {competition.location}</p>}</header>
-    {error && <div className="note wn workflow-spaced" role="alert">{error}</div>}{notice && <div className="note workflow-spaced" role="status">{notice}</div>}
+    {error && <Toast>{error}</Toast>}{notice && <Toast tone="success">{notice}</Toast>}
     {!competition ? <section className="blk"><h2><b>…</b><span>Загрузка</span></h2><div>Данные соревнования загружаются.</div></section> : <>
       <section className="blk"><h2><b>01</b><span>Положение</span></h2><div className="workflow-stack">
         <div><span className={`bd ${competition.state === "draft" ? "wn" : ""}`}>{competition.state === "draft" ? "Черновик" : "Опубликовано"}</span></div>
@@ -99,7 +101,7 @@ export default function CompetitionDetail() {
       {role === "federation" && <section className="blk"><h2><b>04</b><span>Судьи</span></h2><div className="workflow-stack"><form className="workflow-actions" onSubmit={(event) => { event.preventDefault(); void action("judge-assignments/", { competition: id, judge: Number(judge), role_label: judgeLabel }, "Судья назначен"); }}><select className="inp" aria-label="Судья" required value={judge} onChange={(event) => setJudge(event.target.value)}><option value="">Выберите судью</option>{judges.map((item) => <option value={item.id} key={item.id}>{item.full_name}</option>)}</select><input className="inp" aria-label="Роль судьи" required value={judgeLabel} onChange={(event) => setJudgeLabel(event.target.value)} /><button className="btn" type="submit">Назначить</button></form>{assignments.map((item) => <div className="workflow-record" key={item.id}>{item.judge_name} · {item.role_label}</div>)}</div></section>}
       {canEnter && template && <section className="blk"><h2><b>05</b><span>Результаты</span></h2><div className="workflow-stack">{approved.length ? approved.map((item) => { const current = results.find((result) => result.application === item.id); return <div className="workflow-record" key={item.id}><ResultEditor key={`${item.id}-${current?.updated_at ?? ""}`} application={item} template={template} current={current} onSaved={() => { setNotice("Результат записан"); void load(); }} />{current && <div className="workflow-actions"><span className={`bd ${current.validated_by ? "" : "wn"}`}>{current.validated_by ? "Проверен" : "Ожидает проверки"}</span>{role === "federation" && !current.validated_by && <button className="btn" type="button" onClick={() => void action(`results/${current.id}/validate/`, {}, "Результат проверен")}>Проверить</button>}</div>}</div>; }) : <div className="note">Одобренных участников пока нет.</div>}</div></section>}
       {role === "federation" && <section className="blk"><h2><b>06</b><span>Протокол</span></h2><div className="workflow-stack">
-        <div className="note wn">Шаблон не подтверждён по первоисточнику. Перед официальным применением требуется проверка.</div>
+        <Toast>Шаблон не подтверждён по первоисточнику. Перед официальным применением требуется проверка.</Toast>
         {publications.length > 0 && <label className="lb">Причина новой версии<input className="inp workflow-search" required value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} /></label>}
         <div className="btns"><button className="btn" type="button" onClick={() => void showPreview()}>Предпросмотр</button><button className="btn p" type="button" onClick={() => void action(`competitions/${id}/protocol-publish/`, { correction_reason: correctionReason }, "Новая версия протокола опубликована")}>Опубликовать версию</button></div>
         {publications.length > 0 && <div className="workflow-stack">{publications.map((item) => <div className="workflow-actions" key={item.id}><button className="btn" type="button" onClick={() => setSnapshot(item.snapshot)}>Версия {item.version} · {new Date(item.published_at).toLocaleDateString("ru-RU")}</button><a className="btn" href={`/api/v1/competitions/${id}/protocols/${item.version}/download/?file_format=pdf`}>PDF</a><a className="btn" href={`/api/v1/competitions/${id}/protocols/${item.version}/download/?file_format=docx`}>DOCX</a>{item.correction_reason && <span>{item.correction_reason}</span>}</div>)}</div>}

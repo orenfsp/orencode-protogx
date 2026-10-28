@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import { FormEvent, useState } from "react";
 import { api, Discipline, MetricField, ProtocolTemplate } from "@/lib/api";
 
@@ -40,7 +42,7 @@ export function TemplateEditor({ disciplines, onSaved }: { disciplines: Discipli
     {sections.includes("signatures") && <label className="lb">Должности для подписей (через запятую)<input className="inp" value={signatureRoles} onChange={(event) => setSignatureRoles(event.target.value)} /></label>}
     <label className="lb">Ссылка на источник образца<input className="inp" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} /></label>
     <label className="lb">Примечание об источнике<input className="inp" value={sourceNote} onChange={(event) => setSourceNote(event.target.value)} placeholder="Что нужно сверить с первоисточником" /></label>
-    <div className="note wn">Новая версия остаётся демо-шаблоном до проверки действующих правил и первоисточника.</div>
-    {error && <div className="note wn" role="alert">{error}</div>}<button className="btn p" type="submit">Создать версию шаблона</button>
+    <Toast>Новая версия остаётся демо-шаблоном до проверки действующих правил и первоисточника.</Toast>
+    {error && <Toast>{error}</Toast>}<button className="btn p" type="submit">Создать версию шаблона</button>
   </form>;
 }

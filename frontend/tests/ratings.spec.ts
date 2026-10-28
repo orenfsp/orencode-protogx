@@ -13,7 +13,8 @@ test("ratings page loads API options and shows empty state for an uncalculated s
   await expect(page.getByLabel("Возрастная группа")).toHaveValue("2");
 });
 
-test("ratings page expands a published-result breakdown", async ({ page }) => {
+test("ratings page expands a published-result breakdown", async ({ page }, testInfo) => {
+  await page.route("**/api/v1/auth/me/", (route) => route.fulfill({ status: 401, json: {} }));
   await page.route("**/api/v1/rating-options/", (route) => route.fulfill({ json: {
     seasons: [{ id: 1, year: 2026, name: "Сезон 2026", is_active: true }],
     disciplines: [{ id: 1, code: "algorithmic", name: "Алгоритмическое программирование" }],
@@ -32,4 +33,12 @@ test("ratings page expands a published-result breakdown", async ({ page }) => {
   await page.getByRole("button", { name: "Демо Спортсмен" }).click();
   await expect(page.getByText("Региональный чемпионат")).toBeVisible();
   await expect(page.getByText("публикация v1")).toBeVisible();
+  for (const width of [1440, 768, 390]) for (const dark of [false, true]) {
+    await page.setViewportSize({ width, height: 1000 });
+    if (await page.locator("#th").isChecked() !== dark) await page.locator(width <= 900 ? ".mobile-theme" : "label[for=th].tgl").click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(await page.locator(".ratings-table .bd").evaluate((node) => getComputedStyle(node).whiteSpace)).toBe("nowrap");
+    await page.locator(".ratings-scroll").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: testInfo.outputPath(`ratings-${width}-${dark ? "dark" : "light"}.png`), fullPage: true });
+  }
 });

@@ -27,7 +27,7 @@ for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Сохранить исправление" })).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(page.locator("p[role=alert]")).toContainText("Укажите причину исправления");
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toContainText("Укажите причину исправления");
     expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-validation-${width}-${theme}.png`), fullPage: true });
     await expect(page.getByLabel("Причина исправления")).toHaveAttribute("aria-describedby", "correction-error");
@@ -107,11 +107,11 @@ for (const width of [1440, 768, 390]) for (const theme of ["light", "dark"]) {
     expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-empty-${width}-${theme}.png`), fullPage: true });
     await page.getByLabel("Поиск", { exact: true }).fill("error");
-    await expect(page.locator("p[role=alert]")).toContainText("Демо ошибка");
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toContainText("Демо ошибка");
     expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-error-${width}-${theme}.png`), fullPage: true });
     await page.getByLabel("Поиск", { exact: true }).fill("denied");
-    await expect(page.locator("p[role=alert]")).toContainText("Доступ");
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toContainText("Доступ");
     expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze()).violations).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath(`registry-denied-${width}-${theme}.png`), fullPage: true });
   });

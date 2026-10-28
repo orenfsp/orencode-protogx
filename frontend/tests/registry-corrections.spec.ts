@@ -32,10 +32,10 @@ for (const [kind, heading, fields] of cases) {
     await page.getByRole("heading", { name: heading, exact: true }).locator("..").getByRole("button", { name: "Исправить", exact: true }).click();
     await page.getByLabel("Причина исправления").fill("Уточнение");
     await page.getByRole("button", { name: "Сохранить исправление" }).click();
-    await expect(page.locator("p[role=alert]")).toContainText("Период изменён");
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toContainText("Период изменён");
     await expect(page.getByLabel("Причина исправления")).toHaveValue("Уточнение");
     await page.getByRole("heading", { name: heading, exact: true }).locator("..").getByRole("button", { name: "Исправить", exact: true }).click();
-    await expect(page.locator("p[role=alert]")).toHaveCount(0);
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toHaveCount(0);
     await page.getByLabel("Причина исправления").fill("Уточнение");
     await page.getByRole("button", { name: "Сохранить исправление" }).click();
     await expect(page.getByLabel("Причина исправления")).toHaveCount(0);

@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import { FormEvent, useState } from "react";
 import { AgeGroup, api, CalendarEntry, Competition, CompetitionStage, Discipline, ProtocolTemplate } from "@/lib/api";
 
@@ -49,7 +51,7 @@ export function CompetitionEditor({ initial, disciplines, groups, templates, cal
       <button className="btn" type="button" onClick={() => set("stages", form.stages.filter((_, i) => i !== index).map((item, i) => ({ ...item, order: i + 1 })))}>Удалить этап</button>
     </div>)}<button className="btn" type="button" onClick={() => set("stages", [...form.stages, { order: form.stages.length + 1, name: "", format: "online", starts_at: form.starts_at, ends_at: form.ends_at }])}>Добавить этап</button></fieldset>}
     <label className="lb">Положение<textarea className="inp" required rows={5} value={form.regulations} onChange={(event) => set("regulations", event.target.value)} /></label>
-    {error && <div className="note wn" role="alert">{error}</div>}
+    {error && <Toast>{error}</Toast>}
     <button className="btn p" type="submit" disabled={busy}>{busy ? "Сохранение…" : initial ? "Сохранить изменения" : "Создать черновик"}</button>
   </form>;
 }

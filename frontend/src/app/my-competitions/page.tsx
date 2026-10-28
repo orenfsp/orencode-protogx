@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
@@ -30,7 +32,7 @@ function CompetitionList({ role }: { role: ParticipantRole }) {
     return () => { current = false; };
   }, [role, attempt]);
 
-  if (error) return <div className="workflow-stack"><div className="note wn" role="alert">{error}</div><button className="btn" type="button" onClick={() => { setError(""); setData(null); setAttempt((value) => value + 1); }}>Попробовать снова</button></div>;
+  if (error) return <div className="workflow-stack"><Toast>{error}</Toast><button className="btn" type="button" onClick={() => { setError(""); setData(null); setAttempt((value) => value + 1); }}>Попробовать снова</button></div>;
   if (!data) return <div className="note" role="status">Загрузка соревнований…</div>;
 
   const competitions = new Map(data.competitions.map((item) => [item.id, item]));
@@ -56,6 +58,6 @@ export default function MyCompetitions() {
 
   return <>
     <header className="dashboard-head"><span className="kick"><Link className="workflow-link" href="/dashboard">← Кабинет</Link></span><h1>Мои соревнования</h1><p className="lead">{role === "judge" ? "Ваши судейские назначения." : "Заявки на соревнования и решения по ним."}</p></header>
-    <section className="blk"><h2><b>01</b><span>{role === "judge" ? "Назначения" : "Заявки"}</span></h2><div style={{ minWidth: 0 }}>{!me ? <div className="note wn">Для доступа <Link className="workflow-link" href="/login">войдите</Link>.</div> : supported ? <CompetitionList key={`${me.id}:${role}`} role={role} /> : <div className="note">Выберите роль спортсмена, тренера или судьи.</div>}</div></section>
+    <section className="blk"><h2><b>01</b><span>{role === "judge" ? "Назначения" : "Заявки"}</span></h2><div style={{ minWidth: 0 }}>{!me ? <Toast>Для доступа <Link className="workflow-link" href="/login">войдите</Link>.</Toast> : supported ? <CompetitionList key={`${me.id}:${role}`} role={role} /> : <div className="note">Выберите роль спортсмена, тренера или судьи.</div>}</div></section>
   </>;
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Toast } from "@/components/Toast";
+
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { api, AthleteRating, RatingOptions, RatingsResponse } from "@/lib/api";
 
 export default function RatingsPage() {
@@ -38,7 +40,7 @@ export default function RatingsPage() {
   const ranks = useMemo(() => [["youth_3", "III юношеский"], ["youth_2", "II юношеский"], ["youth_1", "I юношеский"], ["adult_3", "III спортивный"], ["adult_2", "II спортивный"], ["adult_1", "I спортивный"], ["cms", "КМС"], ["ms", "МС"]], []);
   return <>
     <header className="dashboard-head"><span className="kick">Результаты · опубликованные протоколы</span><h1>Рейтинг спортсменов</h1><p className="lead">Баллы рассчитываются сервером по последней опубликованной версии протокола. Каждая строка раскрывает источник и правило начисления.</p></header>
-    {error && <div className="note wn workflow-spaced" role="alert">{error}</div>}
+    {error && <Toast>{error}</Toast>}
     <section className="blk"><h2><b>01</b><span>Фильтры</span></h2><div className="workflow-form form-grid">
       <label className="lb">Сезон<select className="inp" value={season} onChange={(event) => setSeason(event.target.value)}><option value="">Выберите сезон</option>{options?.seasons.map((item) => <option key={item.id} value={item.year}>{item.name}</option>)}</select></label>
       <label className="lb">Дисциплина<select className="inp" value={discipline} onChange={(event) => setDiscipline(event.target.value)}><option value="">Выберите дисциплину</option>{options?.disciplines.map((item) => <option key={item.id} value={item.code}>{item.name}</option>)}</select></label>
@@ -46,7 +48,7 @@ export default function RatingsPage() {
       <label className="lb">Минимальный разряд<select className="inp" value={minRank} onChange={(event) => setMinRank(event.target.value)}><option value="">Любой</option>{ranks.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
     </div></section>
     <section className="blk"><h2><b>02</b><span>Таблица</span></h2><div>
-      {loading ? <p role="status">Загрузка рейтинга…</p> : !data?.items.length ? <div className="note">Для выбранных фильтров опубликованных результатов нет.</div> : <div className="tw"><table><thead><tr><th>№</th><th>Спортсмен</th><th>Дисциплина</th><th>База</th><th>Призы</th><th>Коэфф.</th><th>Рейтинг</th><th>Источник</th></tr></thead><tbody>{data.items.map((row: AthleteRating) => <tr key={row.id} className={expanded === row.id ? "sel" : ""}><td>{row.placement}</td><td><button className="workflow-link" type="button" onClick={() => setExpanded(expanded === row.id ? null : row.id)} aria-expanded={expanded === row.id}>{row.athlete_name}</button>{expanded === row.id && <div className="rating-breakdown">{row.breakdown.map((item) => <div className="note" key={`${row.id}-${item.publication_id}`}><strong>{item.awarded_points} б.</strong><span>{item.placement} место · {item.competition_title} · публикация v{item.publication_version}</span><small>Уровень: {item.competition_level}. Снапшот протокола #{item.publication_id}</small></div>)}</div>}</td><td>{row.discipline_name}</td><td className="m">{row.base_score}</td><td className="m">{row.prize_count}</td><td className="m">×{row.coefficient}</td><td className="m"><strong>{row.rating_score}</strong></td><td><span className="bd in">Опубликовано</span></td></tr>)}</tbody></table></div>}
+      {loading ? <p role="status">Загрузка рейтинга…</p> : !data?.items.length ? <div className="note">Для выбранных фильтров опубликованных результатов нет.</div> : <div className="tw ratings-scroll" role="region" aria-label="Рейтинг спортсменов" tabIndex={0}><table className="ratings-table"><thead><tr><th scope="col">№</th><th scope="col">Спортсмен</th><th scope="col">Дисциплина</th><th scope="col">База</th><th scope="col">Призы</th><th scope="col">Коэфф.</th><th scope="col">Рейтинг</th><th scope="col">Источник</th></tr></thead><tbody>{data.items.map((row: AthleteRating) => <Fragment key={row.id}><tr className={expanded === row.id ? "sel" : ""}><td>{row.placement}</td><td><button className="rating-athlete" type="button" onClick={() => setExpanded(expanded === row.id ? null : row.id)} aria-expanded={expanded === row.id} aria-controls={`rating-details-${row.id}`}><span>{row.athlete_name}</span><svg className="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg></button></td><td>{row.discipline_name}</td><td className="m">{row.base_score}</td><td className="m">{row.prize_count}</td><td className="m">×{row.coefficient}</td><td className="m rating-total"><strong>{row.rating_score}</strong></td><td><span className="bd in">Опубликовано</span></td></tr>{expanded === row.id && <tr className="rating-details"><td colSpan={8}><div id={`rating-details-${row.id}`}><div className="rating-breakdown">{row.breakdown.map((item) => <div className="note" key={`${row.id}-${item.publication_id}`}><strong>{item.awarded_points} б.</strong><span>{item.placement} место · {item.competition_title} · публикация v{item.publication_version}</span><small>Уровень: {item.competition_level}. Снапшот протокола #{item.publication_id}</small></div>)}</div></div></td></tr>}</Fragment>)}</tbody></table></div>}
       {data && data.pages > 1 && <div className="pag" aria-label="Пагинация"><span>Страница {data.page} из {data.pages}</span></div>}
     </div></section>
   </>;

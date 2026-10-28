@@ -146,7 +146,7 @@ for (const screen of ["registry", "analytics"]) for (const denial of [401, 403])
       await page.getByLabel("По год").fill("2026");
       await page.getByRole("button", { name: "Построить отчёт" }).click();
     }
-    await expect(page.locator("p[role=alert]")).toContainText("Доступ");
+    await expect(page.locator(".toast-viewport").getByRole("alert")).toContainText("Доступ");
     await expect(page.getByText(screen === "registry" ? "Закрытые данные" : "987", { exact: true })).toHaveCount(0);
   });
 }

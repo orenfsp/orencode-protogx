@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCurrentUser } from "@/components/AppShell";
@@ -16,7 +18,7 @@ function HistoryResults() {
     api<HistoryRow[]>("history/").then((result) => { if (current) setRows(result); }).catch((cause) => { if (current) setError(cause instanceof Error ? cause.message : "История недоступна"); });
     return () => { current = false; };
   }, []);
-  return error ? <div className="note wn" role="alert">{error}</div> : !rows ? <div className="note" role="status">Загрузка истории…</div> : rows.length ? <div className="tw"><table><thead><tr><th>№</th><th>Соревнование</th><th>Статус</th><th>Место</th><th>Баллы</th><th>Протокол</th></tr></thead><tbody>{rows.map((entry, index) => <tr key={entry.competition_id}><td>{index + 1}</td><td><Link className="workflow-link" href={`/competitions/${entry.competition_id}`}>{entry.competition_title}</Link></td><td>{statusName[entry.row.status] ?? entry.row.status}</td><td>{entry.row.place ?? "—"}</td><td>{entry.row.score ?? "—"}</td><td className="m">v{entry.version}</td></tr>)}</tbody></table></div> : <div className="note">Опубликованных результатов пока нет.</div>;
+  return error ? <Toast>{error}</Toast> : !rows ? <div className="note" role="status">Загрузка истории…</div> : rows.length ? <div className="tw"><table><thead><tr><th>№</th><th>Соревнование</th><th>Статус</th><th>Место</th><th>Баллы</th><th>Протокол</th></tr></thead><tbody>{rows.map((entry, index) => <tr key={entry.competition_id}><td>{index + 1}</td><td><Link className="workflow-link" href={`/competitions/${entry.competition_id}`}>{entry.competition_title}</Link></td><td>{statusName[entry.row.status] ?? entry.row.status}</td><td>{entry.row.place ?? "—"}</td><td>{entry.row.score ?? "—"}</td><td className="m">v{entry.version}</td></tr>)}</tbody></table></div> : <div className="note">Опубликованных результатов пока нет.</div>;
 }
 
 export default function History() {

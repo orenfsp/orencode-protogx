@@ -1,5 +1,7 @@
 "use client";
 
+import { Toast } from "@/components/Toast";
+
 import { FormEvent, useState } from "react";
 import { api, Application, ProtocolTemplate, Result } from "@/lib/api";
 
@@ -22,6 +24,6 @@ export function ResultEditor({ application, template, current, onSaved }: { appl
     <strong>{application.athlete_name}</strong>
     <div className="form-grid"><label className="lb">Статус<select className="inp" value={resultStatus} onChange={(event) => setResultStatus(event.target.value as Result["status"])}><option value="classified">Классифицирован</option><option value="no_show">Не явился</option><option value="unclassified">Без результата</option><option value="disqualified">Дисквалифицирован</option></select></label>
     {resultStatus === "classified" && <><label className="lb">Место<input className="inp" type="number" min="1" value={place} onChange={(event) => setPlace(event.target.value)} /></label><label className="lb">Баллы<input className="inp" type="number" step="0.001" value={score} onChange={(event) => setScore(event.target.value)} /></label>{template.metric_fields.map((field) => <label className="lb" key={field.key}>{field.label}<input className="inp" type={field.type === "number" ? "number" : "text"} step={field.type === "number" ? "any" : undefined} required={field.required} value={metrics[field.key] ?? ""} onChange={(event) => setMetrics({ ...metrics, [field.key]: event.target.value })} /></label>)}</>}
-    </div>{error && <div className="note wn" role="alert">{error}</div>}<button className="btn" type="submit">{current ? "Исправить результат" : "Записать результат"}</button>
+    </div>{error && <Toast>{error}</Toast>}<button className="btn" type="submit">{current ? "Исправить результат" : "Записать результат"}</button>
   </form>;
 }
