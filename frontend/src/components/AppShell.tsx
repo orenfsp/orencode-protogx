@@ -103,6 +103,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link href="/dashboard"><b>04</b>Кабинет</Link>
           <Link className={path.startsWith("/ratings") ? "on" : ""} href="/ratings"><b>05</b>Рейтинги</Link>
           <Link className={path.startsWith("/teams") ? "on" : ""} href="/teams"><b>06</b>Команды</Link>
+          <Link className={path.startsWith("/registry") ? "on" : ""} href="/registry"><b>07</b>Реестры</Link>
+          <Link className={path.startsWith("/analytics") ? "on" : ""} href="/analytics/participation"><b>08</b>Аналитика</Link>
         </nav>
         <div className="rb">
           {me ? <>

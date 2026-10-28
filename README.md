@@ -35,3 +35,6 @@ Registration always creates an athlete role. Federation and other roles require 
 Sign in as `demo.federation@example.test` with the local-only password in `docs/demo-scenarios.md`. In **Calendar**, create a draft competition, choose a discipline, age groups, an unverified template, dates and regulations, then publish it. Sign in as `demo.athlete@example.test` to apply. The federation approves the application and assigns `demo.judge@example.test`; the judge enters a result, which the federation validates. Preview and publish a versioned protocol, then download that version as PDF or DOCX. The athlete's **History** then shows the published result. Coaches use **Coach links** to request a discipline-specific link by athlete email; the athlete must confirm it before the coach can apply for them. All demo identities and test scores are fictional.
 
 Templates are configurable and versioned per discipline. Seeded templates are explicitly unverified demo structures. Check the current primary sports rules and the Appendix No. 5 example before any official document use; publication in this system does not claim regulatory or EVSK compliance.
+## CI и проверки
+
+Команды локальных проверок, изолированный PostgreSQL и GitHub Actions описаны в [docs/CI.md](docs/CI.md). Статус AC-11 см. в [матрице приёмки](docs/acceptance-matrix.md).

@@ -49,8 +49,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
-export async function downloadDocument(path: string): Promise<Blob> {
-  const response = await fetch(`/api/v1/${path}`, { credentials: "include" });
+export async function downloadDocument(path: string, signal?: AbortSignal): Promise<Blob> {
+  const response = await fetch(`/api/v1/${path}`, { credentials: "include", signal });
   if (!response.ok) throw new ApiError("Не удалось скачать документ", response.status);
   return response.blob();
 }

@@ -46,6 +46,91 @@ paths:
               schema:
                 $ref: '#/components/schemas/AgeGroup'
           description: ''
+  /api/v1/analytics/participation/:
+    get:
+      operationId: v1_analytics_participation_list
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+      - in: query
+        name: discipline
+        schema:
+          type: integer
+      - in: query
+        name: end_year
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
+      - in: query
+        name: start_year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnnualReport'
+          description: ''
+  /api/v1/analytics/participation/export/:
+    get:
+      operationId: v1_analytics_participation_export_retrieve
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+      - in: query
+        name: discipline
+        schema:
+          type: integer
+      - in: query
+        name: end_year
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
+      - in: query
+        name: start_year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/applications/:
     get:
       operationId: v1_applications_list
@@ -118,6 +203,189 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Application'
+          description: ''
+  /api/v1/athletes/:
+    get:
+      operationId: v1_athletes_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPersonList'
+          description: ''
+  /api/v1/athletes/{id}/:
+    get:
+      operationId: v1_athletes_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+  /api/v1/athletes/{id}/history/{kind}/:
+    get:
+      operationId: v1_athletes_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegistryPeriodList'
+          description: ''
+    post:
+      operationId: v1_athletes_history_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistryPeriod'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistryPeriod'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistryPeriod'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryPeriod'
+          description: ''
+  /api/v1/athletes/{id}/history/{kind}/{period_id}/close/:
+    post:
+      operationId: v1_athletes_history_close_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: kind
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: period_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClosePeriod'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClosePeriod'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClosePeriod'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryPeriod'
+          description: ''
+  /api/v1/athletes/{id}/transfer/:
+    post:
+      operationId: v1_athletes_transfer_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transfer'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Transfer'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Transfer'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationPeriod'
           description: ''
   /api/v1/auth/active-role/:
     post:
@@ -363,6 +631,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoachLink'
+          description: ''
+  /api/v1/coaches/:
+    get:
+      operationId: v1_coaches_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPersonList'
+          description: ''
+  /api/v1/coaches/{id}/:
+    get:
+      operationId: v1_coaches_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
           description: ''
   /api/v1/competitions/:
     get:
@@ -788,6 +1103,186 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserChoice'
+          description: ''
+  /api/v1/judges/:
+    get:
+      operationId: v1_judges_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPersonList'
+          description: ''
+  /api/v1/judges/{id}/:
+    get:
+      operationId: v1_judges_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+  /api/v1/organizations/:
+    get:
+      operationId: v1_organizations_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrganizationList'
+          description: ''
+    post:
+      operationId: v1_organizations_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/:
+    get:
+      operationId: v1_organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    put:
+      operationId: v1_organizations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: v1_organizations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
           description: ''
   /api/v1/qualification-deadlines/:
     get:
@@ -1559,6 +2054,34 @@ components:
       - max_age
       - min_age
       - name
+    AnnualReport:
+      type: object
+      properties:
+        year:
+          type: integer
+        unique_athletes:
+          type: integer
+        started:
+          type: integer
+        ceased:
+          type: integer
+        change:
+          type: integer
+          nullable: true
+        growth_percent:
+          type: number
+          format: double
+          nullable: true
+        breakdowns:
+          $ref: '#/components/schemas/Breakdowns'
+      required:
+      - breakdowns
+      - ceased
+      - change
+      - growth_percent
+      - started
+      - unique_athletes
+      - year
     Application:
       type: object
       properties:
@@ -1745,6 +2268,40 @@ components:
           $ref: '#/components/schemas/Me'
       required:
       - user
+    BreakdownRow:
+      type: object
+      properties:
+        name:
+          type: string
+        participants:
+          type: integer
+      required:
+      - name
+      - participants
+    Breakdowns:
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakdownRow'
+        disciplines:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakdownRow'
+        municipalities:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakdownRow'
+        age_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakdownRow'
+      required:
+      - age_groups
+      - disciplines
+      - municipalities
+      - organizations
     CalendarEntry:
       type: object
       properties:
@@ -1813,6 +2370,14 @@ components:
       - requested_category
     CategoryEnum:
       $ref: '#/components/schemas/JudgeCategoryEnum'
+    ClosePeriod:
+      type: object
+      properties:
+        ends_on:
+          type: string
+          format: date
+      required:
+      - ends_on
     CoachLink:
       type: object
       properties:
@@ -2086,6 +2651,29 @@ components:
       - code
       - id
       - name
+    DisciplinePeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        discipline:
+          type: integer
+        discipline_name:
+          type: string
+          readOnly: true
+      required:
+      - discipline
+      - discipline_name
+      - id
+      - starts_on
     FormatEnum:
       enum:
       - online
@@ -2297,6 +2885,139 @@ components:
           maxLength: 500
       required:
       - athlete
+    MunicipalityPeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        municipality:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - municipality
+      - starts_on
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 300
+        organization_type:
+          type: string
+          maxLength: 100
+        municipality:
+          type: string
+          maxLength: 200
+        is_active:
+          type: boolean
+        contact:
+          type: string
+          maxLength: 300
+      required:
+      - code
+      - id
+      - name
+    OrganizationPeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        organization:
+          type: integer
+        organization_name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - organization
+      - organization_name
+      - starts_on
+    PaginatedOrganizationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+    PaginatedPersonList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+    Participation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - id
+      - starts_on
     PatchedCompetition:
       type: object
       properties:
@@ -2372,6 +3093,56 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedOrganization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 300
+        organization_type:
+          type: string
+          maxLength: 100
+        municipality:
+          type: string
+          maxLength: 200
+        is_active:
+          type: boolean
+        contact:
+          type: string
+          maxLength: 300
+    Person:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 200
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        is_active:
+          type: boolean
+          title: Активный
+          description: Отметьте, если пользователь должен считаться активным. Уберите
+            эту отметку вместо удаления учётной записи.
+        organization:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - full_name
+      - id
+      - organization
     ProtocolColumn:
       type: object
       properties:
@@ -3196,6 +3967,20 @@ components:
       - email
       - full_name
       - password
+    RegistryPeriod:
+      oneOf:
+      - $ref: '#/components/schemas/Participation'
+      - $ref: '#/components/schemas/DisciplinePeriod'
+      - $ref: '#/components/schemas/OrganizationPeriod'
+      - $ref: '#/components/schemas/MunicipalityPeriod'
+      - $ref: '#/components/schemas/TrainingStagePeriod'
+    RegistryPeriodList:
+      oneOf:
+      - $ref: '#/components/schemas/Participation'
+      - $ref: '#/components/schemas/DisciplinePeriod'
+      - $ref: '#/components/schemas/OrganizationPeriod'
+      - $ref: '#/components/schemas/MunicipalityPeriod'
+      - $ref: '#/components/schemas/TrainingStagePeriod'
     RequestTypeEnum:
       enum:
       - assign
@@ -3571,6 +4356,37 @@ components:
       - next
       - previous
       - results
+    TrainingStagePeriod:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: string
+          format: date
+          nullable: true
+        stage:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - stage
+      - starts_on
+    Transfer:
+      type: object
+      properties:
+        organization:
+          type: integer
+        effective_on:
+          type: string
+          format: date
+      required:
+      - effective_on
+      - organization
     UserChoice:
       type: object
       properties:

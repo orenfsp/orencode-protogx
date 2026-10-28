@@ -36,7 +36,8 @@ class RegistryPeriodTests(TestCase):
             ParticipationPeriod.objects.create(athlete=self.athlete, starts_on=date(2025, 2, 1), ends_on=date(2025, 1, 1))
 
     def test_different_disciplines_can_overlap_but_same_discipline_cannot(self):
-        first, second = list(Discipline.objects.order_by("pk")[:2])
+        first = Discipline.objects.create(code="direct-a", name="Direct A")
+        second = Discipline.objects.create(code="direct-b", name="Direct B")
         for discipline in (first, second):
             add_period(actor=self.actor, model=DisciplinePeriod, athlete=self.athlete, discipline=discipline, starts_on=date(2024, 1, 1))
         with self.assertRaises(ValidationError):
@@ -65,6 +66,19 @@ class RegistryPeriodTests(TestCase):
 
 @skipUnless(connection.vendor == "postgresql", "Row-lock concurrency requires PostgreSQL")
 class RegistryConcurrencyTests(TransactionTestCase):
+    def test_database_rejects_direct_overlap_and_allows_adjacent_and_other_discipline(self):
+        athlete = User.objects.create_user(email="direct@example.test", full_name="Athlete")
+        first = Discipline.objects.create(code="direct-a", name="Direct A")
+        second = Discipline.objects.create(code="direct-b", name="Direct B")
+        ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2024, 1, 1), ends_on=date(2024, 12, 31))
+        ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2025, 1, 1))
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2024, 12, 31))
+        DisciplinePeriod.objects.create(athlete=athlete, discipline=first, starts_on=date(2024, 1, 1))
+        DisciplinePeriod.objects.create(athlete=athlete, discipline=second, starts_on=date(2024, 1, 1))
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            DisciplinePeriod.objects.create(athlete=athlete, discipline=first, starts_on=date(2025, 1, 1))
+
     def test_concurrent_overlapping_periods_only_one_succeeds(self):
         actor = User.objects.create_user(email="actor@example.test", full_name="Actor")
         athlete = User.objects.create_user(email="person@example.test", full_name="Athlete")
@@ -91,3 +105,27 @@ class RegistryConcurrencyTests(TransactionTestCase):
         self.assertTrue(all(not thread.is_alive() for thread in threads))
         self.assertCountEqual(results, ["created", "overlap"])
         self.assertEqual(ParticipationPeriod.objects.count(), 1)
+
+    def test_direct_concurrent_overlaps_are_rejected_by_database(self):
+        athlete = User.objects.create_user(email="direct-race@example.test", full_name="Athlete")
+        barrier = Barrier(2)
+        outcomes = []
+
+        def worker():
+            close_old_connections()
+            try:
+                barrier.wait(timeout=10)
+                ParticipationPeriod.objects.create(athlete=athlete, starts_on=date(2025, 1, 1))
+                outcomes.append("created")
+            except IntegrityError:
+                outcomes.append("overlap")
+            finally:
+                close_old_connections()
+
+        threads = [Thread(target=worker) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=15)
+        self.assertTrue(all(not thread.is_alive() for thread in threads))
+        self.assertCountEqual(outcomes, ["created", "overlap"])

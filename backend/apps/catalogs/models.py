@@ -6,6 +6,10 @@ class Organization(models.Model):
 
     code = models.SlugField(max_length=100, unique=True)
     name = models.CharField(max_length=300)
+    organization_type = models.CharField(max_length=100, blank=True)
+    municipality = models.CharField(max_length=200, blank=True)
+    is_active = models.BooleanField(default=True)
+    contact = models.CharField(max_length=300, blank=True)
 
     def __str__(self):
         return self.name

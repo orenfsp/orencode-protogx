@@ -31,7 +31,18 @@ class SeedDemoTests(TestCase):
         federation.set_password("AnotherLocalPassword2026!")
         federation.save(update_fields=["password"])
 
+        from apps.registry.analytics import participation_report
+        from apps.registry.models import (
+            DisciplinePeriod,
+            OrganizationPeriod,
+            ParticipationPeriod,
+        )
+
+        history_counts = [model.objects.count() for model in (ParticipationPeriod, DisciplinePeriod, OrganizationPeriod)]
+        self.assertEqual([row["unique_athletes"] for row in participation_report(2024, 2025)], [2, 3])
+
         call_command("seed_demo", stdout=StringIO())
+        self.assertEqual([model.objects.count() for model in (ParticipationPeriod, DisciplinePeriod, OrganizationPeriod)], history_counts)
         federation.refresh_from_db()
         self.assertTrue(federation.check_password("AnotherLocalPassword2026!"))
         self.assertEqual(User.objects.filter(email__endswith="@example.test").count(), 8)

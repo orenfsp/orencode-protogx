@@ -53,3 +53,6 @@ On an isolated PostgreSQL Compose project, the live `teams-live.spec.ts` scenari
 ## Phase 3.2 stress review — 2026-10-28
 
 Roster and draft-order PDF and DOCX were generated for 2, 15 and 50 fictional athletes with long Cyrillic names, short, long and missing organization names, and two different seeded sports ranks. All PDF pages and LibreOffice-rendered DOCX pages were visually inspected with PDFium; extracted text contained each athlete, both ranks and the relevant organization examples. The initial DOCX split rows across pages and omitted repeating headers; the exporter now prevents row splitting, repeats headers and adjusts column widths and spacing. PDF documents used 1, 2 and 6 pages respectively; converted DOCX used 1, 2 and 4. The draft form still requires primary-source regulatory review.
+# Phase 3.3 registry and participation
+
+The new screens reuse the existing shell and classes. Desktop/tablet/mobile screenshot comparison and both-theme visual inspection for these screens have not yet been completed; no new visual acceptance claim is made. The source reference remains unchanged.

@@ -62,6 +62,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             users = self._seed_accounts()
             self._seed_organizations(users)
+            self._seed_registry(users)
             self._seed_competitions(users)
             self._seed_rank_history(users)
             self._seed_teams(users)
@@ -110,6 +111,45 @@ class Command(BaseCommand):
             ("demo.junior.verified@example.test", None),
         ):
             AthleteProfile.objects.get_or_create(user=users[email], defaults={"organization": organizations.get(code)})
+
+    def _seed_registry(self, users):
+        from apps.registry.models import (
+            DisciplinePeriod,
+            MunicipalityPeriod,
+            OrganizationPeriod,
+            ParticipationPeriod,
+            TrainingStagePeriod,
+        )
+        from apps.registry.services import add_period
+
+        actor = users["demo.federation@example.test"]
+        algorithmic = Discipline.objects.get(code="algorithmic")
+        product = Discipline.objects.get(code="product")
+        fixtures = (
+            ("demo.athlete@example.test", "demo-vector", date(2024, 1, 1), None, "Оренбург", (algorithmic, product)),
+            ("demo.athlete2@example.test", "demo-programming-school", date(2025, 1, 1), None, "Орск", (algorithmic,)),
+            ("demo.athlete3@example.test", "demo-orbit", date(2024, 1, 1), date(2024, 12, 31), "Оренбург", (product,)),
+            ("demo.junior.verified@example.test", None, date(2025, 1, 1), None, "Бузулук", (algorithmic,)),
+        )
+        for email, org_code, start, end, municipality, disciplines in fixtures:
+            athlete = users[email]
+            profile = AthleteProfile.objects.filter(user=athlete).first()
+            if not profile or (profile.organization.code if profile.organization else None) != org_code:
+                continue
+            models = (ParticipationPeriod, DisciplinePeriod, OrganizationPeriod, MunicipalityPeriod, TrainingStagePeriod)
+            if any(model.objects.filter(athlete=athlete).exists() for model in models):
+                continue
+            add_period(actor=actor, model=ParticipationPeriod, athlete=athlete, starts_on=start, ends_on=end)
+            add_period(actor=actor, model=MunicipalityPeriod, athlete=athlete, starts_on=start, ends_on=end, municipality=municipality)
+            for discipline in disciplines:
+                add_period(actor=actor, model=DisciplinePeriod, athlete=athlete, starts_on=start, ends_on=end, discipline=discipline)
+            if profile.organization:
+                if email == "demo.athlete@example.test":
+                    previous = Organization.objects.get(code="demo-orbit")
+                    add_period(actor=actor, model=OrganizationPeriod, athlete=athlete, starts_on=start, ends_on=date(2024, 12, 31), organization=previous)
+                    start = date(2025, 1, 1)
+                # A former participant can still have a current organization profile.
+                add_period(actor=actor, model=OrganizationPeriod, athlete=athlete, starts_on=start, organization=profile.organization)
 
     def _seed_competitions(self, users):
         federation = users["demo.federation@example.test"]
