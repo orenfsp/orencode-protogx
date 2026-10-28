@@ -171,3 +171,46 @@ class IndicatorEvidence(models.Model):
     document_url = models.URLField()
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class ReviewPolicy(models.Model):
+    competition = models.OneToOneField("competitions.Competition", on_delete=models.PROTECT)
+    appeal_deadline = models.DateTimeField(null=True, blank=True)
+    source_url = models.URLField()
+    rule_note = models.TextField()
+    allow_disqualification = models.BooleanField(default=False)
+    allow_technical_loss = models.BooleanField(default=False)
+
+
+class ReviewCase(models.Model):
+    kind = models.CharField(max_length=16, choices=[("appeal", "Апелляция"), ("incident", "Нарушение")])
+    application = models.ForeignKey("competitions.Application", on_delete=models.PROTECT)
+    publication = models.ForeignKey("competitions.ProtocolPublication", null=True, on_delete=models.PROTECT)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    statement = models.TextField()
+    status = models.CharField(max_length=20, default="submitted", choices=[("submitted", "Подано"), ("reviewing", "Рассматривается"), ("needs_materials", "Нужны материалы"), ("accepted", "Удовлетворено"), ("rejected", "Отклонено")])
+    revision = models.PositiveIntegerField(default=1)
+    decision = models.TextField(blank=True)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="decided_review_cases")
+    correction_publication = models.ForeignKey("competitions.ProtocolPublication", null=True, on_delete=models.PROTECT, related_name="review_corrections")
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class ReviewEvidence(models.Model):
+    case = models.ForeignKey(ReviewCase, on_delete=models.PROTECT, related_name="evidence")
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    description = models.CharField(max_length=500)
+    url = models.URLField(blank=True)
+    content = models.BinaryField(null=True)
+    content_type = models.CharField(max_length=50, blank=True)
+    sha256 = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+class ReviewHistory(models.Model):
+    case = models.ForeignKey(ReviewCase, on_delete=models.PROTECT, related_name="history")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    action = models.CharField(max_length=40)
+    reason = models.TextField()
+    state = models.CharField(max_length=20)
+    created_at = models.DateTimeField(default=timezone.now)

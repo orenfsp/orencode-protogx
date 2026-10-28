@@ -19,6 +19,13 @@ from .ministry import MinistryView
 from .newcomer import NewcomerView
 from .notifications import NotificationsView
 from .progression import ProgressionRuleCreateView, ProgressionView
+from .reviews import (
+    EvidenceDownloadView,
+    ReviewActionView,
+    ReviewCasesView,
+    ReviewEvidenceView,
+    ReviewPolicyView,
+)
 from .training import (
     AttendanceView,
     EnrollmentView,
@@ -29,6 +36,11 @@ from .training import (
 )
 
 urlpatterns = [
+    path("reviews/", ReviewCasesView.as_view()),
+    path("reviews/policies/", ReviewPolicyView.as_view()),
+    path("reviews/<int:pk>/action/", ReviewActionView.as_view()),
+    path("reviews/<int:pk>/evidence/", ReviewEvidenceView.as_view()),
+    path("reviews/evidence/<int:pk>/", EvidenceDownloadView.as_view()),
     path("notifications/", NotificationsView.as_view()),
     path("newcomer/", NewcomerView.as_view()),
     path("ministry/", MinistryView.as_view()),
