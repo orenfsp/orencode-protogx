@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "apps.ratings",
     "apps.teams",
     "apps.extensions",
+    "oauth2_provider",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -107,3 +108,37 @@ FSP_PUBLIC_URL = os.environ.get("FSP_PUBLIC_URL", "http://127.0.0.1:3000").rstri
 INTEGRATION_ENCRYPTION_KEY = os.environ.get("INTEGRATION_ENCRYPTION_KEY", "")
 FSP_WEBHOOK_HOSTS = [h for h in os.environ.get("FSP_WEBHOOK_HOSTS", "").split(",") if h]
 FSP_WEBHOOK_ALLOW_LOOPBACK = os.environ.get("FSP_WEBHOOK_ALLOW_LOOPBACK", "0") == "1"
+
+OIDC_KEY_FILE = os.environ.get("FSP_OIDC_PRIVATE_KEY_FILE", "")
+OIDC_PRIVATE_KEY = Path(OIDC_KEY_FILE).read_text(encoding="utf-8") if OIDC_KEY_FILE else ""
+FSP_OIDC_ENABLED = os.environ.get("FSP_OIDC_ENABLED", "0") == "1" and bool(OIDC_PRIVATE_KEY)
+FSP_OIDC_ISSUER = os.environ.get("FSP_OIDC_ISSUER", "http://127.0.0.1:8000").rstrip("/")
+LOGIN_URL = "/o/login/"
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
+OAUTH2_PROVIDER = {
+    "OIDC_ENABLED": FSP_OIDC_ENABLED,
+    "OIDC_RSA_PRIVATE_KEY": OIDC_PRIVATE_KEY,
+    "OIDC_RSA_PRIVATE_KEYS_INACTIVE": [Path(p).read_text(encoding="utf-8") for p in os.environ.get("FSP_OIDC_INACTIVE_KEY_FILES", "").split(os.pathsep) if p],
+    "OIDC_ISS_ENDPOINT": FSP_OIDC_ISSUER,
+    "OIDC_USERINFO_ENDPOINT": FSP_OIDC_ISSUER + "/o/userinfo/",
+    "OAUTH2_VALIDATOR_CLASS": "apps.extensions.oidc.FSPValidator",
+    "OAUTH2_BACKEND_CLASS": "apps.extensions.oidc.FSPCore",
+    "SCOPES": {"openid": "Псевдонимный идентификатор", "profile": "ФИО", "fsp_roles": "Назначенные роли", "fsp_disciplines": "Спортивные дисциплины", "fsp_rank": "Действующие разряды"},
+    "DEFAULT_SCOPES": ["openid"],
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 300,
+    "ID_TOKEN_EXPIRE_SECONDS": 300,
+    "AUTHORIZATION_CODE_EXPIRE_SECONDS": 60,
+    "PKCE_REQUIRED": True,
+    "COMPLIANT_BCP_RFC9700_PKCE_METHOD": True,
+    "COMPLIANT_BCP_RFC9700_PKCE_REQUIRED": True,
+    "COMPLIANT_BCP_RFC9700_TOKEN_STORAGE": True,
+    "COMPLIANT_BCP_RFC9700_AUTHZ_RESPONSE_ISS": True,
+    "COMPLIANT_BCP_RFC9700_IMPLICIT_GRANT": True,
+    "COMPLIANT_BCP_RFC9700_PASSWORD_GRANT": True,
+    "OIDC_RESPONSE_TYPES_SUPPORTED": ["code"],
+    "OIDC_RP_INITIATED_LOGOUT_ENABLED": True,
+    "OIDC_RP_INITIATED_LOGOUT_STRICT_REDIRECT_URIS": True,
+    "OIDC_RP_INITIATED_LOGOUT_ACCEPT_EXPIRED_TOKENS": False,
+    "OIDC_JWKS_MAX_AGE_SECONDS": 60,
+    "ALLOW_URI_WILDCARDS": False,
+}

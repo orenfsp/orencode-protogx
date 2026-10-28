@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from apps.extensions.oidc import oidc_patterns
 
 
 class HealthSerializer(serializers.Serializer):
@@ -20,6 +21,7 @@ class HealthView(GenericAPIView):
 
 
 urlpatterns = [
+    path("o/", include(oidc_patterns, namespace="oauth2_provider")),
     path("admin/", admin.site.urls),
     path("api/v1/health/", HealthView.as_view()),
     path("api/v1/auth/", include("apps.accounts.urls")),

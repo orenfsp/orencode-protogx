@@ -307,3 +307,17 @@ class ResultImport(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["client", "idempotency_key"], name="extension_import_idempotency")]
+
+
+class OIDCClientPolicy(models.Model):
+    application = models.OneToOneField("oauth2_provider.Application", on_delete=models.PROTECT)
+    scopes = models.JSONField(default=list)
+    enabled = models.BooleanField(default=True)
+
+
+class OIDCSharingConsent(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    application = models.ForeignKey("oauth2_provider.Application", on_delete=models.PROTECT)
+    scopes = models.JSONField()
+    recorded_at = models.DateTimeField(default=timezone.now)
+    revoked_at = models.DateTimeField(null=True)

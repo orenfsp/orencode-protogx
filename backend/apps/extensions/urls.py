@@ -33,6 +33,12 @@ from .judging import JudgingDocumentsView, JudgingDownloadView
 from .ministry import MinistryView
 from .newcomer import NewcomerView
 from .notifications import NotificationsView
+from .oidc import (
+    OIDCClientDisableView,
+    OIDCClientsView,
+    OIDCConsentRevokeView,
+    OIDCConsentsView,
+)
 from .progression import ProgressionRuleCreateView, ProgressionView
 from .reviews import (
     EvidenceDownloadView,
@@ -51,6 +57,10 @@ from .training import (
 )
 
 urlpatterns = [
+    path("fsp-id/clients/", OIDCClientsView.as_view()),
+    path("fsp-id/consents/", OIDCConsentsView.as_view()),
+    path("fsp-id/clients/<int:pk>/disable/", OIDCClientDisableView.as_view()),
+    path("fsp-id/consents/<int:pk>/revoke/", OIDCConsentRevokeView.as_view()),
     path("integrations/", IntegrationsView.as_view()),
     path("integrations/<int:pk>/revoke/", RevokeIntegrationView.as_view()),
     path("integrations/identities/", IntegrationIdentityView.as_view()),
