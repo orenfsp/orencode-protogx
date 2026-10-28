@@ -10,6 +10,13 @@ test("live registry history and two-year XLSX agree", async ({ page }, testInfo)
   await page.getByRole("button", { name: "Демо Спортсмен", exact: true }).click();
   await expect(page.getByText("Демо центр Вектор").last()).toBeVisible();
   await expect(page.getByText("Демо клуб Орбита").last()).toBeVisible();
+  const organizations = await page.request.get("/api/v1/organizations/?search=Орбита");
+  expect(organizations.ok()).toBeTruthy();
+  const organizationId = (await organizations.json()).results[0].id;
+  await page.getByLabel("ID новой организации").fill(String(organizationId));
+  await page.getByLabel("Дата перевода").fill("2025-06-01");
+  await page.getByRole("button", { name: "Сохранить перевод" }).click();
+  await expect(page.getByText("2025-06-01 — по настоящее время · Демо клуб Орбита")).toBeVisible();
   await page.goto("/analytics/participation");
   const firstYear = page.getByRole("row").filter({ hasText: "2024" }).first();
   const secondYear = page.getByRole("row").filter({ hasText: "2025" }).first();
