@@ -18,6 +18,50 @@ class MandatoryWorkflowTests(TestCase):
     apply = competition_tests.CompetitionWorkflowTests.apply
     approve = competition_tests.CompetitionWorkflowTests.approve
 
+    def test_coach_directory_minimal_consent_minor_and_role_scope(self):
+        self.athlete.full_name = "Вымышленный Спортсмен"
+        self.athlete.save()
+        self.second.full_name = "Вымышленный Несовершеннолетний"
+        self.second.date_of_birth = date(2015, 1, 1)
+        self.second.save()
+        self.as_role(self.coach, "coach")
+        path = "/api/v1/coach-athlete-directory/"
+        self.assertEqual(self.client.get(path + "?search=В").status_code, 400)
+        response = self.client.get(path + "?search=Вымышленный")
+        self.assertEqual(response.data, [{"id": self.athlete.pk, "full_name": self.athlete.full_name}])
+        data = {"athlete": self.second.pk, "discipline": self.algorithmic.pk, "search": "Вымышленный"}
+        self.assertEqual(self.client.post(path, data).status_code, 403)
+        data["athlete"] = self.athlete.pk
+        self.assertEqual(self.client.post(path, data).status_code, 202)
+        self.assertEqual(self.client.post(path, data).status_code, 202)
+        link = CoachAthleteLink.objects.get(coach=self.coach, athlete=self.athlete)
+        self.assertEqual(link.status, "pending")
+        consent = PersonalDataConsent.objects.get(user=self.athlete)
+        from django.utils import timezone
+        consent.revoked_at = timezone.now()
+        consent.save()
+        self.assertEqual(self.client.get(path + "?search=Вымышленный").data, [])
+        self.assertEqual(self.client.post(path, data).status_code, 403)
+        self.as_role(self.athlete, "athlete")
+        self.assertEqual(self.client.get(path + "?search=Вымышленный").status_code, 403)
+
+    def test_link_history_both_owners_only_and_records_reasons(self):
+        self.as_role(self.coach, "coach")
+        self.client.post("/api/v1/coach-links/", {"athlete_email": self.athlete.email, "discipline": self.algorithmic.pk})
+        link = CoachAthleteLink.objects.get(coach=self.coach, athlete=self.athlete)
+        self.as_role(self.athlete, "athlete")
+        self.client.post(f"/api/v1/coach-links/{link.pk}/decision/", {"status": "confirmed"})
+        self.client.post(f"/api/v1/coach-links/{link.pk}/status/", {"status": "suspended", "reason": "Учебный перерыв"})
+        path = f"/api/v1/coach-links/{link.pk}/history/"
+        rows = self.client.get(path).data
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(rows[-1]["before"]["status"], "confirmed")
+        self.assertEqual(rows[-1]["after"]["reason"], "Учебный перерыв")
+        self.as_role(self.coach, "coach")
+        self.assertEqual(len(self.client.get(path).data), 3)
+        self.as_role(self.second, "athlete")
+        self.assertEqual(self.client.get(path).status_code, 404)
+
     def test_personal_protocol_hides_other_rows_and_has_version(self):
         competition = self.competition()
         for athlete in (self.athlete, self.second):

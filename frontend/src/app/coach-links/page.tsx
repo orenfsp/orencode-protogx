@@ -2,6 +2,8 @@
 
 import { Toast } from "@/components/Toast";
 import { CoachLinkLifecycle } from "@/components/CoachLinkLifecycle";
+import { CoachAthleteSearch } from "@/components/CoachAthleteSearch";
+import { RecordHistory } from "@/components/RecordHistory";
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -9,6 +11,11 @@ import { useCurrentUser } from "@/components/AppShell";
 import { api, CoachLink, Discipline } from "@/lib/api";
 
 export default function CoachLinks() {
+  const me = useCurrentUser();
+  return <CoachLinksContent key={`${me?.id}:${me?.active_role}`} />;
+}
+
+function CoachLinksContent() {
   const me = useCurrentUser();
   const role = me?.active_role;
   const [links, setLinks] = useState<CoachLink[]>([]);
@@ -35,8 +42,10 @@ export default function CoachLinks() {
   }
   return <><header className="dashboard-head"><span className="kick"><Link className="workflow-link" href="/dashboard">← Кабинет</Link></span><h1>Связи тренера</h1><p className="lead">Тренер может подавать заявки только после подтверждения спортсменом связи по дисциплине.</p></header>
     {error && <Toast>{error}</Toast>}{notice && <Toast tone="success">{notice}</Toast>}
+    {role === "coach" && <CoachAthleteSearch disciplines={disciplines} onSaved={reload} />}
     {role === "coach" && <section className="blk"><h2><b>01</b><span>Запросить связь</span></h2><div className="workflow-stack"><form className="workflow-form" onSubmit={request}><label className="lb">Email спортсмена<input className="inp" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></label><label className="lb">Дисциплина<select className="inp" required value={discipline} onChange={(event) => setDiscipline(event.target.value)}><option value="">Выберите</option>{disciplines.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button className="btn p" type="submit">Отправить запрос</button></form></div></section>}
     {(role === "coach" || role === "athlete") && <section className="blk"><h2><b>02</b><span>Связи</span></h2><div className="workflow-stack">{links.length ? links.map((link) => <div className="workflow-record" key={link.id}><strong>{role === "coach" ? link.athlete_name : link.coach_name}</strong><span>{disciplines.find((item) => item.id === link.discipline)?.name}</span><span className={`bd ${link.status === "pending" ? "wn" : ""}`}>{link.status === "pending" ? "Ожидает" : link.status === "confirmed" ? "Подтверждена" : link.status === "suspended" ? "Приостановлена" : link.status === "ended" ? "Завершена" : "Отклонена"}</span>{role === "athlete" && link.status === "pending" && <div className="workflow-actions"><button className="btn p" type="button" onClick={() => void decide(link.id, "confirmed")}>Подтвердить</button><button className="btn" type="button" onClick={() => void decide(link.id, "rejected")}>Отклонить</button></div>}</div>) : <div className="note">Связей пока нет.</div>}</div></section>}
     {(role === "athlete" || role === "coach") && <CoachLinkLifecycle links={links} athlete={role === "athlete"} onSaved={reload} />}
+    {(role === "athlete" || role === "coach") && <section className="blk"><h2><b>04</b><span>Журнал связей</span></h2><div className="workflow-stack">{links.map((link) => <div key={link.id} className="workflow-record"><p>Связь №{link.id} · {disciplines.find((item) => item.id === link.discipline)?.name}</p><RecordHistory path={`coach-links/${link.id}/history/`} version={link.status} /></div>)}</div></section>}
   </>;
 }

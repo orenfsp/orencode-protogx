@@ -2,6 +2,7 @@
 
 import { Toast } from "@/components/Toast";
 import { QualificationCorrectionPanel } from "@/components/QualificationCorrectionPanel";
+import { RecordHistory } from "@/components/RecordHistory";
 
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
@@ -59,12 +60,12 @@ function DeadlineTable({ items }: { items: Deadline[] }) {
 
 function RankHistoryTable({ rows, showAthlete }: { rows: RankRecord[]; showAthlete: boolean }) {
   if (!rows.length) return <div className="note">Присвоенных разрядов пока нет.</div>;
-  return <div className="tw"><table><thead><tr><th>№</th>{showAthlete && <th>Спортсмен</th>}<th>Разряд</th><th>Основание</th><th>Приказ</th><th>Присвоен</th><th>Срок</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.id}><td>{index + 1}</td>{showAthlete && <td>{row.athlete_name}</td>}<td>{row.rank_label}</td><td><Link className="workflow-link" href={`/competitions/${row.competition_id}`}>{row.competition_title}</Link>{row.place ? `, ${row.place} место` : ""}</td><td>{row.order_number}</td><td className="m">{fmt(row.assigned_on)}</td><td><Validity_ value={row.validity} left={row.days_left} /> <span className="m">до {fmt(row.valid_until)}</span></td></tr>)}</tbody></table></div>;
+  return <div className="tw"><table><thead><tr><th>№</th>{showAthlete && <th>Спортсмен</th>}<th>Разряд</th><th>Основание</th><th>Приказ</th><th>Присвоен</th><th>Срок</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.id}><td>{index + 1}</td>{showAthlete && <td>{row.athlete_name}</td>}<td>{row.rank_label}</td><td><Link className="workflow-link" href={`/competitions/${row.competition_id}`}>{row.competition_title}</Link>{row.place ? `, ${row.place} место` : ""}</td><td>{row.order_number}<RecordHistory path={`qualification-history/rank/${row.id}/corrections/`} version={`${row.order_number}:${row.assigned_on}:${row.valid_until}`} /></td><td className="m">{fmt(row.assigned_on)}</td><td><Validity_ value={row.validity} left={row.days_left} /> <span className="m">до {fmt(row.valid_until)}</span></td></tr>)}</tbody></table></div>;
 }
 
 function CatHistoryTable({ rows, showJudge }: { rows: CatRecord[]; showJudge: boolean }) {
   if (!rows.length) return <div className="note">Присвоенных категорий пока нет.</div>;
-  return <div className="tw"><table><thead><tr><th>№</th>{showJudge && <th>Судья</th>}<th>Категория</th><th>Приказ</th><th>Присвоена</th><th>Срок</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.id}><td>{index + 1}</td>{showJudge && <td>{row.judge_name}</td>}<td>{row.category_label}</td><td>{row.order_number}</td><td className="m">{fmt(row.assigned_on)}</td><td><Validity_ value={row.validity} left={row.days_left} /> <span className="m">до {fmt(row.valid_until)}</span></td></tr>)}</tbody></table></div>;
+  return <div className="tw"><table><thead><tr><th>№</th>{showJudge && <th>Судья</th>}<th>Категория</th><th>Приказ</th><th>Присвоена</th><th>Срок</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.id}><td>{index + 1}</td>{showJudge && <td>{row.judge_name}</td>}<td>{row.category_label}</td><td>{row.order_number}<RecordHistory path={`qualification-history/category/${row.id}/corrections/`} version={`${row.order_number}:${row.assigned_on}:${row.valid_until}`} /></td><td className="m">{fmt(row.assigned_on)}</td><td><Validity_ value={row.validity} left={row.days_left} /> <span className="m">до {fmt(row.valid_until)}</span></td></tr>)}</tbody></table></div>;
 }
 
 function RankAppTable({ rows, showAthlete }: { rows: RankApp[]; showAthlete: boolean }) {

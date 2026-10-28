@@ -683,6 +683,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/CalendarEntry'
           description: ''
+  /api/v1/coach-athlete-directory/:
+    get:
+      operationId: v1_coach_athlete_directory_list
+      parameters:
+      - in: query
+        name: search
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AthleteChoice'
+          description: ''
+    post:
+      operationId: v1_coach_athlete_directory_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DirectoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DirectoryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectoryAccepted'
+          description: ''
   /api/v1/coach-links/:
     get:
       operationId: v1_coach_links_list
@@ -751,6 +798,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoachLink'
+          description: ''
+  /api/v1/coach-links/{id}/history/:
+    get:
+      operationId: v1_coach_links_history_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkHistory'
           description: ''
   /api/v1/coach-links/{id}/status/:
     post:
@@ -2998,6 +3067,16 @@ components:
         * `pending` - На рассмотрении
         * `approved` - Одобрена
         * `rejected` - Отклонена
+    AthleteChoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+      required:
+      - full_name
+      - id
     AthleteHistory:
       type: object
       properties:
@@ -3612,6 +3691,29 @@ components:
       description: |-
         * `approved` - approved
         * `rejected` - rejected
+    DirectoryAccepted:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    DirectoryRequest:
+      type: object
+      properties:
+        athlete:
+          type: integer
+          minimum: 1
+        discipline:
+          type: integer
+        search:
+          type: string
+          maxLength: 100
+          minLength: 3
+      required:
+      - athlete
+      - discipline
+      - search
     Discipline:
       type: object
       properties:
@@ -3830,6 +3932,31 @@ components:
       description: |-
         * `suspension` - Приостановление
         * `disqualification` - Дисквалификация
+    LinkHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        action:
+          type: string
+        active_role:
+          type: string
+        before:
+          type: object
+          additionalProperties: {}
+        after:
+          type: object
+          additionalProperties: {}
+      required:
+      - action
+      - active_role
+      - after
+      - before
+      - created_at
+      - id
     LinkTransition:
       type: object
       properties:

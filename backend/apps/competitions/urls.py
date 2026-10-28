@@ -1,12 +1,15 @@
 from django.urls import path
 
 from . import views
+from .coach_directory import CoachDirectoryView, LinkHistoryView
 from .link_lifecycle import LinkLifecycleView
 from .registration import RegistrationView, RegulationsDownloadView
 from .reports import AthleteReportView, PersonalProtocolView
 from .types import CompetitionTypeDetailView, CompetitionTypesView
 
 urlpatterns = [
+    path("coach-athlete-directory/", CoachDirectoryView.as_view()),
+    path("coach-links/<int:pk>/history/", LinkHistoryView.as_view()),
     path("age-groups/", views.AgeGroupsView.as_view()),
     path("calendar-entries/", views.CalendarEntriesView.as_view()),
     path("templates/", views.TemplatesView.as_view()),
