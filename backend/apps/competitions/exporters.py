@@ -61,7 +61,7 @@ def _metadata_lines(snapshot):
         f"Дисциплина: {snapshot['discipline']}",
         f"Вид и уровень: {meta['competition_type']} · {meta['level']}",
         f"Дата и место: {meta['starts_at'][:10]} · {meta['location']}",
-        f"Формат: {meta['format']} · возраст на дату {meta['age_reference_date']}",
+        f"Формат: {dict(online='Онлайн', in_person='Очное', hybrid='Смешанный').get(meta['format'], meta['format'])} · возраст на дату {meta['age_reference_date']}",
         f"Календарная запись: {meta['calendar_entry'] or 'не указана'}",
     ]
 

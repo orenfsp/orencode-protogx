@@ -82,8 +82,9 @@ class AthleteRatingSerializer(serializers.ModelSerializer):
 
     def get_athlete_name(self, obj) -> str:
         from django.utils import timezone
-        from apps.competitions.services import age_on
+
         from apps.competitions.models import CoachAthleteLink
+        from apps.competitions.services import age_on
         born = obj.athlete.date_of_birth
         if born and age_on(born, timezone.localdate()) >= 18:
             return obj.athlete.full_name

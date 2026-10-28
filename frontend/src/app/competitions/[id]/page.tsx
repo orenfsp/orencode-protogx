@@ -12,6 +12,7 @@ import { AgeGroup, api, Application, CalendarEntry, CoachLink, Competition, Disc
 
 type JudgeChoice = { id: number; full_name: string };
 const statusName: Record<string, string> = { pending: "На рассмотрении", approved: "Одобрена", rejected: "Отклонена", classified: "Классифицирован", no_show: "Не явился", unclassified: "Без результата", disqualified: "Дисквалифицирован", pending_result: "Результат не внесён" };
+const formatName = { online: "Онлайн", in_person: "Очное", hybrid: "Смешанный" };
 
 export default function CompetitionDetail() {
   const params = useParams<{ id: string }>();
@@ -88,7 +89,7 @@ export default function CompetitionDetail() {
     {!competition ? <section className="blk"><h2><b>…</b><span>Загрузка</span></h2><div>Данные соревнования загружаются.</div></section> : <>
       <section className="blk"><h2><b>01</b><span>Положение</span></h2><div className="workflow-stack">
         <div><span className={`bd ${competition.state === "draft" ? "wn" : ""}`}>{competition.state === "draft" ? "Черновик" : "Опубликовано"}</span></div>
-        <p><strong>Уровень:</strong> {competition.level} · <strong>Вид:</strong> {competition.competition_type} · <strong>Формат:</strong> {competition.format}</p>
+        <p><strong>Уровень:</strong> {competition.level} · <strong>Вид:</strong> {competition.competition_type} · <strong>Формат:</strong> {formatName[competition.format]}</p>
         <p><strong>Регистрация до:</strong> {new Date(competition.registration_deadline).toLocaleString("ru-RU")}</p>
         <p><strong>Возрастные группы:</strong> {competition.age_group_details.map((group) => group.name).join(", ")} · <strong>Дата определения возраста:</strong> {competition.age_reference_date} · <strong>Одинаковые места:</strong> {competition.allow_ties ? "разрешены" : "не разрешены"}</p>
         {competition.calendar_entry && <p><strong>Календарь:</strong> {calendar.find((entry) => entry.id === competition.calendar_entry)?.title}</p>}
@@ -96,7 +97,7 @@ export default function CompetitionDetail() {
         <a className="btn" href={`/api/v1/competitions/${id}/regulations/`}>Скачать положение · DOCX</a>
         <p className="bd">{competition.registration_open === false ? "Приём заявок закрыт" : "Приём заявок до установленного срока"}</p>
         {role === "federation" && competition.state === "published" && <button className="btn" onClick={() => void action(`competitions/${id}/registration/`, { registration_open: competition.registration_open === false }, "Приём заявок обновлён")}>{competition.registration_open === false ? "Открыть приём заявок" : "Закрыть приём заявок"}</button>}
-        {competition.stages.length > 0 && <ul className="at">{competition.stages.map((stage) => <li key={stage.order}><b>{stage.order}</b><span>{stage.name} · {stage.format}</span><span className="m">{new Date(stage.starts_at).toLocaleDateString("ru-RU")}</span></li>)}</ul>}
+        {competition.stages.length > 0 && <ul className="at">{competition.stages.map((stage) => <li key={stage.order}><b>{stage.order}</b><span>{stage.name} · {formatName[stage.format]}</span><span className="m">{new Date(stage.starts_at).toLocaleDateString("ru-RU")}</span></li>)}</ul>}
       </div></section>
       {role === "federation" && <section className="blk"><h2><b>02</b><span>Настройка</span></h2><div><div className="btns">{competition.state === "draft" && <button className="btn p" type="button" onClick={() => void action(`competitions/${id}/publish/`, {}, "Соревнование опубликовано")}>Опубликовать</button>}<button className="btn" type="button" onClick={() => setEdit(!edit)}>{edit ? "Закрыть редактор" : "Изменить"}</button></div>{edit && <CompetitionEditor initial={competition} disciplines={disciplines} groups={groups} templates={templates} calendar={calendar} onSaved={(saved) => { setCompetition(saved); setEdit(false); setNotice("Изменения сохранены"); }} />}</div></section>}
       {(role === "athlete" || role === "coach") && competition.state === "published" && <section className="blk"><h2><b>02</b><span>Заявка</span></h2><div>{myApplication && role === "athlete" ? <div className="note">Ваша заявка: {statusName[myApplication.status]}{myApplication.decision_reason && ` · ${myApplication.decision_reason}`}</div> : <form className="workflow-form" onSubmit={apply}>{role === "coach" && <><label className="lb">Подтверждённый спортсмен<select className="inp" required value={coachAthlete} onChange={(event) => setCoachAthlete(event.target.value)}><option value="">Выберите</option>{coachOptions.map((link) => <option key={link.id} value={link.athlete ?? ""}>{link.athlete_name}</option>)}</select></label><Link className="workflow-link" href="/coach-links">Управление связями тренера</Link></>}<label className="lb">Возрастная группа<select className="inp" required value={ageGroup} onChange={(event) => setAgeGroup(event.target.value)}><option value="">Выберите</option>{competition.age_group_details.map((group) => <option value={group.id} key={group.id}>{group.name}</option>)}</select></label><button className="btn p" type="submit">Отправить заявку</button></form>}</div></section>}
