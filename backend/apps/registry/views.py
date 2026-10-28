@@ -46,6 +46,7 @@ from .serializers import (
     ClosePeriodSerializer,
     DisciplinePeriodSerializer,
     MunicipalityPeriodSerializer,
+    OrganizationFilterSerializer,
     OrganizationPeriodSerializer,
     OrganizationSerializer,
     ParticipationSerializer,
@@ -285,7 +286,22 @@ class Organizations(FederationMixin, generics.ListCreateAPIView):
     pagination_class = RegistryPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "code", "municipality"]
-    queryset = Organization.objects.order_by("name", "pk")
+    def get_queryset(self):
+        query = OrganizationFilterSerializer(data=self.request.query_params.dict())
+        query.is_valid(raise_exception=True)
+        values = query.validated_data
+        organizations = Organization.objects.all()
+        if "active" in values:
+            organizations = organizations.filter(is_active=values["active"])
+        if "municipality" in values:
+            organizations = organizations.filter(municipality=values["municipality"])
+        if "organization_type" in values:
+            organizations = organizations.filter(organization_type=values["organization_type"])
+        return organizations.order_by("name", "pk")
+
+    @extend_schema(parameters=[OpenApiParameter("active", bool), OpenApiParameter("municipality", str), OpenApiParameter("organization_type", str)])
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
     @transaction.atomic
     def perform_create(self, serializer):

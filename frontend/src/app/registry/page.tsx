@@ -40,6 +40,7 @@ function RegistryWorkspace() {
   const [orgFilter, setOrgFilter] = useState("");
   const [disciplineFilter, setDisciplineFilter] = useState("");
   const [municipalityFilter, setMunicipalityFilter] = useState("");
+  const [organizationType, setOrganizationType] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState<Page | null>(null);
   const [error, setError] = useState("");
@@ -80,10 +81,14 @@ function RegistryWorkspace() {
       if (orgFilter) query.set("organization", orgFilter);
       if (disciplineFilter) query.set("discipline", disciplineFilter);
       if (municipalityFilter) query.set("municipality", municipalityFilter);
+    } else {
+      if (activeFilter) query.set("active", activeFilter);
+      if (municipalityFilter) query.set("municipality", municipalityFilter);
+      if (organizationType) query.set("organization_type", organizationType);
     }
     api<Page>(`${kind}/?${query}`, { signal: controller.signal }).then((result) => { if (!controller.signal.aborted) { setData(result); setError(""); } }).catch((failure) => { if (!controller.signal.aborted) { setData(null); if (failure instanceof ApiError && (failure.status === 401 || failure.status === 403)) setDenied(true); else setError(failure.message); } });
     return () => controller.abort();
-  }, [kind, search, page, revision, activeFilter, orgFilter, disciplineFilter, municipalityFilter]);
+  }, [kind, search, page, revision, activeFilter, orgFilter, disciplineFilter, municipalityFilter, organizationType]);
   useEffect(() => {
     if (!selected || kind !== "athletes") return;
     const controller = new AbortController();
@@ -141,6 +146,11 @@ function RegistryWorkspace() {
   if (denied || optionsForbidden) return <p className="note wn" role="alert">Доступ к реестру недоступен. Войдите снова или выберите роль федерации.</p>;
   return <div className="registry-workspace"><header className="dashboard-head"><span className="kick">ФЕДЕРАЦИЯ · данные реестра</span><h1>Реестры</h1></header>
     <section className="blk"><h2><b>01</b><span>Поиск</span></h2><div className="btns">{(Object.keys(labels) as Kind[]).map((key) => <button key={key} className="btn" type="button" onClick={() => { setKind(key); setPage(1); setSelected(null); setSelectedOrg(null); setCorrection(null); setHistory(null); }}>{labels[key]}</button>)}</div><label className="lb">Поиск<input className="inp" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></label>{kind !== "organizations" && <div className="form-grid"><label className="lb">Статус<select className="inp" value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}><option value="">Все</option><option value="true">Активные</option><option value="false">Неактивные</option></select></label><label className="lb">Организация<select className="inp" value={orgFilter} onChange={(e) => { setOrgFilter(e.target.value); setPage(1); }} disabled={!options}><option value="">Все</option>{options?.organizations.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label className="lb">Дисциплина<select className="inp" value={disciplineFilter} onChange={(e) => { setDisciplineFilter(e.target.value); setPage(1); }} disabled={!options}><option value="">Все</option>{options?.disciplines.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label className="lb">Муниципалитет<select className="inp" value={municipalityFilter} onChange={(e) => { setMunicipalityFilter(e.target.value); setPage(1); }} disabled={!options}><option value="">Все</option>{options?.municipalities.map((name) => <option value={name} key={name}>{name}</option>)}</select></label></div>}</section>
+    {kind === "organizations" && <section className="blk"><h2><b>01</b><span>Фильтры</span></h2><div className="form-grid">
+      <label className="lb">Статус организации<select className="inp" value={activeFilter} onChange={(e) => { setActiveFilter(e.target.value); setPage(1); }}><option value="">Все</option><option value="true">Активные</option><option value="false">Неактивные</option></select></label>
+      <label className="lb">Муниципалитет в фильтре<select className="inp" value={municipalityFilter} onChange={(e) => { setMunicipalityFilter(e.target.value); setPage(1); }} disabled={!options}><option value="">Все</option>{options?.municipalities.map((name) => <option value={name} key={name}>{name}</option>)}</select></label>
+      <label className="lb">Тип организации<input className="inp" value={organizationType} onChange={(e) => { setOrganizationType(e.target.value); setPage(1); }} /></label>
+    </div></section>}
     {(error || optionsError) && <p className="note wn" role="alert">{error || optionsError}</p>}
     <section className="blk"><h2><b>02</b><span>{labels[kind]}</span></h2>{!data ? <p className="note">{error ? "Данные не загружены." : "Загрузка…"}</p> : !data.results.length ? <p className="note">Записей не найдено.</p> : <div className="tw"><table><thead><tr><th>Имя / название</th><th>Организация / муниципалитет</th><th>Статус</th></tr></thead><tbody>{data.results.map((row) => <tr key={row.id}><td>{"full_name" in row ? <button className="workflow-link" type="button" onClick={() => { setHistory(null); setCorrection(null); setClosing(null); setSelected(row); setEditName(row.full_name); setEditBirth(row.date_of_birth ?? ""); }}>{row.full_name}</button> : <button className="workflow-link" type="button" onClick={() => { setSelectedOrg(row); }}>{row.name}</button>}</td><td>{"full_name" in row ? row.organization ?? "Не указана" : row.municipality || "Не указан"}</td><td>{row.is_active ? "Активен" : "Неактивен"}</td></tr>)}</tbody></table></div>}<div className="btns"><button className="btn" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Назад</button><span>Страница {page}</span><button className="btn" type="button" disabled={!data?.next} onClick={() => setPage(page + 1)}>Далее</button></div></section>
     {selected && kind !== "organizations" && <section className="blk"><h2><b>03</b><span>Профиль · {selected.full_name}</span></h2><label className="lb">Имя<input className="inp" value={editName} onChange={(e) => setEditName(e.target.value)} /></label><label className="lb">Дата рождения<input className="inp" type="date" value={editBirth} onChange={(e) => setEditBirth(e.target.value)} /></label><button className="btn" type="button" onClick={savePerson}>Сохранить профиль</button></section>}

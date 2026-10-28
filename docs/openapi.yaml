@@ -1367,6 +1367,18 @@ paths:
     get:
       operationId: v1_organizations_list
       parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+      - in: query
+        name: municipality
+        schema:
+          type: string
+      - in: query
+        name: organization_type
+        schema:
+          type: string
       - name: page
         required: false
         in: query

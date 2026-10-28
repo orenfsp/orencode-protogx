@@ -66,6 +66,12 @@ class PersonFilterSerializer(serializers.Serializer):
     municipality = serializers.CharField(required=False, max_length=200)
 
 
+class OrganizationFilterSerializer(serializers.Serializer):
+    active = serializers.BooleanField(required=False)
+    municipality = serializers.CharField(required=False, max_length=200)
+    organization_type = serializers.CharField(required=False, max_length=100)
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization

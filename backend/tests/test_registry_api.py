@@ -158,6 +158,19 @@ class RegistryApiTests(TestCase):
         self.assertIn("Оренбург", options.data["municipalities"])
         self.assertIn({"id": self.second.pk, "name": "Вторая"}, options.data["organizations"])
 
+    def test_organization_filters_validate_and_combine(self):
+        self.first.municipality = "Оренбург"
+        self.first.organization_type = "Клуб"
+        self.first.save(update_fields=["municipality", "organization_type"])
+        self.second.municipality = "Орск"
+        self.second.is_active = False
+        self.second.save(update_fields=["municipality", "is_active"])
+        response = self.client.get("/api/v1/organizations/", {"active": "true", "municipality": "Оренбург", "organization_type": "Клуб"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([item["id"] for item in response.data["results"]], [self.first.pk])
+        self.assertEqual(self.client.get("/api/v1/organizations/", {"active": "false"}).data["count"], 1)
+        self.assertEqual(self.client.get("/api/v1/organizations/", {"active": "invalid"}).status_code, 400)
+
     def test_session_mutation_requires_csrf(self):
         client = APIClient(enforce_csrf_checks=True)
         client.force_login(self.federation)

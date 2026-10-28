@@ -28,3 +28,25 @@ for (const [role, button] of [["athlete", "Спортсмены"], ["coach", "Т
     await expect(page.getByLabel("Существующий пользователь")).toHaveValue("");
   });
 }
+
+test("organization filters send named selections to the API", async ({ page }) => {
+  const user = { id: 1, full_name: "Федерация", email: "fiction@example.test", roles: ["federation"], active_role: "federation" };
+  let lastQuery = "";
+  await page.route("**/api/v1/auth/me/", (route) => route.fulfill({ json: user }));
+  await page.route("**/api/v1/registry/options/", (route) => route.fulfill({ json: { organizations: [], disciplines: [], age_groups: [], municipalities: ["Оренбург"] } }));
+  await page.route("**/api/v1/registry/eligible-users/**", (route) => route.fulfill({ json: { results: [], next: null } }));
+  await page.route("**/api/v1/athletes/**", (route) => route.fulfill({ json: { count: 0, next: null, previous: null, results: [] } }));
+  await page.route("**/api/v1/organizations/**", (route) => {
+    lastQuery = new URL(route.request().url()).search;
+    return route.fulfill({ json: { count: 0, next: null, previous: null, results: [] } });
+  });
+  await page.goto("/registry");
+  await page.getByRole("button", { name: "Организации", exact: true }).click();
+  await page.getByLabel("Статус организации").selectOption("false");
+  await page.getByLabel("Муниципалитет в фильтре").selectOption("Оренбург");
+  await page.getByLabel("Тип организации").fill("Клуб");
+  await expect.poll(() => {
+    const query = new URLSearchParams(lastQuery);
+    return [query.get("active"), query.get("municipality"), query.get("organization_type")];
+  }).toEqual(["false", "Оренбург", "Клуб"]);
+});
