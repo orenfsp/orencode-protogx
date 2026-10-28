@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/components/AppShell";
 import { api } from "@/lib/api";
 
 export type Field = { name: string; label: string; type?: "text" | "number" | "date" | "url" | "checkbox" | "textarea"; options?: string; choices?: { value: string | number; label: string }[]; optional?: boolean };
-export type Action = { label: string; path: string; fields: Field[] };
+export type Action = { label: string; path: string; fields: Field[]; roles?: string[] };
 export type WorkspaceProps = { title: string; endpoint: string; columns: { key: string; label: string }[]; actions?: Action[]; publicAccess?: boolean };
 type Data = { items: Record<string, unknown>[]; notice?: string; options?: Record<string, { value: string | number; label: string }[]> };
 
@@ -15,6 +15,7 @@ function display(value: unknown): string { if (value == null) return "—"; if (
 
 function WorkspaceBody({ title, endpoint, columns, actions = [], publicAccess = false }: WorkspaceProps) {
   const me = useCurrentUser();
+  actions = actions.filter(action => !action.roles || (me?.active_role && action.roles.includes(me.active_role)));
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
