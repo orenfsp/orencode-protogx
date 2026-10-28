@@ -18,6 +18,14 @@ export type RatingContribution = { competition_id: number; competition_title: st
 export type AthleteRating = { id: number; athlete: number; athlete_name: string; season: number; discipline: number; discipline_code: string; discipline_name: string; base_score: string; prize_count: number; coefficient: string; rating_score: string; calculated_at: string; placement: number; breakdown: RatingContribution[] };
 export type RatingOptions = { seasons: { id: number; year: number; name: string; is_active: boolean }[]; disciplines: { id: number; code: string; name: string }[]; age_groups: { id: number; name: string; min_age: number; max_age: number }[] };
 export type RatingsResponse = { items: AthleteRating[]; page: number; page_size: number; total: number; pages: number };
+export type TeamMembership = { id: number; athlete: number; athlete_name: string; athlete_email: string; position: number; selected_by: number; selected_at: string; removed_at: string | null; removal_reason: string; eligibility_snapshot: { eligible: boolean; age: number | null; consent: boolean; guardian_verified: boolean; restriction: string | null; rating_score: string | null }; current_eligibility?: { eligible: boolean; restriction: string | null }; selection_note: string };
+export type RegionalTeam = { id: number; name: string; region: string; status: "draft" | "published"; season: number; season_year: number; discipline: number; discipline_code: string; discipline_name: string; age_group: number; age_group_name: string; created_by: number; created_at: string; updated_at: string; member_count: number; members: TeamMembership[] };
+export type TeamCandidate = { id: number; full_name: string; email: string; sport_rank?: string | null; eligible: boolean; selected: boolean; eligibility: { age: number | null; consent: boolean; guardian_verified: boolean; restriction: string | null; rating_score: string | null }; rating: { score: string; base_score: string; prize_count: number; position?: number } | null };
+export type TeamOptions = { seasons: { id: number; year: number; name: string }[]; disciplines: Discipline[]; age_groups: AgeGroup[] };
+
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) { super(message); }
+}
 
 async function csrfToken(signal?: AbortSignal | null): Promise<string> {
   const response = await fetch("/api/v1/auth/csrf/", { credentials: "include", signal });
@@ -36,7 +44,13 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(typeof error.detail === "string" ? error.detail : JSON.stringify(error));
+    throw new ApiError(typeof error.detail === "string" ? error.detail : JSON.stringify(error), response.status);
   }
   return response.status === 204 ? (undefined as T) : response.json();
+}
+
+export async function downloadDocument(path: string): Promise<Blob> {
+  const response = await fetch(`/api/v1/${path}`, { credentials: "include" });
+  if (!response.ok) throw new ApiError("Не удалось скачать документ", response.status);
+  return response.blob();
 }

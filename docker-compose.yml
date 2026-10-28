@@ -23,12 +23,14 @@ services:
       POSTGRES_HOST: db
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-local-development-only-change-me}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DEMO_SEED_ENABLED: ${DEMO_SEED_ENABLED:-0}
+      DEMO_ENVIRONMENT: ${DEMO_ENVIRONMENT:-}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,api}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
     depends_on:
       db:
         condition: service_healthy
-    command: sh -c "python manage.py migrate --noinput && if [ \"${DJANGO_DEBUG:-1}\" = \"1\" ]; then python manage.py seed_demo; fi && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python manage.py migrate --noinput && if [ \"$${DJANGO_DEBUG:-0}\" = \"1\" ] && [ \"$${DEMO_SEED_ENABLED:-0}\" = \"1\" ]; then echo 'demo seed enabled'; python manage.py seed_demo; else echo 'demo seed disabled'; fi && python manage.py runserver 0.0.0.0:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=2)"]
       interval: 5s

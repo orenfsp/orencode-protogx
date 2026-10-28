@@ -6,7 +6,13 @@ Phase 2 competition workflow on the Phase 1 platform. The mandatory design sourc
 
 ## Run with Docker Compose
 
-Copy `.env.example` to `.env` and replace the local passwords and Django secret. Run `docker compose up --build`. The frontend is at `http://localhost:3000`, API at `http://localhost:8000/api/v1/health/`, OpenAPI at `/api/schema/`, docs at `/api/docs/`. The API applies migrations and, with `DJANGO_DEBUG=1`, idempotently seeds five fictional demo accounts before becoming healthy. Next.js waits for that healthcheck. The database persists in a named Compose volume; `seed_demo` refuses non-debug environments.
+Copy `.env.example` to `.env` and replace the local passwords and Django secret. Run `docker compose up --build`. The frontend is at `http://localhost:3000`, API at `http://localhost:8000/api/v1/health/`, OpenAPI at `/api/schema/`, docs at `/api/docs/`. The API applies migrations and runs the opt-in demo seeder before becoming healthy. Next.js waits for that healthcheck. The database persists in a named Compose volume.
+
+## Regional team demo and automatic seeding
+
+Compose startup performs migrations before seeding. Copy `.env.example` to `.env` to opt in locally. The command requires `DJANGO_DEBUG=1`, `DEMO_SEED_ENABLED=1`, `DEMO_ENVIRONMENT=local` and a local database host. Production and staging must disable these settings. The command creates fictional users, competitions, published protocols, calculated ratings and regional teams; see [docs/demo-scenarios.md](docs/demo-scenarios.md).
+
+Team lists and candidates use 50-item API pages; the team screen loads the pages and provides a candidate search. Team exports include an optional current organization affiliation. This minimal affiliation is not the future AC-11 registry or its historical reporting.
 
 ## Local development and checks
 

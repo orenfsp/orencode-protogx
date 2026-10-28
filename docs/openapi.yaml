@@ -1193,6 +1193,298 @@ paths:
               schema:
                 $ref: '#/components/schemas/Result'
           description: ''
+  /api/v1/teams/:
+    get:
+      operationId: v1_teams_list
+      parameters:
+      - in: query
+        name: age_group
+        schema:
+          type: integer
+        description: Age group ID
+      - in: query
+        name: discipline
+        schema:
+          type: string
+        description: Discipline code or ID
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number (50 teams per page)
+      - in: query
+        name: season
+        schema:
+          type: integer
+        description: Season year
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPage'
+          description: ''
+    post:
+      operationId: v1_teams_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/:
+    get:
+      operationId: v1_teams_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/candidates/:
+    get:
+      operationId: v1_teams_candidates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number (50 candidates per page)
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidatePage'
+          description: ''
+  /api/v1/teams/{id}/documents/:
+    get:
+      operationId: v1_teams_documents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDocumentResponse'
+          description: ''
+  /api/v1/teams/{id}/history/:
+    get:
+      operationId: v1_teams_history_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamHistory'
+          description: ''
+  /api/v1/teams/{id}/members/:
+    post:
+      operationId: v1_teams_members_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/members/{membership_id}/remove/:
+    post:
+      operationId: v1_teams_members_remove_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: membership_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/publish/:
+    post:
+      operationId: v1_teams_publish_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegionalTeam'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
+  /api/v1/teams/{id}/reorder/:
+    post:
+      operationId: v1_teams_reorder_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+  /api/v1/teams/options/:
+    get:
+      operationId: v1_teams_options_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalTeam'
+          description: ''
   /api/v1/templates/:
     get:
       operationId: v1_templates_list
@@ -1484,6 +1776,28 @@ components:
       - source
       - title
       - year
+    CandidatePage:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamCandidate'
+      required:
+      - count
+      - next
+      - previous
+      - results
     CategoryApplicationCreate:
       type: object
       properties:
@@ -1973,6 +2287,16 @@ components:
       - full_name
       - id
       - roles
+    MemberAdd:
+      type: object
+      properties:
+        athlete:
+          type: integer
+        note:
+          type: string
+          maxLength: 500
+      required:
+      - athlete
     PatchedCompetition:
       type: object
       properties:
@@ -2761,6 +3085,80 @@ components:
       - page_size
       - pages
       - total
+    RegionalTeam:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        region:
+          type: string
+          maxLength: 120
+        status:
+          $ref: '#/components/schemas/RegionalTeamStatusEnum'
+        season:
+          type: integer
+        season_year:
+          type: integer
+          readOnly: true
+        discipline:
+          type: integer
+        discipline_code:
+          type: string
+          readOnly: true
+        discipline_name:
+          type: string
+          readOnly: true
+        age_group:
+          type: integer
+        age_group_name:
+          type: string
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        member_count:
+          type: integer
+          readOnly: true
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMembership'
+          readOnly: true
+      required:
+      - age_group
+      - age_group_name
+      - created_at
+      - created_by
+      - discipline
+      - discipline_code
+      - discipline_name
+      - id
+      - member_count
+      - members
+      - name
+      - season
+      - season_year
+      - updated_at
+    RegionalTeamStatusEnum:
+      enum:
+      - draft
+      - published
+      type: string
+      description: |-
+        * `draft` - Черновик
+        * `published` - Сформирован
     Register:
       type: object
       properties:
@@ -3010,6 +3408,169 @@ components:
       $ref: '#/components/schemas/QualificationReviewStatusEnum'
     StatusDc7Enum:
       $ref: '#/components/schemas/DecisionStatusEnum'
+    TeamCandidate:
+      type: object
+      properties:
+        id:
+          type: integer
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+        sport_rank:
+          type: string
+          nullable: true
+        eligible:
+          type: boolean
+        selected:
+          type: boolean
+        eligibility:
+          type: object
+          additionalProperties: {}
+        rating:
+          type: object
+          additionalProperties: {}
+          nullable: true
+      required:
+      - eligibility
+      - eligible
+      - email
+      - full_name
+      - id
+      - rating
+      - selected
+      - sport_rank
+    TeamCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        region:
+          type: string
+          maxLength: 120
+        season:
+          type: integer
+        discipline:
+          type: integer
+        age_group:
+          type: integer
+      required:
+      - age_group
+      - discipline
+      - name
+      - season
+    TeamDocumentResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+    TeamHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        action:
+          type: string
+          maxLength: 32
+        actor:
+          type: integer
+        actor_name:
+          type: string
+          readOnly: true
+        membership:
+          type: integer
+          nullable: true
+        before: {}
+        after: {}
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - action
+      - actor
+      - actor_name
+      - id
+    TeamMembership:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        athlete:
+          type: integer
+        athlete_name:
+          type: string
+          readOnly: true
+        athlete_email:
+          type: string
+          format: email
+          readOnly: true
+        organization_name:
+          type: string
+          nullable: true
+          readOnly: true
+        position:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        selected_by:
+          type: integer
+          readOnly: true
+        selected_at:
+          type: string
+          format: date-time
+          readOnly: true
+        removed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        removal_reason:
+          type: string
+        eligibility_snapshot:
+          readOnly: true
+        current_eligibility:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        selection_note:
+          type: string
+      required:
+      - athlete
+      - athlete_email
+      - athlete_name
+      - current_eligibility
+      - eligibility_snapshot
+      - id
+      - organization_name
+      - removed_at
+      - selected_at
+      - selected_by
+    TeamPage:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegionalTeam'
+      required:
+      - count
+      - next
+      - previous
+      - results
     UserChoice:
       type: object
       properties:

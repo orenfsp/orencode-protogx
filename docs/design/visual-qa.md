@@ -41,3 +41,15 @@ The role-aware `/my-competitions` page reuses the shell, stamps and bordered tab
 ## Phase 3.1 ratings review — 2026-10-27
 
 The `/ratings` page was rebuilt with the existing shell, numbered indigo navigation, document rail, bordered table, stamp status and responsive mobile layout. `tests/ratings.spec.ts` passed against the live Compose web/API services for both an empty state and an expandable published-result breakdown. The backend test `test_protocol_publication_recalculates_rating_from_its_snapshot` covers the live domain sequence from publication to rating, while `test_ratings_api_returns_breakdown_and_deterministic_placement` verifies the API DTO consumed by the page. The page build, typecheck and lint passed. A separate screenshot capture for the populated table was not required for the functional gate; the reference HTML remains unchanged.
+
+## Phase 3.2 regional teams review — 2026-10-27
+
+The `/teams` page reuses the numbered sidebar, document rail, orange actions, bordered tables, stamps, Rubik/Inter/JetBrains Mono tokens and mobile navigation. It adds no new global styles or changes to `fsp-reference.html`. The existing targeted Playwright test uses intercepted API data and checks page rendering; it does not verify manual selection or finalization. A dedicated side-by-side screenshot capture remains a follow-up visual review item.
+
+## Phase 3.2 document and live workflow review — 2026-10-28
+
+On an isolated PostgreSQL Compose project, the live `teams-live.spec.ts` scenario logged in, opened rating provenance, created a team, manually selected and reordered athletes, reloaded the persisted roster, finalized it and downloaded all four documents. The roster and draft-order PDFs and both DOCX files converted with LibreOffice were rendered using PDFium. Their single pages were inspected: Cyrillic names, ranks, team metadata, order and signature placeholders were visible without table clipping for this two-athlete sample. Longer rosters and names remain a separate pagination/overflow gate. The draft form is a demonstration and requires regulatory review against a primary source.
+
+## Phase 3.2 stress review — 2026-10-28
+
+Roster and draft-order PDF and DOCX were generated for 2, 15 and 50 fictional athletes with long Cyrillic names, short, long and missing organization names, and two different seeded sports ranks. All PDF pages and LibreOffice-rendered DOCX pages were visually inspected with PDFium; extracted text contained each athlete, both ranks and the relevant organization examples. The initial DOCX split rows across pages and omitted repeating headers; the exporter now prevents row splitting, repeats headers and adjusts column widths and spacing. PDF documents used 1, 2 and 6 pages respectively; converted DOCX used 1, 2 and 4. The draft form still requires primary-source regulatory review.

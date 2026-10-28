@@ -7,6 +7,7 @@ test("ratings page loads API options and shows empty state for an uncalculated s
   await expect(page.getByRole("heading", { name: "Рейтинг спортсменов" })).toBeVisible();
   await expect(page.getByLabel("Сезон")).toHaveValue("2026");
   await expect(page.getByLabel("Дисциплина")).toHaveValue("algorithmic");
+  await page.getByLabel("Дисциплина").selectOption("robotics");
   await expect(page.getByText("Для выбранных фильтров опубликованных результатов нет.")).toBeVisible();
   await page.getByLabel("Возрастная группа").selectOption({ label: "Демо: 18+" });
   await expect(page.getByLabel("Возрастная группа")).toHaveValue("2");

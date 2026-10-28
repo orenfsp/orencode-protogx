@@ -36,7 +36,15 @@ test("competition application, moderation, result, protocol and athlete history"
   const athleteContext = await browser.newContext();
   const athletePage = await athleteContext.newPage();
   athletePage.setDefaultTimeout(10000);
-  await signIn(athletePage, "demo.athlete@example.test");
+  const athleteName = `Тестовый Спортсмен ${Date.now()}`;
+  await athletePage.goto("/register");
+  await athletePage.getByLabel("ФИО", { exact: true }).fill(athleteName);
+  await athletePage.getByLabel("Электронная почта").fill(`phase2-${Date.now()}@example.test`);
+  await athletePage.getByLabel("Дата рождения").fill("2000-01-01");
+  await athletePage.getByLabel("Пароль").fill("DemoOnly2026!");
+  await athletePage.getByRole("checkbox", { name: /Согласие на обработку/ }).check();
+  await athletePage.getByRole("button", { name: "Создать аккаунт" }).click();
+  await expect(athletePage).toHaveURL(/\/dashboard$/);
   await athletePage.goto(competitionUrl);
   await athletePage.getByRole("combobox", { name: "Возрастная группа" }).selectOption({ label: "Демо: 18+" });
   await athletePage.getByRole("button", { name: "Отправить заявку" }).click();
@@ -64,7 +72,7 @@ test("competition application, moderation, result, protocol and athlete history"
   await page.getByRole("button", { name: "Проверить" }).click();
   await expect(page.getByText("Результат проверен")).toBeVisible();
   await page.getByRole("button", { name: "Предпросмотр" }).click();
-  await expect(page.getByRole("table").last()).toContainText("Демо Спортсмен");
+  await expect(page.getByRole("table").last()).toContainText(athleteName);
   await page.getByRole("button", { name: "Опубликовать версию" }).click();
   await expect(page.getByText("Новая версия протокола опубликована")).toBeVisible();
   const [pdf] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "PDF", exact: true }).last().click()]);

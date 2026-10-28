@@ -36,6 +36,11 @@ class User(AbstractUser):
         return self.email
 
 
+class AthleteProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="athlete_profile")
+    organization = models.ForeignKey("catalogs.Organization", null=True, blank=True, on_delete=models.PROTECT, related_name="athletes")
+
+
 class UserRole(models.Model):
     class Role(models.TextChoices):
         FEDERATION = "federation", "Federation"
