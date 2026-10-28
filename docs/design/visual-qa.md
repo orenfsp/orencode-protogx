@@ -1,5 +1,11 @@
 # Visual QA
 
+## Optional services — 2026-10-28
+
+`optional-live.spec.ts` captures the loaded newcomer page at 1440/768/390 in both themes, plus the real OIDC consent and fictional userinfo callback. Evidence copies are `screenshots/optional-newcomer-*`, `optional-oidc-consent.png`, and `optional-oidc-userinfo.png`. The 390px dark navigator and desktop consent were visually inspected: the existing sidebar/rail, orange actions, stamps, typography and mobile navigation are retained. Tables scroll horizontally on mobile. This is sampled visual QA, not pixel-level acceptance of every optional form/state.
+
+OIDC Django templates use an exact packaged copy of the existing frontend globals.css + app.css, checked by `python scripts/sync_optional_styles.py --check`; no independent theme remains. The original reference and frontend CSS files were not edited. Django's theme toggle does not persist between navigations.
+
 Reference: `fsp-reference.html` (SHA-256 `2362C4D1AEC5D54FA075215D6FDF986416D23D8402FBF33342D29671C5D043A2`). It is immutable.
 
 Phase 1 maps the reference variables to `frontend/src/app/globals.css`, the numbered indigo sidebar and role selector to `AppShell`, the document rail to `.main::before`, and the fixed mobile bottom navigation to `.mobtab`. Rubik, Inter, and JetBrains Mono are loaded with the same font weights. The light/dark token values and 900px/520px breakpoints come from the reference CSS.

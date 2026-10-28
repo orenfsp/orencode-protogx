@@ -1,5 +1,7 @@
 # Действующие API-контракты
 
+Дополнения ветки `feat/case-optional-d1-d12` описаны в [optional integration/OIDC contracts](../optional-integrations.md), [demo workflows](../optional-demo.md) и актуальном OpenAPI. Новые session endpoints используют прежний CSRF/role contract; `/external/*` принимает отдельный scoped integration bearer, `/o/*` — библиотечный OIDC. Их credentials не заменяют session на mandatory endpoints.
+
 Источник путей и полей — [сохранённая OpenAPI-схема](../openapi.yaml), `backend/config/urls.py`, `apps/*/{urls,views,serializers,services}.py` на `600562d`. Swagger: `/api/docs/`, schema: `/api/schema/`. Префикс ниже — `/api/v1/`. Схема `drf-spectacular` описывает успешные ответы и часть запросов; **роли и бизнес-ошибки уточнены по коду**, они не полностью перечислены в YAML. DTO на клиенте принадлежат руководителю: `frontend/src/lib/api.ts`.
 
 Все POST/PATCH требуют CSRF token; защищённые операции дополнительно требуют session cookie. Публичные register/login создают сессию после CSRF-проверки. `GET` публичен только там, где написано «публично». Ошибки: DRF выдаёт 400 для serializer/domain validation (обычно словарь поля или `detail`), 403 при отказе роли/объекта, 404 для отсутствующего id; анонимный запрос к защищённому endpoint отклоняется. `api<T>()` преобразует неуспешный JSON в `Error`. Не полагайтесь на наличие единой error DTO.
