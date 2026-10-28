@@ -1,0 +1,9 @@
+demo.federation@example.test
+
+demo.athlete@example.test
+
+demo.coach@example.test
+
+demo.judge@example.test 
+
+DemoOnly2026!
