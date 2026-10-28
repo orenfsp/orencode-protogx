@@ -40,3 +40,15 @@ class JudgingDocument(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="generated_judging_documents")
     snapshot = models.JSONField()
     created_at = models.DateTimeField(default=timezone.now)
+
+
+class TrainingOrganization(models.Model):
+    organization = models.OneToOneField("catalogs.Organization", on_delete=models.PROTECT, related_name="training_card")
+    organization_type = models.CharField(max_length=100)
+    municipality = models.CharField(max_length=200)
+    license_details = models.CharField(max_length=500, blank=True)
+    program = models.TextField()
+    disciplines = models.ManyToManyField("catalogs.Discipline")
+    coaches = models.ManyToManyField(settings.AUTH_USER_MODEL, limit_choices_to={"role_assignments__role": "coach"})
+    contact_url = models.URLField(blank=True)
+    public = models.BooleanField(default=False)

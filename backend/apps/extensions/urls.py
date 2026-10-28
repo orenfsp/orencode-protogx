@@ -7,10 +7,12 @@ from .certificates import (
     CertificateVerifyView,
 )
 from .judging import JudgingDocumentsView, JudgingDownloadView
+from .newcomer import NewcomerView
 from .notifications import NotificationsView
 
 urlpatterns = [
     path("notifications/", NotificationsView.as_view()),
+    path("newcomer/", NewcomerView.as_view()),
     path("judging-documents/", JudgingDocumentsView.as_view()),
     path("judging-documents/<int:pk>/download/", JudgingDownloadView.as_view()),
     path("certificates/", CertificatesView.as_view()),
