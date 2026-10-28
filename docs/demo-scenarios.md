@@ -22,7 +22,7 @@ As federation, open **Реестры**, search for «Демо Спортсмен
 
 The demo seeder also creates registry metadata for the existing fictional coach and judge roles without assigning roles or modifying their confirmed links. The federation may create a missing profile for an existing active user with an already assigned role and current consent; a minor's current consent must reference their verified guardian. Unknown historical affiliations are not inferred from profile creation. Repeated seeding preserves already existing specialist profiles and their manual edits.
 
-`frontend/tests/registry-create-live.spec.ts` registers a unique fictional adult through the ordinary consent form and then creates that athlete's profile as federation against the live API. It does not insert consent or roles directly. Coach and judge profile creation also has server tests and intercepted browser tests; live browser coverage for those two roles remains outstanding.
+`frontend/tests/registry-create-live.spec.ts` registers a unique fictional adult through the ordinary consent form, assigns coach and judge roles as guarded local test setup, and creates all three profiles as federation against the live API. It does not insert consent or create a federation role. The fixture requires the local demo safety flags and an explicitly identified isolated Compose project.
 
 On an isolated Compose database, startup followed by two manual seeder runs retained 8 users, 2 specialist profiles, 4 participation periods, 5 discipline periods and 4 organization periods. These counts check repeatability of those records; they are not a substitute for reviewing every preserved field.
 
