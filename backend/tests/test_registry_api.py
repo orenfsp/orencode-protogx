@@ -147,3 +147,13 @@ class RegistryApiTests(TestCase):
         self.assertEqual(options.status_code, 200)
         self.assertIn("Оренбург", options.data["municipalities"])
         self.assertIn({"id": self.second.pk, "name": "Вторая"}, options.data["organizations"])
+
+    def test_session_mutation_requires_csrf(self):
+        client = APIClient(enforce_csrf_checks=True)
+        client.force_login(self.federation)
+        session = client.session
+        session["active_role"] = "federation"
+        session.save()
+        response = client.post("/api/v1/organizations/", {"code": "csrf-test", "name": "Тест"}, format="json")
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Organization.objects.filter(code="csrf-test").exists())
