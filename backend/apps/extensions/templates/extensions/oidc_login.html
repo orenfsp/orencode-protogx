@@ -1,1 +1,3 @@
-{% extends "extensions/oidc_base.html" %}{% block content %}<h1>Войти через ФСП ID</h1><form method="post">{% csrf_token %}{{ form.as_p }}<input type="hidden" name="next" value="{{ next }}"><button type="submit">Войти</button></form><p class="note">Используйте существующую учётную запись федерации. Для демо — только вымышленные данные.</p>{% endblock %}
+{% extends "extensions/oidc_base.html" %}{% block content %}
+<h1>Войти через ФСП ID</h1><form class="auth-form" method="post">{% csrf_token %}{{ form.as_p }}<input type="hidden" name="next" value="{{ next }}"><button class="btn p" type="submit">Войти</button></form>
+<p class="note wn workflow-spaced">Используйте существующую учётную запись федерации. Для демо — только вымышленные данные.</p>{% endblock %}

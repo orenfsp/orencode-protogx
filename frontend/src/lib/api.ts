@@ -54,3 +54,13 @@ export async function downloadDocument(path: string): Promise<Blob> {
   if (!response.ok) throw new ApiError("Не удалось скачать документ", response.status);
   return response.blob();
 }
+
+export async function apiForm<T>(path: string, body: FormData): Promise<T> {
+  const token = await csrfToken();
+  const response = await fetch(`/api/v1/${path}`, { method: "POST", credentials: "include", headers: { "X-CSRFToken": token }, body });
+  if (!response.ok) {
+    const failure = await response.json().catch(() => ({}));
+    throw new ApiError(typeof failure.detail === "string" ? failure.detail : JSON.stringify(failure), response.status);
+  }
+  return response.json();
+}

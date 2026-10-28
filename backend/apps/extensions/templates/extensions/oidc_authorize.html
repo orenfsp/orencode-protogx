@@ -1,2 +1,9 @@
 {% extends "extensions/oidc_base.html" %}{% block content %}
-<h1>Передача данных через ФСП ID</h1>{% if error %}<p class="note">Запрос входа отклонён. Проверьте настройки приложения и повторите вход.</p>{% else %}<p>Приложение <strong>{{ application.name }}</strong> запрашивает:</p><ul>{% for scope in scopes_descriptions %}<li>{{ scope }}</li>{% endfor %}</ul><p class="note">Передаются только перечисленные сведения. Согласие можно отозвать в кабинете. Пароль приложению не передаётся.</p><form method="post">{% csrf_token %}{% for field in form %}{% if field.is_hidden %}{{ field }}{% endif %}{% endfor %}{{ form.errors }}<button type="submit">Отказать</button><button type="submit" name="allow" value="true">Разрешить передачу данных</button></form>{% endif %}{% endblock %}
+<h1>Передача данных через ФСП ID</h1>
+{% if error %}<p class="note wn">Запрос входа отклонён. Проверьте настройки приложения и повторите вход.</p>
+{% else %}<p class="section-intro">Приложение <strong>{{ application.name }}</strong> запрашивает:</p>
+<ul>{% for scope in scopes_descriptions %}<li>{{ scope }}</li>{% endfor %}</ul>
+<p class="note wn workflow-spaced">Передаются только перечисленные сведения. Согласие можно отозвать в кабинете. Пароль приложению не передаётся.</p>
+<form method="post">{% csrf_token %}{% for field in form %}{% if field.is_hidden %}{{ field }}{% endif %}{% endfor %}{{ form.errors }}
+<div class="cta"><button class="btn" type="submit">Отказать</button><button class="btn p" type="submit" name="allow" value="true">Разрешить передачу данных</button></div></form>
+{% endif %}{% endblock %}

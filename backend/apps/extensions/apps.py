@@ -6,4 +6,7 @@ class ExtensionsConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
 
     def ready(self):
-        from . import signals  # noqa: F401
+        from . import (
+            schema,  # noqa: F401
+            signals,  # noqa: F401
+        )

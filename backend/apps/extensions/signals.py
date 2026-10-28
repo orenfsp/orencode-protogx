@@ -11,6 +11,7 @@ from .notifications import notify
 def webhook_event(sender, instance, created, **kwargs):
     if created:
         from .integrations import enqueue_webhooks
+
         enqueue_webhooks(instance)
 
 
@@ -20,12 +21,28 @@ def domain_event(sender, instance, created, **kwargs):
         return
     event = instance
     if event.action == "competition.published":
-        recipients = User.objects.filter(is_active=True, role_assignments__role="athlete")
-    elif event.competition_id and event.action in ("application.decided", "protocol.published"):
-        recipients = User.objects.filter(competition_applications__competition_id=event.competition_id, competition_applications__status="approved")
+        recipients = User.objects.filter(
+            is_active=True, role_assignments__role="athlete"
+        )
+    elif event.competition_id and event.action in (
+        "application.decided",
+        "protocol.published",
+    ):
+        recipients = User.objects.filter(
+            competition_applications__competition_id=event.competition_id,
+            competition_applications__status="approved",
+        )
         if event.action == "application.decided":
             recipients = recipients.filter(competition_applications__pk=event.target_id)
     else:
         return
     for user in recipients.distinct():
-        notify(user, f"audit:{event.pk}", {"competition.published": "Открыто соревнование", "application.decided": "Изменён статус заявки", "protocol.published": "Опубликована версия протокола"}[event.action])
+        notify(
+            user,
+            f"audit:{event.pk}",
+            {
+                "competition.published": "Открыто соревнование",
+                "application.decided": "Изменён статус заявки",
+                "protocol.published": "Опубликована версия протокола",
+            }[event.action],
+        )

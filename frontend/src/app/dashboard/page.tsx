@@ -30,8 +30,9 @@ export default function Dashboard() {
   const dashboard = data?.role === role ? data : null;
   return <>
     <header className="dashboard-head"><span className="kick">Личный кабинет · {role ? roleContent[role].title : "Вход"}</span><h1>{role ? roleContent[role].title : "Личный кабинет"}</h1><p className="lead">{role ? roleContent[role].intro : "Войдите, чтобы открыть свой кабинет."}</p></header>
+    {role && <p className="section-intro"><Link className="btn" href="/services">Дополнительные сервисы</Link></p>}
     {!me ? <section className="blk"><h2><b>01</b><span>Вход</span></h2><div className="note wn">Для доступа к кабинету <Link href="/login">войдите</Link>.</div></section>
-      : !role ? <section className="blk"><h2><b>01</b><span>Роль</span></h2><div className="note wn">Активная роль недоступна. Выберите назначенную роль в боковой панели.</div></section>
+      : !role ? <section className="blk"><h2><b>01</b><span>Доступ</span></h2><div><p className="note wn">Выберите назначенную роль в боковой панели или откройте сервис учётной записи. Кабинет министерства требует отдельного права чтения.</p><div className="cta"><Link className="btn" href="/ministry">Кабинет министерства</Link><Link className="btn" href="/services">Сервисы ФСП</Link></div></div></section>
         : <>
           <section className="blk"><h2><b>01</b><span>Обзор</span></h2><div>
             <p className="section-intro">{me.full_name} · {roleContent[role].title}</p>

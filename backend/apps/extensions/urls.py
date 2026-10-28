@@ -34,10 +34,14 @@ from .ministry import MinistryView
 from .newcomer import NewcomerView
 from .notifications import NotificationsView
 from .oidc import (
+    GuardianAuthorizationRevokeView,
+    GuardianAuthorizationsView,
     OIDCClientDisableView,
     OIDCClientsView,
+    OIDCClientUpdateView,
     OIDCConsentRevokeView,
     OIDCConsentsView,
+    OIDCSecretRotateView,
 )
 from .progression import ProgressionRuleCreateView, ProgressionView
 from .reviews import (
@@ -57,7 +61,14 @@ from .training import (
 )
 
 urlpatterns = [
+    path("fsp-id/guardian-authorizations/", GuardianAuthorizationsView.as_view()),
+    path(
+        "fsp-id/guardian-authorizations/<int:pk>/revoke/",
+        GuardianAuthorizationRevokeView.as_view(),
+    ),
     path("fsp-id/clients/", OIDCClientsView.as_view()),
+    path("fsp-id/clients/<int:pk>/", OIDCClientUpdateView.as_view()),
+    path("fsp-id/clients/<int:pk>/rotate-secret/", OIDCSecretRotateView.as_view()),
     path("fsp-id/consents/", OIDCConsentsView.as_view()),
     path("fsp-id/clients/<int:pk>/disable/", OIDCClientDisableView.as_view()),
     path("fsp-id/consents/<int:pk>/revoke/", OIDCConsentRevokeView.as_view()),

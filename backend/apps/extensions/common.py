@@ -22,12 +22,16 @@ def private_response(content, content_type, filename):
 
 
 def athlete_access(request, athlete, discipline=None, *, write=False):
-    role = require_role(request, "federation", "coach", *( () if write else ("athlete",)))
+    role = require_role(
+        request, "federation", "coach", *(() if write else ("athlete",))
+    )
     if role == "federation":
         return role
     if role == "athlete" and athlete.pk == request.user.pk:
         return role
-    links = CoachAthleteLink.objects.filter(coach=request.user, athlete=athlete, status="confirmed")
+    links = CoachAthleteLink.objects.filter(
+        coach=request.user, athlete=athlete, status="confirmed"
+    )
     if discipline is not None:
         links = links.filter(discipline=discipline)
     if role == "coach" and links.exists():
@@ -36,11 +40,20 @@ def athlete_access(request, athlete, discipline=None, *, write=False):
 
 
 def require_athlete_consent(athlete, day):
-    if not athlete.is_active or not athlete.role_assignments.filter(role="athlete").exists() or not has_current_consent(athlete):
+    if (
+        not athlete.is_active
+        or not athlete.role_assignments.filter(role="athlete").exists()
+        or not has_current_consent(athlete)
+    ):
         raise ValidationError("Необходимо действующее согласие спортсмена")
     if not athlete.date_of_birth:
         raise ValidationError("Не указана дата рождения")
-    if age_on(athlete.date_of_birth, day) < 18 and not Guardian.objects.filter(minor=athlete, confirmation_status="verified").exists():
+    if (
+        age_on(athlete.date_of_birth, day) < 18
+        and not Guardian.objects.filter(
+            minor=athlete, confirmation_status="verified"
+        ).exists()
+    ):
         raise ValidationError("Необходимо проверенное согласие представителя")
 
 
