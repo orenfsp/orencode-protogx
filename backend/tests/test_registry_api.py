@@ -111,7 +111,8 @@ class RegistryApiTests(TestCase):
         session = self.client.session
         session["active_role"] = "athlete"
         session.save()
-        self.assertEqual(self.client.post(path, body, format="json").status_code, 403)
+        for role in ("athlete", "coach", "judge"):
+            self.assertEqual(self.client.post(f"/api/v1/registry/profiles/{role}/", body, format="json").status_code, 403)
         self.assertEqual(self.client.get(audit_path).status_code, 403)
         self.assertEqual(AuditEvent.objects.filter(action="registry.period_corrected").count(), 1)
 
